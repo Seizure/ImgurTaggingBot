@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema 
+ targetNamespace="urn:xmlns:tagaroo:Settings"
+ elementFormDefault="qualified" attributeFormDefault="unqualified"
+ xmlns="urn:xmlns:tagaroo:Settings" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Settings"
+>
+ 
+ <xs:element name="Settings"><xs:complexType><xs:sequence>
+  <xs:element name="Configuration" type="Configuration">
+   <xs:annotation><xs:documentation>
+    Key deployment settings of the application, that don't change at runtime.
+   </xs:documentation></xs:annotation>
+  </xs:element>
+  <xs:element name="StaticSettings" type="StaticSettings">
+   <xs:annotation><xs:documentation>
+    Other settings that don't change at runtime;
+    for such settings to take effect, the application must be restarted.
+   </xs:documentation></xs:annotation>
+  </xs:element>
+  <xs:element name="DynamicSettings" type="DynamicSettings">
+   <xs:annotation><xs:documentation>
+    Settings that may be changed while the application is running,
+    either by the application itself or by the user.
+    These settings can be changed by the user either by issuing commands to the running application,
+    in which case they will take immediate effect,
+    or my manually modifying the settings XML file,
+    in which case the application must be instructed to re-load and apply the new settings.
+    Be careful if doing the latter,
+    as the application may attempt to concurrently access and write to the settings file.
+   </xs:documentation></xs:annotation>
+  </xs:element>
+ </xs:sequence></xs:complexType></xs:element>
+ 
+ <xs:complexType name="Configuration">
+  <xs:sequence>
+   <xs:element name="Imgur" type="ConfigurationImgur"/>
+   <xs:element name="Discord" type="ConfigurationDiscord"/>
+  </xs:sequence>
+ </xs:complexType>
+ 
+ <xs:complexType name="ConfigurationImgur">
+  <xs:sequence>
+   <xs:element name="OAuthToken">
+    <xs:annotation><xs:documentation>
+     The OAuth Token that the application uses to authenticate itself
+     as a non-guest user to Imgur.
+     This connects the application to a specific Imgur user,
+     and allows it to perform actions as that user,
+     such as posting Comments.
+    </xs:documentation></xs:annotation>
+    <xs:complexType>
+     <xs:attribute name="Username" type="xs:string" use="required">
+      <xs:annotation><xs:documentation>
+       Username of the Imgur account for which this OAuth Token is for.
+      </xs:documentation></xs:annotation>
+     </xs:attribute>
+     <xs:attribute name="UserID" type="xs:int" use="required">
+      <xs:annotation><xs:documentation>
+       User ID of the Imgur account for which this OAuth Token is for.
+       Note this is not the same as the username;
+       it is a unique integer ID.
+      </xs:documentation></xs:annotation>
+     </xs:attribute>
+     <xs:attribute name="AccessToken" type="xs:string" use="required">
+      <xs:annotation><xs:documentation>
+       -Keep this value secret and secure-;
+       this value essentially serves as the password to the Imgur user account;
+       anyone with access to it can effectively log on as that user.
+      </xs:documentation></xs:annotation>
+     </xs:attribute>
+     <xs:attribute name="RefreshToken" type="xs:string" use="required">
+      <xs:annotation><xs:documentation>
+       -Keep this value secret and secure-.
+       This value is used to generate a new Access Token (along with a new Refresh Token)
+       when the current one expires.
+      </xs:documentation></xs:annotation>
+     </xs:attribute>
+     <xs:attribute name="TokenType" type="xs:string" use="required">
+      <xs:annotation><xs:documentation>
+       This typically seems to be "bearer".
+      </xs:documentation></xs:annotation>
+     </xs:attribute>
+     <xs:attribute name="ExpiresAt" type="xs:dateTime" use="required">
+      <xs:annotation><xs:documentation>
+       When the Access Token expires.
+       Upon expiry, a new OAuth Token is acquired using the existing Refresh Token,
+       and the newly generated OAuth Token will automatically be saved to the settings file,
+       overwriting the old one.
+       This value can be set to a value in the past,
+       in which case a new Access Token will be generated upon the first connection to Imgur,
+       but note that the Refresh Token and Access Token must still be valid for this to succeed.
+      </xs:documentation></xs:annotation>
+     </xs:attribute>
+    </xs:complexType>
+   </xs:element>
+  </xs:sequence>
+  <xs:attribute name="ClientID" type="xs:string" use="required">
+   <xs:annotation><xs:documentation>
+    The "Client ID" part of the Imgur API key,
+    which the application will use to access the Imgur API.
+    This is required for both guest access without an OAuth Token,
+    and non-guest access alongside an OAuth Token.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="ClientSecret" type="xs:string" use="required">
+   <xs:annotation><xs:documentation>
+    The "Client Secret" part of the Imgur API key,
+    which the application will use to access the Imgur API.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
+ <xs:complexType name="ConfigurationDiscord">
+  <xs:attribute name="Token" type="xs:string" use="required">
+   <xs:annotation><xs:documentation>
+    The Discord API key,
+    which the application will use to access the Discord API.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="GuildID" type="xs:unsignedLong" use="required">
+   <xs:annotation><xs:documentation>
+    The numerical ID of the Discord Guild (Server) to connect to
+    (unlike other Discord applications, each instance of this application is tied to a specific Guild).
+    Specify an invalid ID, such as 0,
+    to have the application log a list of Guilds and their IDs available to it;
+    the application's Discord API key will have to be "invited" to the Guild
+    for the Guild to appear in the list of available Guilds.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="LogChannelID" type="xs:unsignedLong" use="required">
+   <xs:annotation><xs:documentation>
+    -Keep this Channel secure, and only allow access to it by administrative users-;
+    sensitive information will be logged to this Channel,
+    including OAuth Token details, which must be kept safe.
+    The numerical ID of the Discord Channel in the Guild
+    where the application will log messages to.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
+ <xs:complexType name="StaticSettings">
+  <xs:attribute name="ImgurMaximumCommentLengthUTF16CodeUnits" type="positiveShort" use="required">
+   <xs:annotation><xs:documentation>
+    The maximum length of a single Imgur Comment.
+    This seems to be specified in units of UTF-16 Code Units,
+    which is equivalent to a Unicode Character for Characters within the Basic Multilingual Plane
+    (Characters outside the BMP are unusual).
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="TaglistDatafilePath" type="xs:string" use="required">
+   <xs:annotation><xs:documentation>
+    File path to the XML data file containing the Taglists.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
+ <xs:complexType name="DynamicSettings">
+  <xs:sequence>
+   <xs:element name="ImgurCommenters">
+    <xs:annotation><xs:documentation>
+     The Imgur Users to pull Comments from to parse,
+     specified by their Usernames.
+    </xs:documentation></xs:annotation>
+    <xs:complexType><xs:sequence>
+     <xs:element name="Commenter" minOccurs="1" maxOccurs="unbounded"><xs:complexType>
+      <xs:attribute name="Username" type="xs:string" use="required"/>
+     </xs:complexType></xs:element>
+    </xs:sequence></xs:complexType>
+   </xs:element>
+  </xs:sequence>
+  <xs:attribute name="PullCommentsFrequency" type="positiveDuration" use="required">
+   <xs:annotation><xs:documentation>
+    How often the application polls Imgur for new Comments.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="PullCommentsPerUserRequestThreshhold" type="xs:unsignedByte" use="required">
+   <xs:annotation><xs:documentation>
+    The maximum amount of "get Comments" requests to send per user when retrieving a Commenter's Comments.
+    This is a safety feature to stop the application
+    issuing huge amounts of requests if the Commenter has a large number of Comments
+    since the last time Comments were pulled.
+    If this threshhold is reached, a warning is logged,
+    and no further Comments from that user are retrieved;
+    the most recent Comments are retrieved first.
+    This can be disabled, but is not recommended, by setting to 0.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="CommentsProcessedUpToInclusive" type="xs:dateTime" use="required">
+   <xs:annotation><xs:documentation>
+    The date–time of the most recent Comment that has been processed.
+    This information is used and updated to prevent the application from
+    going through every single Comment whenever it reads them.
+    Comments that were posted at or before this point,
+    as well as Comments that have been Replied to by the application,
+    are deemed "processed" and ignored;
+    as such this value can be "rewound" to re-process Comments that the application didn't reply to,
+    such as in the case of some error.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
+ <xs:simpleType name="positiveShort"><xs:restriction base="xs:short">
+  <xs:minExclusive value="0"/>
+ </xs:restriction></xs:simpleType>
+ 
+ <xs:simpleType name="positiveDuration"><xs:restriction base="xs:duration">
+  <xs:minExclusive value="PT0S"/>
+ </xs:restriction></xs:simpleType>
+ 
+</xs:schema>

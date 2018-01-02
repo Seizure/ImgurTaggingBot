@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema 
+ targetNamespace="urn:xmlns:tagaroo:Taglists"
+ elementFormDefault="qualified" attributeFormDefault="unqualified"
+ xmlns="urn:xmlns:tagaroo:Taglists" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Taglists"
+>
+ 
+ <xs:element name="Taglists">
+  <xs:complexType>
+   <xs:sequence>
+    <xs:element name="Taglist" type="Taglist" minOccurs="0" maxOccurs="unbounded"/>
+   </xs:sequence>
+  </xs:complexType>
+  <xs:unique name="UniqueTaglistNames">
+   <xs:selector xpath="this:Taglist"/>
+   <xs:field xpath="@Name"/>
+  </xs:unique>
+ </xs:element>
+ 
+ <xs:complexType name="Taglist">
+  <xs:sequence>
+   <xs:element name="RegisteredUsers">
+    <xs:annotation><xs:documentation>
+     The Imgur Users that constitute the Taglist;
+     Usernames must be unique.
+    </xs:documentation></xs:annotation>
+    <xs:complexType>
+     <xs:sequence>
+      <xs:element name="TaglistUser" type="TaglistUser" minOccurs="0" maxOccurs="unbounded"/>
+     </xs:sequence>
+    </xs:complexType>
+    <xs:unique name="UniqueTaglistUsers">
+     <xs:selector xpath="this:TaglistUser"/>
+     <xs:field xpath="@Username"/>
+    </xs:unique>
+   </xs:element>
+  </xs:sequence>
+  <xs:attribute name="Name" type="xs:token" use="required">
+   <xs:annotation><xs:documentation>
+    Taglist names must be unique.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="SafeArchiveChannelID" type="xs:unsignedLong" use="required">
+   <xs:annotation><xs:documentation>
+    The numerical Channel ID of the Discord Channel
+    to which Tagged Imgur items will be archived,
+    where their Rating as specified in the Tag command is Safe.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="QuestionableArchiveChannelID" type="xs:unsignedLong" use="required">
+   <xs:annotation><xs:documentation>
+    The numerical Channel ID of the Discord Channel
+    to which Tagged Imgur items will be archived,
+    where their Rating as specified in the Tag command is Questionable.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="ExplicitArchiveChannelID" type="xs:unsignedLong" use="required">
+   <xs:annotation><xs:documentation>
+    The numerical Channel ID of the Discord Channel
+    to which Tagged Imgur items will be archived,
+    where their Rating as specified in the Tag command is Explicit.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
+ <xs:complexType name="TaglistUser">
+  <xs:sequence>
+   <xs:element name="CategoryBlacklist" minOccurs="0">
+    <xs:annotation><xs:documentation>
+     A collection of Category name strings that the User is not interested in;
+     if an item Tagged to this Taglist is Tagged with any Categories from this collection,
+     this User will not be notified of the Tagged item.
+     Category names must be unique.
+    </xs:documentation></xs:annotation>
+    <xs:complexType>
+     <xs:sequence>
+      <xs:element name="Category" type="Category" minOccurs="0" maxOccurs="unbounded"/>
+     </xs:sequence>
+    </xs:complexType>
+    <xs:unique name="UniqueUserCategories">
+     <xs:selector xpath="this:Category"/>
+     <xs:field xpath="@Name"/>
+    </xs:unique>
+   </xs:element>
+  </xs:sequence>
+  <xs:attribute name="Username" type="xs:token" use="required">
+   <xs:annotation><xs:documentation>
+    This Imgur user's Mentionable Imgur username.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="InterestedInSafe" type="xs:boolean" default="false">
+   <xs:annotation><xs:documentation>
+    If false, this User will not be notified of anything Tagged to this Taglist
+    which has been Tagged with a Rating of Safe.
+    Default false.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="InterestedInQuestionable" type="xs:boolean" default="false">
+   <xs:annotation><xs:documentation>
+    If false, this User will not be notified of anything Tagged to this Taglist
+    which has been Tagged with a Rating of Questionable.
+    Default false.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="InterestedInExplicit" type="xs:boolean" default="false">
+   <xs:annotation><xs:documentation>
+    If false, this User will not be notified of anything Tagged to this Taglist
+    which has been Tagged with a Rating of Explicit.
+    Default false.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
+ <xs:complexType name="Category">
+  <xs:attribute name="Name" type="xs:token" use="required"/>
+ </xs:complexType>
+ 
+</xs:schema>

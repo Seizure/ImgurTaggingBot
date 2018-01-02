@@ -1,0 +1,11 @@
+For an ImgUR application to be allowed access to a user account, and so be able to perform actions as that user, such as posting comments, it requires an OAuth Token. The OAuth Token serves to authenticate the application as that user when it makes calls to the ImgUR API.
+Note that, because of this, the OAuth Token is essentially a password to the account it was created for; anyone with the Token can effectively log in to that user account, so the Token must be stored in a secure place.
+The process is necessarily complex, as it is intended to be done across web-capable applications rather than completed manually.
+To obtain an OAuth Token for a particular ImgUR user, thereby allowing an ImgUR application to perform actions as that ImgUR user, first, log in normally to ImgUR as that user. Next, go to <https://api.imgur.com/oauth2/authorize/?client_id=%CLIENT-ID%&response_type=token>, replacing %CLIENT-ID% with the Client ID of the ImgUR application to allow access (the creator of the ImgUR application will have this information). Upon acceptance, the browser should be redirected to some other location (the exact location will be set by the creator of the ImgUR application). Upon this redirect, the components of the OAuth Token should appear at the end of the URL in the browser's address bar, specifically in the URL fragment; these details form the OAuth Token, and must be kept safe.
+The OAuth Token is formed of the following details:
+- The Username of the ImgUR Account it grants access to
+- The ID of the ImgUR Account it grants access to
+- The expiry time of the Access Token, specified as the number of seconds from the time of issue; typically this is 
+- A Token Type; ???
+- An Access Token; this must be kept secure
+- A Refresh Token, which must also be kept secure; it is used to request a new Access Token after the existing Access Token expires

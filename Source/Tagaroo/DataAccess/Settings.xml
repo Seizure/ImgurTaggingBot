@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?> 
+<!--
+-Do Not- commit this file to the source code repository if it contains sensitive information!
+The source code repository is public.
+If changes to this file need to be committed to the repository, remove the sensitive information first,
+and keep it stored in a safe place.
+Sensitive information includes, but is not limited to:
+- The Imgur OAuth Access Token and Refresh Token
+- The "Token" part of the Discord API key
+- The "Client Secret" part of the Imgur API key
+- The "Client Secret" part of the Discord API key
+Anyone with access to the relevant sensitive information can hijack the application's Imgur and Discord accounts.
+-->
+<Settings xmlns="urn:xmlns:tagaroo:Settings">
+ 
+ <Configuration>
+  <Imgur ClientID="" ClientSecret="">
+   <OAuthToken
+    Username=""
+    UserID="0"
+    AccessToken=""
+    RefreshToken=""
+    TokenType="bearer"
+    ExpiresAt="2017-12-01T00:00:00Z"
+   />
+  </Imgur>
+  <Discord
+   GuildID="388542416225042435"
+   LogChannelID="388542416225042439"
+   Token=""
+  />
+ </Configuration>
+ 
+ <StaticSettings
+  ImgurMaximumCommentLengthUTF16CodeUnits="140"
+  TaglistDatafilePath="Taglists.xml"
+ />
+ 
+ <DynamicSettings
+  PullCommentsFrequency="PT1H"
+  PullCommentsPerUserRequestThreshhold="10"
+  CommentsProcessedUpToInclusive="2017-12-01T00:00:00Z"
+ >
+  <ImgurCommenters>
+   <Commenter Username=""/>
+  </ImgurCommenters>
+ </DynamicSettings>
+ 
+</Settings>
