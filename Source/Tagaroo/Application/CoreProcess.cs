@@ -17,7 +17,7 @@ namespace Tagaroo.Application{
  public class CoreProcess : ImgurCommandHandler{
   private readonly ImgurInterfacer Imgur;
   private readonly DiscordInterfacer Discord;
-  private readonly ImgurCommandParser CommandParserImgur=new ImgurCommandParser();
+  private readonly ImgurCommandParser CommandParserImgur;
   private readonly TaglistRepository RepositoryTaglists;
   private readonly SettingsRepository RepositorySettings;
   private readonly SingleThreadSynchronizationContext ApplicationMessagePump = new SingleThreadSynchronizationContext();
@@ -29,6 +29,7 @@ namespace Tagaroo.Application{
    this.Discord=Discord;
    this.RepositoryTaglists=RepositoryTaglists;
    this.RepositorySettings=RepositorySettings;
+   this.CommandParserImgur=new ImgurCommandParser(Imgur);
   }
 
   public bool Run(){
@@ -134,18 +135,11 @@ namespace Tagaroo.Application{
   }
 
   public async Task ProcessComment(IComment Process){
-   //Skip Comments that have already been replied to by this application; otherwise Comments will be re-processed
-   //TODO Children always empty
-   if(Process.Children.Any(
-    C => Imgur.isCommentByThisApplication(C)
-   )){
-    return;
-   }
-   await ProcessCommentUnconditionally(Process);
+   await CommandParserImgur.ProcessCommands(Process,this);
   }
   
   public async Task ProcessCommentUnconditionally(IComment Process){
-   await CommandParserImgur.ProcessCommands(Process,this);
+   await CommandParserImgur.ProcessCommandsUnconditionally(Process,this);
   }
 
   /*

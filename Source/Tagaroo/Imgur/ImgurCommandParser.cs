@@ -8,14 +8,32 @@ using Imgur.API.Models;
 using Tagaroo.Model;
 using Tagaroo.Logging;
 
+using ImgurException=Imgur.API.ImgurException;
+
 namespace Tagaroo.Imgur{
  public class ImgurCommandParser{
-  public ImgurCommandParser(){}
+  private readonly ImgurInterfacer Imgur;
+  public ImgurCommandParser(ImgurInterfacer Imgur){
+   this.Imgur=Imgur;
+  }
 
   public async Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback){
+   await ProcessCommands(HostComment,Callback,true);
+  }
+  public async Task ProcessCommandsUnconditionally(IComment HostComment,ImgurCommandHandler Callback){
+   await ProcessCommands(HostComment,Callback,false);
+  }
+
+  protected async Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback,bool CheckForReplies){
    ICollection<Match> ParsedCommands = Pattern_Command.Matches(HostComment.CommentText);
    List<Task> Tasks=new List<Task>(ParsedCommands.Count);
    foreach(Match ParsedCommand in ParsedCommands){
+    if(CheckForReplies){
+     //Skip Comments that have already been replied to by this application; otherwise Comments will be re-processed
+     if(!await ShouldProcess(HostComment)){
+      continue;
+     }
+    }
     string Command = ParsedCommand.Groups[1].Value
      .Normalize(NormalizationForm.FormKD)
      .ToUpperInvariant()
@@ -43,6 +61,30 @@ namespace Tagaroo.Imgur{
     }
    }
    await Task.WhenAll(Tasks);
+  }
+
+  protected async Task<bool> ShouldProcess(IComment ToProcess){
+   IEnumerable<IComment> Replies;
+   //? Imgur seems inconsistent in whether or not Comment Replies are included
+   if(ToProcess.Children.Count()>0){
+    Replies = ToProcess.Children;
+   }else{
+    try{
+     Replies = await Imgur.ReadCommentReplies(ToProcess);
+    }catch(ImgurException Error){
+     Log.Imgur_.LogError(
+      "Unable to retrieve replies for Comment with ID {0:D} (by '{1}' on {2:u}) to determine if it has been processed; skipping Comment. Details: {3}",
+      ToProcess.Id,ToProcess.Author,ToProcess.DateTime,Error.Message
+     );
+     return false;
+    }
+   }
+   if(Replies.Any(
+    C => Imgur.isCommentByThisApplication(C)
+   )){
+    return false;
+   }
+   return true;
   }
 
   public bool ParseTagCommand(string Input,int StartsAt,int HostCommentID,string OnItemID,bool ItemAlbum,out Tag Result){

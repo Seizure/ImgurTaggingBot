@@ -33,6 +33,9 @@ namespace Tagaroo.Imgur{
   );
   
   /// <exception cref="ImgurException"/>
+  Task<IEnumerable<IComment>> ReadCommentReplies(IComment RepliesTo);
+
+  /// <exception cref="ImgurException"/>
   Task<GalleryItem> ReadGalleryImage(string ID);
   
   /// <exception cref="ImgurException"/>
@@ -247,6 +250,14 @@ namespace Tagaroo.Imgur{
     where C.DateTime > SinceExclusive
     select C
    ).ToList();
+  }
+
+  public async Task<IEnumerable<IComment>> ReadCommentReplies(IComment RepliesTo){
+   try{
+    return (await APIComments.GetRepliesAsync(RepliesTo.Id)).Children;
+   }catch(ImgurException){
+    throw;
+   }
   }
 
   public async Task<GalleryItem> ReadGalleryImage(string ID){
