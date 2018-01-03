@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?> 
 <Taglists xmlns="urn:xmlns:tagaroo:Taglists">
  
- <Taglist Name="TheTaglist" SafeArchiveChannelID="0" QuestionableArchiveChannelID="0" ExplicitArchiveChannelID="0"><RegisteredUsers>
+ <Taglist Name="SampleTaglist" SafeArchiveChannelID="388542416225042439" QuestionableArchiveChannelID="388542416225042439" ExplicitArchiveChannelID="388542416225042439"><RegisteredUsers>
   <TaglistUser Username="None-A" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>

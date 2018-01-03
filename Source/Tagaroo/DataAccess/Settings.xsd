@@ -35,6 +35,11 @@
   <xs:sequence>
    <xs:element name="Imgur" type="ConfigurationImgur"/>
    <xs:element name="Discord" type="ConfigurationDiscord"/>
+   <xs:element name="Logging" type="ConfigurationLogging">
+    <xs:annotation><xs:documentation>
+     Logging verbosity levels of different areas of the application can be configured here.
+    </xs:documentation></xs:annotation>
+   </xs:element>
   </xs:sequence>
  </xs:complexType>
  
@@ -138,6 +143,43 @@
   </xs:attribute>
  </xs:complexType>
  
+ <xs:complexType name="ConfigurationLogging">
+  <xs:attribute name="LogToDiscord" type="xs:boolean" use="required">
+   <xs:annotation><xs:documentation>
+    If true, the application will attempt to output logging messages to the specified Discord Log Channel,
+    falling back on the process' StdOut.
+    If false, the application will output logging messages to the process' StdOut.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="BootstrapLogLevel" type="LogLevel" use="required">
+   <xs:annotation><xs:documentation>
+    Messages concerning startup and shutdown of the application.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="ApplicationLogLevel" type="LogLevel" use="required">
+   <xs:annotation><xs:documentation>
+    Messages concerning the main running logic of the application.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="ImgurLogLevel" type="LogLevel" use="required">
+   <xs:annotation><xs:documentation>
+    Messages concerning the application's interactions with Imgur.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="DiscordLogLevel" type="LogLevel" use="required">
+   <xs:annotation><xs:documentation>
+    Messages concerning the application's interactions with Discord.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="DiscordLibraryLogLevel" type="LogLevel" use="required">
+   <xs:annotation><xs:documentation>
+    Logging messages produced by the third-party library Discord.Net.
+    These messages are not produced by the application,
+    rather by a library the application uses.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+ </xs:complexType>
+ 
  <xs:complexType name="StaticSettings">
   <xs:attribute name="ImgurMaximumCommentLengthUTF16CodeUnits" type="positiveShort" use="required">
    <xs:annotation><xs:documentation>
@@ -198,6 +240,15 @@
    </xs:documentation></xs:annotation>
   </xs:attribute>
  </xs:complexType>
+ 
+ <xs:simpleType name="LogLevel"><xs:restriction base="xs:token">
+  <xs:enumeration value="Critical"/>
+  <xs:enumeration value="Error"/>
+  <xs:enumeration value="Warning"/>
+  <xs:enumeration value="Information"/>
+  <xs:enumeration value="Verbose"/>
+  <xs:enumeration value="Off"/>
+ </xs:restriction></xs:simpleType>
  
  <xs:simpleType name="positiveShort"><xs:restriction base="xs:short">
   <xs:minExclusive value="0"/>

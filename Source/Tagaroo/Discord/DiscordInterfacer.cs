@@ -61,7 +61,6 @@ namespace Tagaroo.Discord{
    }else if(State==States.Connecting||State==States.Disconnecting){
     throw new InvalidOperationException("Cannot connect while connecting/disconnecting");
    }
-   Log.Bootstrap_.LogInfo("Connecting to Discord...");
    this.State = States.Connecting;
    TaskCompletionSource<object> BecomingReady=new TaskCompletionSource<object>();
    Func<Task> OnReady=()=>{
@@ -82,7 +81,7 @@ namespace Tagaroo.Discord{
    await BecomingReady.Task;
    Client.Ready -= OnReady;
    this.State = States.Connected;
-   Log.Bootstrap_.LogInfo("Successfully connected to Discord");
+   //Log.Bootstrap_.LogInfo("Successfully connected to Discord");
    IdentifyChannels(this.GuildID, this.LogChannelID, out this.Guild, out this.LogChannel);
   }
 
@@ -136,11 +135,17 @@ namespace Tagaroo.Discord{
   public async Task PostGalleryItemDetails(ulong ChannelID,GalleryItem ToPost){
    if(State!=States.Connected){throw new InvalidOperationException("Not connected");}
    EmbedBuilder MessageEmbed = new EmbedBuilder()
-   .WithTitle(ToPost.Title.Length <= EmbedBuilder.MaxTitleLength ? ToPost.Title : ToPost.Title.Substring(0,EmbedBuilder.MaxTitleLength))
    .WithTimestamp(ToPost.Created);
+   if(ToPost.hasTitle){
+    MessageEmbed = MessageEmbed.WithTitle(
+     ToPost.Title.Length <= EmbedBuilder.MaxTitleLength ? ToPost.Title : ToPost.Title.Substring(0,EmbedBuilder.MaxTitleLength)
+    );
+   }
    if(Uri.IsWellFormedUriString(ToPost.Link,UriKind.Absolute)){
     MessageEmbed = MessageEmbed
+    //TODO Gallery URL
     .WithUrl(ToPost.Link)
+    //TODO Get image resource URL
     .WithImageUrl(ToPost.Link);
    }else{
     Log.Discord_.LogWarning(
@@ -153,13 +158,17 @@ namespace Tagaroo.Discord{
      ToPost.AuthorUsername.Length <= EmbedAuthorBuilder.MaxAuthorNameLength ? ToPost.AuthorUsername : ToPost.AuthorUsername.Substring(0,EmbedAuthorBuilder.MaxAuthorNameLength)
     );
    }
-   int RemainingSpace = EmbedBuilder.MaxEmbedLength - (MessageEmbed.Title.Length + (MessageEmbed.Author?.Name.Length??0));
-   MessageEmbed = MessageEmbed.WithDescription(
-    ToPost.Description.Length <= RemainingSpace ? ToPost.Description : ToPost.Description.Substring(0,RemainingSpace)
-   );
+   if(ToPost.hasDescription){
+    int RemainingSpace = EmbedBuilder.MaxEmbedLength - ((MessageEmbed.Title?.Length??0) + (MessageEmbed.Author?.Name.Length??0));
+    MessageEmbed = MessageEmbed.WithDescription(
+     ToPost.Description.Length <= RemainingSpace ? ToPost.Description : ToPost.Description.Substring(0,RemainingSpace)
+    );
+   }
    await SendMessage(
     ChannelID,
-    string.Format("{1}\r\n{0}",ToPost.Link,ToPost.Title),
+    ToPost.hasTitle
+    ? string.Format("{1}\r\n{0}",ToPost.Link,ToPost.Title)
+    : string.Format("{0}",ToPost.Link),
     ToPost.NSFW,
     MessageEmbed.Build()
    );

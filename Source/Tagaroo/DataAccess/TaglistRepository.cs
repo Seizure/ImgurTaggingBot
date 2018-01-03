@@ -19,8 +19,10 @@ namespace Tagaroo.DataAccess{
   /// <exception cref="DataAccessException"/>
   Task<IReadOnlyDictionary<string,Taglist>> LoadAll();
 
+  /*
   /// <exception cref="DataAccessException"/>
   Task SaveAll(ICollection<Taglist> Save);
+  */
  }
  
  public class TaglistRepositoryMain : TaglistRepository{
@@ -35,9 +37,8 @@ namespace Tagaroo.DataAccess{
    this.Cache=Cache;
   }
 
-  //TODO Call on startup
   public void Initialize(){
-   Initialize();
+   XMLDataFileHandler.Initialize();
   }
   
   /*
@@ -119,11 +120,13 @@ namespace Tagaroo.DataAccess{
    return Results;
   }
 
+  /*
   public async Task SaveAll(ICollection<Taglist> Save){
    Initialize();
-   //TODO
+   ...
    this.CachedTaglists=null;
   }
+  */
 
   static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Taglists";
  }

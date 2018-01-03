@@ -68,9 +68,12 @@ namespace Tagaroo.Application{
   Any async function passed to this method should be treated as async void (Action), and not async Task (Func<Task>).
   Unhandled exceptions thrown from async void methods will cause the application to crash, which is desirable,
   whereas unhandled exceptions from async Task methods, where the returned Task is never awaited, are swallowed.
-  This swallowing may be disabled by enabling the ThrowUnobservedTaskExceptions configuration directive.
+  This swallowing may be disabled by enabling the ThrowUnobservedTaskExceptions configuration directive,
+  although this will cause the application to crash for any unobserved exception, which may not be desirable
+  (there is a potential unobserved exception in CoreProcess.ProcessTagCommand).
   Otherwise, treating the function as async Task without this directive,
-  will cause any unhandled exceptions to go unnoticed.
+  will cause any unhandled exceptions to go unnoticed,
+  thus treat as async void (Action) to ensure unhandled exceptions don't go unnoticed.
   */
   public void RunOnCurrentThread(Action BeginWith){
    if(running){throw new InvalidOperationException("Already running");}

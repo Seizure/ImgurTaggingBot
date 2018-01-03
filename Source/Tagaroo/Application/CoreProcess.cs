@@ -19,31 +19,48 @@ namespace Tagaroo.Application{
   private readonly DiscordInterfacer Discord;
   private readonly ImgurCommandParser CommandParserImgur=new ImgurCommandParser();
   private readonly TaglistRepository RepositoryTaglists;
-  private readonly Settings Settings;
+  private readonly SettingsRepository RepositorySettings;
   private readonly SingleThreadSynchronizationContext ApplicationMessagePump = new SingleThreadSynchronizationContext();
   private readonly CancellationTokenSource ShutdownSignal=new CancellationTokenSource();
+  private Settings CurrentSettings;
   
-  public CoreProcess(ImgurInterfacer Imgur, DiscordInterfacer Discord, TaglistRepository RepositoryTaglists, Settings Settings){
+  public CoreProcess(ImgurInterfacer Imgur, DiscordInterfacer Discord, TaglistRepository RepositoryTaglists, SettingsRepository RepositorySettings){
    this.Imgur=Imgur;
    this.Discord=Discord;
    this.RepositoryTaglists=RepositoryTaglists;
-   this.Settings=Settings;
+   this.RepositorySettings=RepositorySettings;
   }
 
-  public void Run(){
+  public bool Run(){
+   bool startupsuccess=false;
+   Log.Bootstrap_.LogVerbose("Beginning application message pump");
    ApplicationMessagePump.RunOnCurrentThread(async()=>{
+    Log.Bootstrap_.LogVerbose("Application message pump started");
     bool success = await Setup();
     if(!success){return;}
+    startupsuccess=true;
     await RunMain();
     await UnSetup();
     ApplicationMessagePump.Finish();
    });
+   return startupsuccess;
   }
 
   private async Task<bool> Setup(){
+   Log.Bootstrap_.LogVerbose("Initializing repositories");
+   RepositorySettings.Initialize();
+   RepositoryTaglists.Initialize();
+   Log.Bootstrap_.LogInfo("Reading Settings");
+   try{
+    this.CurrentSettings = await RepositorySettings.LoadSettings();
+   }catch(DataAccessException Error){
+    Log.Bootstrap_.LogError("Could not load Settings: "+Error.Message);
+   }
+   if(this.CurrentSettings is null){return false;}
    Log.Bootstrap_.LogInfo("Connecting to Discord...");
    try{
     await Discord.Connect();
+    Log.Bootstrap_.LogInfo("Discord connection established");
    }catch(DiscordException Error){
     Log.Bootstrap_.LogError("Unable to connect to Discord: "+Error.Message);
     return false;
@@ -64,7 +81,7 @@ namespace Tagaroo.Application{
      await Task.Delay(6000);
      this.Shutdown();
      await Task.Delay(
-      Settings.PullCommentsFrequency,
+      CurrentSettings.PullCommentsFrequency,
       ShutdownSignal.Token
      );
     }catch(TaskCanceledException){
@@ -82,9 +99,9 @@ namespace Tagaroo.Application{
    IDictionary<string,IList<IComment>> NewComments;
    try{
     NewComments = await Imgur.ReadCommentsSince(
-     Settings.CommentsProcessedUpToInclusive,
-     Settings.CommenterUsernames,
-     Settings.RequestThreshholdPullCommentsPerUser
+     CurrentSettings.CommentsProcessedUpToInclusive,
+     CurrentSettings.CommenterUsernames,
+     CurrentSettings.RequestThreshholdPullCommentsPerUser
     );
    }catch(ImgurException Error){
     Log.Application_.LogError("Error pulling latest Comments from Imgur: "+Error.Message);
@@ -101,11 +118,24 @@ namespace Tagaroo.Application{
      }
     }
    }
+   //Wait until all Comments have been processed before then updating the latest comment date–time, in case of any unhandled exceptions during processing
    await Task.WhenAll(Tasks);
+   if(LatestCommentAt > CurrentSettings.CommentsProcessedUpToInclusive){
+    CurrentSettings.CommentsProcessedUpToInclusive = LatestCommentAt;
+    try{
+     await RepositorySettings.SaveWritableSettings(CurrentSettings);
+    }catch(DataAccessException Error){
+     Log.Application_.LogError(
+      "Unable to save updated Settings with new 'Last Processed Comment date–time' of {0:u}; it would be advisable, though not essential, to update the settings file manually with the updated value. Details: {1}",
+      CurrentSettings.CommentsProcessedUpToInclusive,Error.Message
+     );
+    }
+   }
   }
 
   public async Task ProcessComment(IComment Process){
    //Skip Comments that have already been replied to by this application; otherwise Comments will be re-processed
+   //TODO Children always empty
    if(Process.Children.Any(
     C => Imgur.isCommentByThisApplication(C)
    )){
@@ -126,20 +156,24 @@ namespace Tagaroo.Application{
   }
   */
   public async Task ProcessTagCommand(Tag Command){
+   Task<GalleryItem> TaggedItemTask;
+   if(!Command.isItemAlbum){
+    TaggedItemTask=Imgur.ReadGalleryImage(Command.ItemID);
+   }else{
+    TaggedItemTask=Imgur.ReadGalleryAlbum(Command.ItemID);
+   }
+   Task<IReadOnlyDictionary<string,Taglist>> AllTaglistsTask = RepositoryTaglists.LoadAll();
    GalleryItem TaggedItem;
    try{
-    if(!Command.isItemAlbum){
-     TaggedItem=await Imgur.ReadGalleryImage(Command.ItemID);
-    }else{
-     TaggedItem=await Imgur.ReadGalleryAlbum(Command.ItemID);
-    }
+    TaggedItem = await TaggedItemTask;
    }catch(ImgurException Error){
     Log.Application_.LogError("Error acquiring details for Tagged Imgur Gallery item with ID '{0}': {1}",Command.ItemID,Error.Message);
+    //Exceptions from AllTaglistsTask may go unobserved
     return;
    }
    IReadOnlyDictionary<string,Taglist> AllTaglists;
    try{
-    AllTaglists = await RepositoryTaglists.LoadAll();
+    AllTaglists = await AllTaglistsTask;
    }catch(DataAccessException Error){
     Log.Application_.LogError("Error loading Taglists while processing Tag command: "+Error.Message);
     return;

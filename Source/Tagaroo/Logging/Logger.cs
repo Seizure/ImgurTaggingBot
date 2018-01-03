@@ -33,5 +33,8 @@ namespace Tagaroo.Logging{
   internal void AddListener(TraceListener Add){
    Implementation.Listeners.Add(Add);
   }
+  internal void RemoveListener(string Name){
+   Implementation.Listeners.Remove(Name);
+  }
  }
 }

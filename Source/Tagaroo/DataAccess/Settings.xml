@@ -29,6 +29,14 @@ Anyone with access to the relevant sensitive information can hijack the applicat
    LogChannelID="388542416225042439"
    Token=""
   />
+  <Logging
+   LogToDiscord="true"
+   BootstrapLogLevel="Information"
+   ApplicationLogLevel="Information"
+   ImgurLogLevel="Information"
+   DiscordLogLevel="Information"
+   DiscordLibraryLogLevel="Error"
+  />
  </Configuration>
  
  <StaticSettings

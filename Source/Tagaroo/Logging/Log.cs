@@ -4,7 +4,6 @@ using System.Text;
 using System.Diagnostics;
 
 namespace Tagaroo.Logging{
- //TODO Configure Switches on startup
  internal class Log{
   public Logger Bootstrap{get;}
   public Logger Application{get;}
@@ -41,6 +40,14 @@ namespace Tagaroo.Logging{
    Imgur.AddListener(Add);
    Discord.AddListener(Add);
    DiscordLibrary.AddListener(Add);
+  }
+
+  public void RemoveTraceListener(string Name){
+   Bootstrap.RemoveListener(Name);
+   Application.RemoveListener(Name);
+   Imgur.RemoveListener(Name);
+   Discord.RemoveListener(Name);
+   DiscordLibrary.RemoveListener(Name);
   }
 
   static public Log Instance{get;} = new Log();

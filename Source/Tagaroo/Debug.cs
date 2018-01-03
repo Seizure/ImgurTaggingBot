@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if DEBUG
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -265,12 +266,22 @@ namespace Tagaroo{
    Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL);
    //Logging.Log.Instance.AddTraceListener(new Logging.DiscordTraceListener("DiscordListener",Discord,new System.Diagnostics.TextWriterTraceListener(Console.Out)));
    Logging.Log.Instance.DiscordLevel.Level=System.Diagnostics.SourceLevels.Verbose;
+   Logging.Log.Instance.DiscordLibraryLevel.Level=System.Diagnostics.SourceLevels.Warning;
    SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext();
    RunOn.RunOnCurrentThread(async()=>{
     await Discord.Connect();
     await Task.Delay(1000);
     await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
-     "Q","The Title","http://imgur.com/a/YYL69","The Author","The Description",false,DateTimeOffset.UtcNow,string.Empty,null,null
+     "Q","Gallery Link","https://imgur.com/gallery/YYL69",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
+    ));
+    await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
+     "Q","Album Link","https://imgur.com/a/YYL69",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
+    ));
+    await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
+     "Q","Image Link","https://imgur.com/2rzgptw",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
+    ));
+    await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
+     "Q","Resource Link","https://i.imgur.com/2rzgptw.jpg",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
     ));
     await Task.Run(()=>{
      Console.ReadKey(true);
@@ -328,6 +339,11 @@ namespace Tagaroo{
    Model.CommentsProcessedUpToInclusive=DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(1));
    await Repository.SaveWritableSettings(Model);
    */
+   DataAccess.SettingsRepository RepositorySettings=new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings.xml");
+   DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true);
+   Settings ModelSettings=await RepositorySettings.LoadSettings();
+   var ModelTaglists=await RepositoryTaglist.LoadAll();
+   ApplicationConfiguration ModelConfiguration=await RepositorySettings.LoadConfiguration();
   }
   
   Task Imgur.ImgurCommandHandler.ProcessTagCommand(Tag Parsed){
@@ -343,22 +359,43 @@ namespace Tagaroo{
   }
 
   public void RunCore(){
-   //CoreProcess Core=new CoreProcess(new Imgur.ImgurInterfacer(),new Settings());
-   //Core.Run();
+   Logging.Log.Instance.DiscordLibraryLevel.Level=System.Diagnostics.SourceLevels.Warning;
+   Console.Write("Discord Authentication Token > ");
+   string DiscordAuthorizationToken=Console.ReadLine();
+   string ImgurAuthenticationSecret="Q",OAuthAccessToken="Q",OAuthRefreshToken="Q";
+   Console.Write("Imgur Authentication ID > ");
+   string ImgurAuthenticationID=Console.ReadLine();
+   Console.Write("Imgur Authentication Secret > ");
+   ImgurAuthenticationSecret=Console.ReadLine();
+   Console.Write("Imgur OAuth Access Token > ");
+   OAuthAccessToken=Console.ReadLine();
+   /*
+   Console.Write("Imgur OAuth Refresh Token > ");
+   OAuthRefreshToken=Console.ReadLine();
+   */
+   CoreProcess Core=new CoreProcess(
+    new Imgur.ImgurInterfacerMain(
+     new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
+     ImgurAuthenticationID,ImgurAuthenticationSecret,
+     "wereleven",77530931,
+     OAuthAccessToken,OAuthRefreshToken,"bearer",
+     DateTimeOffset.UtcNow+TimeSpan.FromDays(11),
+     140
+    ),
+    new Discord.DiscordInterfacerMain(
+     DiscordAuthorizationToken,
+     388542416225042435UL,388542416225042439UL
+    ),
+    new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true),
+    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml")
+   );
+   Core.Run();
   }
 
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   //new Debug().RunImgUR().Wait();
+   //new Debug().RunDebug().Wait();
    new Debug().RunDebugDiscord();
-   /*
-   new CoreProcess(
-    new Imgur.ImgurInterfacer(),
-    new DataAccess.TaglistRepository(),
-    new Discord.DiscordInterfacer(),
-    new Settings()
-   );
-   */
    Console.ReadKey(true);
   }
 
@@ -371,3 +408,4 @@ namespace Tagaroo{
   */
  }
 }
+#endif

@@ -46,9 +46,10 @@ namespace Tagaroo.Imgur{
   );
  }
 
+ //TODO Manual OAuth Token refresh
  //TODO User ID lookup
  //TODO Query Rate remaining
- public class ImgurInterfacerMain:ImgurInterfacer{
+ public class ImgurInterfacerMain : ImgurInterfacer{
   private readonly IApiClient Client,ClientAuthenticated;
   private readonly IOAuth2Endpoint APIOAuth;
   private readonly IAccountEndpoint APIUserAccount;
@@ -57,7 +58,7 @@ namespace Tagaroo.Imgur{
   private readonly IAlbumEndpoint APIAlbum;
   private readonly SettingsRepository RepositorySettings;
   private readonly int UserID;
-  private readonly int MaximumCommentLength;
+  private readonly ushort MaximumCommentLength;
   
   /// <summary></summary>
   /// <param name="ApplicationAuthenticationID">
@@ -112,7 +113,7 @@ namespace Tagaroo.Imgur{
    string UserAuthenticationRefreshToken,
    string UserAuthenticationTokenType,
    DateTimeOffset TokenExpiresAt,
-   int MaximumCommentLength
+   short MaximumCommentLength
   ){
    if(MaximumCommentLength<=0){
     throw new ArgumentOutOfRangeException(nameof(MaximumCommentLength));
@@ -145,7 +146,7 @@ namespace Tagaroo.Imgur{
    this.APIImage=new EndpointsImpl.ImageEndpoint(Client);
    this.APIAlbum=new EndpointsImpl.AlbumEndpoint(Client);
    this.UserID=UserID;
-   this.MaximumCommentLength=MaximumCommentLength;
+   this.MaximumCommentLength=(ushort)MaximumCommentLength;
    this.RepositorySettings=RepositorySettings;
   }
 
@@ -161,6 +162,7 @@ namespace Tagaroo.Imgur{
   }
 
   public async Task<IOAuth2Token> RefreshUserAuthenticationToken(){
+   //TODO API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
    IOAuth2Token NewToken;
    try{
     NewToken = await APIOAuth.GetTokenByRefreshTokenAsync(ClientAuthenticated.OAuth2Token.RefreshToken);
@@ -239,6 +241,7 @@ namespace Tagaroo.Imgur{
     }
     ++RequestCount;
    //Keep pulling Comments pages until the oldest Comment pulled is from at or before SinceExclusive
+   //TODO Don't loop if reached end of Comments
    }while(OldestCommentDateTime > SinceExclusive);
    //Remove any Comments from the last Comments page that were from at or before SinceExclusive
    return (
@@ -260,10 +263,12 @@ namespace Tagaroo.Imgur{
    try{
     if(!Album){
      return GalleryItem.FromImgurImage(
+      ID,
       await APIImage.GetImageAsync(ID)
      );
     }else{
      return GalleryItem.FromImgurAlbum(
+      ID,
       await APIAlbum.GetAlbumAsync(ID)
      );
     }
@@ -296,6 +301,7 @@ namespace Tagaroo.Imgur{
   }
 
   protected IList<string> ChunkConcatenate(IList<string> Input,string Prepend,string Separator,int MaximumChunkSizeUTF16CodeUnits){
+   if(MaximumChunkSizeUTF16CodeUnits<=0){throw new ArgumentOutOfRangeException(nameof(MaximumChunkSizeUTF16CodeUnits));}
    IList<string> Result=new List<string>();
    StringBuilder Current=new StringBuilder();
    bool first = true;

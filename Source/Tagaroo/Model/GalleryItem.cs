@@ -28,25 +28,32 @@ namespace Tagaroo.Model{
    int? Width,
    int? Height
   ){
+   if(ID is null){throw new ArgumentNullException(nameof(ID));}
    this.ID=ID;
    this.Title=Title;
-   this.Link=Link;
+   this.Link = Link ?? string.Empty;
    this.AuthorUsername=AuthorUsername;
    this.Description=Description;
    this.NSFW=NSFW;
    this.Created=Created;
-   this.Categories=Categories;
+   this.Categories = Categories ?? string.Empty;
    this.Width=Width;
    this.Height=Height;
   }
 
+  public bool hasTitle{get{
+   return !(this.Title is null);
+  }}
   public bool hasKnownAuthor{get{
    return !(this.AuthorUsername is null);
   }}
+  public bool hasDescription{get{
+   return !(this.Description is null);
+  }}
 
-  static public GalleryItem FromImgurImage(IImage ImgurGalleryItem){
+  static public GalleryItem FromImgurImage(string ID,IImage ImgurGalleryItem){
    return new GalleryItem(
-    ImgurGalleryItem.Id,
+    ImgurGalleryItem.Id ?? ID,
     ImgurGalleryItem.Title,
     ImgurGalleryItem.Link,
     null,
@@ -59,9 +66,9 @@ namespace Tagaroo.Model{
    );
   }
 
-  static public GalleryItem FromImgurAlbum(IAlbum ImgurGalleryItem){
+  static public GalleryItem FromImgurAlbum(string ID,IAlbum ImgurGalleryItem){
    return new GalleryItem(
-    ImgurGalleryItem.Id,
+    ImgurGalleryItem.Id ?? ID,
     ImgurGalleryItem.Title,
     ImgurGalleryItem.Link,
     ImgurGalleryItem.AccountUrl,

@@ -8,9 +8,9 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.IO;
+using System.Diagnostics;
 using Imgur.API.Models;
-
-using Settings=Tagaroo.Application.Settings;
+using Tagaroo.Application;
 
 namespace Tagaroo.DataAccess{
  
@@ -18,7 +18,7 @@ namespace Tagaroo.DataAccess{
   void Initialize();
   
   /// <exception cref="DataAccessException"/>
-  Task LoadConfiguration();
+  Task<ApplicationConfiguration> LoadConfiguration();
   
   /// <exception cref="DataAccessException"/>
   Task<Settings> LoadSettings();
@@ -39,17 +39,39 @@ namespace Tagaroo.DataAccess{
    this.SettingsFilePath=SettingsFilePath;
   }
 
-  //TODO Call on startup
   public void Initialize(){
    XMLDataFileHandler.Initialize();
   }
 
-  public async Task LoadConfiguration(){
+  public async Task<ApplicationConfiguration> LoadConfiguration(){
    XDocument DataDocument=await XMLDataFileHandler.LoadFile(FileAccess.Read,FileShare.Read);
-   XElement ConfigurationImgurElement=DataDocument.Root.Elements(xmlns+"Configuration").Elements(xmlns+"Imgur").First();
-   XElement ConfigurationDiscordElement=DataDocument.Root.Elements(xmlns+"Configuration").Elements(xmlns+"Discord").First();
+   XElement ConfigurationElement=DataDocument.Root.Elements(xmlns+"Configuration").First();
+   XElement ConfigurationImgurElement=ConfigurationElement.Elements(xmlns+"Imgur").First();
+   XElement ConfigurationImgurOAuthElement=ConfigurationImgurElement.Elements(xmlns+"OAuthToken").First();
+   XElement ConfigurationDiscordElement=ConfigurationElement.Elements(xmlns+"Discord").First();
+   XElement ConfigurationLoggingElement=ConfigurationElement.Elements(xmlns+"Logging").First();
    XElement StaticSettingsElement=DataDocument.Root.Elements(xmlns+"StaticSettings").First();
-
+   return new ApplicationConfiguration(
+    Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("BootstrapLogLevel")),
+    Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("ApplicationLogLevel")),
+    Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("ImgurLogLevel")),
+    Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("DiscordLogLevel")),
+    Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("DiscordLibraryLogLevel")),
+    (bool)ConfigurationLoggingElement.Attribute("LogToDiscord"),
+    (string)ConfigurationImgurElement.Attribute("ClientID"),
+    (string)ConfigurationImgurElement.Attribute("ClientSecret"),
+    (string)ConfigurationImgurOAuthElement.Attribute("Username"),
+    (int)ConfigurationImgurOAuthElement.Attribute("UserID"),
+    (string)ConfigurationImgurOAuthElement.Attribute("AccessToken"),
+    (string)ConfigurationImgurOAuthElement.Attribute("RefreshToken"),
+    (string)ConfigurationImgurOAuthElement.Attribute("TokenType"),
+    (DateTimeOffset)ConfigurationImgurOAuthElement.Attribute("ExpiresAt"),
+    (short)StaticSettingsElement.Attribute("ImgurMaximumCommentLengthUTF16CodeUnits"),
+    (string)ConfigurationDiscordElement.Attribute("Token"),
+    (ulong)ConfigurationDiscordElement.Attribute("GuildID"),
+    (ulong)ConfigurationDiscordElement.Attribute("LogChannelID"),
+    (string)StaticSettingsElement.Attribute("TaglistDatafilePath")
+   );
   }
 
   public async Task<Settings> LoadSettings(){
