@@ -214,6 +214,7 @@ namespace Tagaroo.Imgur{
    List<IComment> Result=new List<IComment>();
    ushort RequestCount=0;
    int page=0;
+   bool more;
    DateTimeOffset OldestCommentDateTime=DateTimeOffset.MinValue;
    do{
     if(RequestCount >= RequestsLimit && RequestsLimit > 0){
@@ -233,16 +234,13 @@ namespace Tagaroo.Imgur{
      throw;
     }
     Result.AddRange(UserComments);
+    more = UserComments.Count >= CommentsPerPage;
     if(UserComments.Count>0){
      OldestCommentDateTime = UserComments.Last().DateTime;
-    }else{
-     //No more Comments to retrieve
-     break;
     }
     ++RequestCount;
    //Keep pulling Comments pages until the oldest Comment pulled is from at or before SinceExclusive
-   //TODO Don't loop if reached end of Comments
-   }while(OldestCommentDateTime > SinceExclusive);
+   }while(more && OldestCommentDateTime > SinceExclusive);
    //Remove any Comments from the last Comments page that were from at or before SinceExclusive
    return (
     from C in Result
@@ -340,5 +338,6 @@ namespace Tagaroo.Imgur{
   protected const string MentionPrefix = "$";
   #endif
   protected readonly TimeSpan ExpiryPrecision = TimeSpan.FromDays(1);
+  protected const int CommentsPerPage = 50;
  }
 }

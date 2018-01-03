@@ -241,15 +241,16 @@ namespace Tagaroo{
   public async Task RunDebugImgUR(){
    Console.Write("Authentication ID > ");
    string ImgurAuthenticationID=Console.ReadLine();
+   string ImgurAuthenticationSecret="Q",OAuthAccessToken="Q";
    /*
    Console.Write("Authentication Secret > ");
-   string ImgurAuthenticationSecret=Console.ReadLine();
+   ImgurAuthenticationSecret=Console.ReadLine();
    Console.Write("OAuth Access Token > ");
-   string OAuthAccessToken=Console.ReadLine();
+   OAuthAccessToken=Console.ReadLine();
    */
    Imgur.ImgurInterfacer ClientImgur=new Imgur.ImgurInterfacerMain(
     new DataAccess.SettingsRepositoryMain(string.Empty),
-    ImgurAuthenticationID,"Q","Q",3,"Q","Q","bearer",DateTimeOffset.MaxValue,140
+    ImgurAuthenticationID,ImgurAuthenticationSecret,"Q",3,OAuthAccessToken,"Q","bearer",DateTimeOffset.MaxValue,140
    );
    IDictionary<string,IList<IComment>> Results=await ClientImgur.ReadCommentsSince(DateTimeOffset.UtcNow.AddMonths(-1),new HashSet<string>(){"TruFox"},10);
    foreach(IComment Result in Results.Values.First()){
@@ -394,8 +395,8 @@ namespace Tagaroo{
 
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   //new Debug().RunDebug().Wait();
-   new Debug().RunDebugDiscord();
+   new Debug().RunDebugImgUR().Wait();
+   //new Debug().RunDebugDiscord();
    Console.ReadKey(true);
   }
 
