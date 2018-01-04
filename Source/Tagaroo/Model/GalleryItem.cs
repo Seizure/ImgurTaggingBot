@@ -7,7 +7,8 @@ namespace Tagaroo.Model{
  public class GalleryItem{
   public string ID {get;}
   public string Title {get;}
-  public string Link {get;}
+  public string LinkPage {get;}
+  public string LinkImage {get;}
   public string AuthorUsername {get;}
   public string Description {get;}
   public bool NSFW {get;}
@@ -19,7 +20,8 @@ namespace Tagaroo.Model{
   public GalleryItem(
    string ID,
    string Title,
-   string Link,
+   string LinkPage,
+   string LinkImage,
    string AuthorUsername,
    string Description,
    bool NSFW,
@@ -31,7 +33,8 @@ namespace Tagaroo.Model{
    if(ID is null){throw new ArgumentNullException(nameof(ID));}
    this.ID=ID;
    this.Title=Title;
-   this.Link = Link ?? string.Empty;
+   this.LinkPage = LinkPage ?? string.Empty;
+   this.LinkImage = LinkImage ?? string.Empty;
    this.AuthorUsername=AuthorUsername;
    this.Description=Description;
    this.NSFW=NSFW;
@@ -55,6 +58,7 @@ namespace Tagaroo.Model{
    return new GalleryItem(
     ImgurGalleryItem.Id ?? ID,
     ImgurGalleryItem.Title,
+    string.Format(ImagePageURLFormat, ID),
     ImgurGalleryItem.Link,
     null,
     ImgurGalleryItem.Description,
@@ -66,11 +70,12 @@ namespace Tagaroo.Model{
    );
   }
 
-  static public GalleryItem FromImgurAlbum(string ID,IAlbum ImgurGalleryItem){
+  static public GalleryItem FromImgurAlbum(string ID,IAlbum ImgurGalleryItem,IImage AlbumCoverImage=null){
    return new GalleryItem(
     ImgurGalleryItem.Id ?? ID,
     ImgurGalleryItem.Title,
     ImgurGalleryItem.Link,
+    AlbumCoverImage?.Link,
     ImgurGalleryItem.AccountUrl,
     ImgurGalleryItem.Description,
     ImgurGalleryItem.Nsfw ?? NSFWIfNotSpecified,
@@ -81,6 +86,7 @@ namespace Tagaroo.Model{
    );
   }
 
+  protected const string ImagePageURLFormat = "https://imgur.com/{0}";
   public const bool NSFWIfNotSpecified = false;
  }
 }

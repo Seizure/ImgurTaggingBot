@@ -47,6 +47,10 @@ namespace Tagaroo.Discord{
    this.AuthenticationToken=AuthenticationToken;
    this.GuildID=GuildID;
    this.LogChannelID=LogChannelID;
+   /*
+   Many of these event handlers are not called in a synchronized manner,
+   and so may need to be properly synchronized to the current SynchronizationContext
+   */
    Client.Log+=onClientLogMessage;
    Client.MessageReceived+=onMessage;
    Client.Disconnected+=onDisconnected;
@@ -141,17 +145,18 @@ namespace Tagaroo.Discord{
      ToPost.Title.Length <= EmbedBuilder.MaxTitleLength ? ToPost.Title : ToPost.Title.Substring(0,EmbedBuilder.MaxTitleLength)
     );
    }
-   if(Uri.IsWellFormedUriString(ToPost.Link,UriKind.Absolute)){
+   if(Uri.IsWellFormedUriString(ToPost.LinkPage,UriKind.Absolute)){
     MessageEmbed = MessageEmbed
-    //TODO Gallery URL
-    .WithUrl(ToPost.Link)
-    //TODO Get image resource URL
-    .WithImageUrl(ToPost.Link);
+    .WithUrl(ToPost.LinkPage);
    }else{
     Log.Discord_.LogWarning(
      "The URI '{1}' for the Gallery item with ID '{0}' is not a valid absolute URI; unable to provide a working link to it in the Archive Channel",
-     ToPost.ID,ToPost.Link
+     ToPost.ID,ToPost.LinkPage
     );
+   }
+   if(Uri.IsWellFormedUriString(ToPost.LinkImage,UriKind.Absolute)){
+    MessageEmbed = MessageEmbed
+    .WithImageUrl(ToPost.LinkImage);
    }
    if(ToPost.hasKnownAuthor){
     MessageEmbed = MessageEmbed.WithAuthor(
@@ -167,8 +172,8 @@ namespace Tagaroo.Discord{
    await SendMessage(
     ChannelID,
     ToPost.hasTitle
-    ? string.Format("{1}\r\n{0}",ToPost.Link,ToPost.Title)
-    : string.Format("{0}",ToPost.Link),
+    ? string.Format("{1}\r\n{0}",ToPost.LinkPage,ToPost.Title)
+    : string.Format("{0}",ToPost.LinkPage),
     ToPost.NSFW,
     MessageEmbed.Build()
    );
@@ -221,6 +226,7 @@ namespace Tagaroo.Discord{
   }
 
   private Task onMessage(SocketMessage Message){
+   //TODO Check if calls to this method are properly synchronized
    if(State!=States.Connected){return Task.CompletedTask;}
    //TODO Handle any desirable messages from other Discord users
    return Task.CompletedTask;
@@ -247,6 +253,7 @@ namespace Tagaroo.Discord{
    return Task.CompletedTask;
   }
 
+  //Calls made by Discord.Net to this event handler method may not be synchronized to the current SynchronizationContext
   private Task onClientLogMessage(LogMessage MessageDetail){
    string Message;
    if(MessageDetail.Exception is null){

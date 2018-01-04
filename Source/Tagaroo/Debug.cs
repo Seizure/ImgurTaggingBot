@@ -272,6 +272,7 @@ namespace Tagaroo{
    RunOn.RunOnCurrentThread(async()=>{
     await Discord.Connect();
     await Task.Delay(1000);
+    /*
     await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
      "Q","Gallery Link","https://imgur.com/gallery/YYL69",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
     ));
@@ -284,6 +285,7 @@ namespace Tagaroo{
     await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
      "Q","Resource Link","https://i.imgur.com/2rzgptw.jpg",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
     ));
+    */
     await Task.Run(()=>{
      Console.ReadKey(true);
     });
@@ -393,12 +395,15 @@ namespace Tagaroo{
    Core.Run();
   }
 
+  /*
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
    //new Debug().RunDebugImgUR().Wait();
-   new Debug().RunCore();
+   //new Debug().RunCore();
+   new Program().Main();
    Console.ReadKey(true);
   }
+  */
 
   /*
   private static Assembly ResolveAssembly(object Origin,ResolveEventArgs Event){

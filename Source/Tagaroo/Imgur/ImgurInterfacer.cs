@@ -276,9 +276,20 @@ namespace Tagaroo.Imgur{
       await APIImage.GetImageAsync(ID)
      );
     }else{
+     IAlbum AlbumModel = await APIAlbum.GetAlbumAsync(ID);
+     IImage AlbumCoverImage = (
+      from I in AlbumModel.Images
+      where string.Equals(I.Id, AlbumModel.Cover, StringComparison.Ordinal)
+      select I
+     ).FirstOrDefault();
+     if(AlbumCoverImage is null){
+      Log.Imgur_.LogWarning(
+       "The Cover Image with ID '{1}' for the Album with ID '{0}' could not be found",
+       AlbumModel.Id,AlbumModel.Cover
+      );
+     }
      return GalleryItem.FromImgurAlbum(
-      ID,
-      await APIAlbum.GetAlbumAsync(ID)
+      ID, AlbumModel, AlbumCoverImage
      );
     }
    }catch(ImgurException){

@@ -77,6 +77,10 @@ namespace Tagaroo{
    return 0;
   }
 
+  static int Main(string[] Parameters){
+   return new Program().Main();
+  }
+
   const string SettingsFilePath=@"Settings.xml";
   public const int Return_ApplicationStartError=-1;
   public const int Return_ConfigurationLoadError=-2;

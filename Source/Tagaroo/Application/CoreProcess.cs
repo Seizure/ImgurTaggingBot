@@ -79,8 +79,8 @@ namespace Tagaroo.Application{
    while(run){
     await ProcessLatestComments();
     try{
-     await Task.Delay(6000);
-     this.Shutdown();
+     //await Task.Delay(6000);
+     //this.Shutdown();
      await Task.Delay(
       CurrentSettings.PullCommentsFrequency,
       ShutdownSignal.Token
