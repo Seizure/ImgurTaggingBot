@@ -342,8 +342,8 @@ namespace Tagaroo{
    Model.CommentsProcessedUpToInclusive=DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(1));
    await Repository.SaveWritableSettings(Model);
    */
-   DataAccess.SettingsRepository RepositorySettings=new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings.xml");
-   DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true);
+   DataAccess.SettingsRepository RepositorySettings=new DataAccess.SettingsRepositoryMain(@"Settings.xml");
+   DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"Taglists.xml",true);
    Settings ModelSettings=await RepositorySettings.LoadSettings();
    var ModelTaglists=await RepositoryTaglist.LoadAll();
    ApplicationConfiguration ModelConfiguration=await RepositorySettings.LoadConfiguration();
@@ -398,9 +398,9 @@ namespace Tagaroo{
   /*
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   //new Debug().RunDebugImgUR().Wait();
+   new Debug().RunDebug().Wait();
    //new Debug().RunCore();
-   new Program().Main();
+   //new Program().Main();
    Console.ReadKey(true);
   }
   */

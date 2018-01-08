@@ -134,7 +134,7 @@ namespace Tagaroo.Imgur{
   );
   
   /*
-  @Tagaroo [tag] <taglist-name> [<rating>] { <category> <category> ... }
+  @Tagaroo [tag] <taglist-name> [<rating>] [ <category> <category> ... ]
   Whitespace-delimited; terminated by a new line or other unrecognized character.
   Optional elements should not be ommitted if they conflict with subsequent elements,
   such as a Taglist with the name "tag", or a Category "S".

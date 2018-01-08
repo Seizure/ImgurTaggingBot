@@ -49,9 +49,7 @@ namespace Tagaroo.Imgur{
   );
  }
 
- //TODO Manual OAuth Token refresh
- //TODO User ID lookup
- //TODO Query Rate remaining
+ //TODO Make contact with Imgur during startup; acquire rate limit
  public class ImgurInterfacerMain : ImgurInterfacer{
   private readonly IApiClient Client,ClientAuthenticated;
   private readonly IOAuth2Endpoint APIOAuth;

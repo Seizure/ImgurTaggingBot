@@ -10,18 +10,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="DataAccess\Settings.xml" />
-    <None Remove="DataAccess\Settings.xsd" />
-    <None Remove="DataAccess\Taglists.xml" />
-    <None Remove="DataAccess\Taglists.xsd" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="DataAccess\Settings.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Settings.xml</Link>
+      <Visible>false</Visible>
     </Content>
     <Content Include="DataAccess\Taglists.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Taglists.xml</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="DataAccess\Settings.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Settings.xsd</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="DataAccess\Taglists.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Taglists.xsd</Link>
+      <Visible>false</Visible>
     </Content>
   </ItemGroup>
 
@@ -41,8 +48,5 @@
       <HintPath>System</HintPath>
     </Reference>
   </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-  </Target>
 
 </Project>

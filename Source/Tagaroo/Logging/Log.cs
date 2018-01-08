@@ -5,6 +5,7 @@ using System.Diagnostics;
 
 namespace Tagaroo.Logging{
  internal class Log{
+  //TODO Imgur remaining API bandwidth log
   public Logger Bootstrap{get;}
   public Logger Application{get;}
   public Logger Imgur{get;}

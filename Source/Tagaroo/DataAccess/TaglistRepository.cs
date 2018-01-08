@@ -13,6 +13,8 @@ using Tagaroo.Model;
 
 namespace Tagaroo.DataAccess{
  
+ //TODO Check Taglists.xml file exists on startup
+ //TODO Check Taglists' Channels exist, warn on non-NSFW E-Rated Channels
  public interface TaglistRepository{
   void Initialize();
 

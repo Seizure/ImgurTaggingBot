@@ -10,6 +10,7 @@ using System.Xml.Schema;
 using System.IO;
 using System.Reflection;
 
+//TODO Version XML namespaces
 namespace Tagaroo.DataAccess{
  internal class XMLFileRepository{
   private readonly string DataFilePath;

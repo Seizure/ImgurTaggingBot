@@ -1,0 +1,198 @@
+﻿This document describes how to set up and start running the application, and details some maintenance issues. It is intended for administrative users who are to be in charge of the application's executable, rather than those who interact with the running application through its various interfaces, such as Discord and Imgur; see the regular Documentation file for those cases, which administrators should also read.
+This document assumes familiarity with XML.
+
+
+
+Prerequisites
+
+The application runs on the .NET Core 2.0 platform. .NET Core 2.0 is supported by Windows 7 and later, as well as some non-Microsoft operating systems; full details of operating systems supporting the .NET Core 2.0 platform can be found at <//github.com./dotnet/core/blob/master/release-notes/2.0/2.0-supported-os.md>.
+By default, the build process will output “Tagaroo.dll” as the built application. To run it, the .NET Core 2.0 runtime will need to be installed on the target machine if it is not already present. Note that the .NET Core runtime must be version 2 or later, and not version 1.1. .NET Core applications are typically run with the command “dotnet”, which should be on the system path if installed; use “dotnet --version” to check that the version is 2 or later.
+
+
+
+Application files
+
+The application is made up of the following files, which should all be in the same directory.
+
+Tagaroo.dll:
+The application executable, runnable with the command “dotnet”.
+
+Settings.xml:
+XML application configuration and settings file. This file will be read at startup and also at relevant points while the application is running. See the Settings section for further details. Be careful when editing this file while the application is running, as the application will write updated Settings to this file periodically; it is recommended that Settings be updated through the application rather than by modifying the file directly for this reason. Depending on how the file is opened, keeping the file open in an editor may cause errors when the application tries to update the Settings, or the editor may overwrite changes that the application has made since the file was opened in it, both of which may lead to problems.
+
+Other important files that do not need to be in the same directory as the application's executable are as follows…
+
+Taglists.xml:
+XML file where details of all of the application's Taglists are stored, including all users registered to a Taglist, and their preferences. Generally this file resides in the same directory as the executable, but its location can be configured in Settings. As for the Settings XML file, be careful when editing the file while the application is running, as the application will write updates to it; changes to Taglists should be made through the application rather than by editing the file manually.
+
+Settings.xsd:
+XML Schema for the Settings XML file, including documentation. This is provided to aid users in construction and editing of the Settings XML file. The Settings XML file must be valid with respect to this schema.
+
+Taglists.xsd:
+XML Schema for the Taglists XML file, including documentation. This is provided to aid users in construction and editing of the Taglists XML file. The Taglists XML file must be valid with respect to this schema.
+
+*.dll:
+The application uses a number of libraries, present as DLL files. These must be kept in the same directory as the application.
+
+
+
+Before Running the Application
+
+Needed API Keys
+The application accesses the basic Imgur API, and the Discord API, which are accessed over the web. In order to do this, it needs an API key from each. The API key is used to authenticate the application to the API, so that the API can identify the application that is calling it.
+Each Discord API key is associated with a Discord bot user, which will be created along with the key. This bot user must be invited to the Discord Guild (formerly Discord Server) that the application is to interact with.
+The application also requires an account on Imgur, which it will use to post comments. In order to do this, the Imgur API also requires a second API key, known as an OAuth Token, which it will use like a password to access the account.
+Before proceeding, ensure the following tasks have been completed—
+- Discord API key acquired along with Discord bot user
+- Discord bot user invited to desired Guild
+- Imgur API key acquired
+- Imgur user account created for the application (an existing Imgur account may be used, but bear in mind the application will perform actions on Imgur as that user)
+- Imgur OAuth Token acquired for the Imgur user account
+For more information on API keys and how to acquire them, see the Acquiring API Keys section.
+
+Configuration
+Before the application can be run, it needs to be configured. This is done by editing the file <Settings.xml>, the schema for which is in the file <Settings.xsd>. This file contains a Configuration element with details that must be filled in.
+- Some of these details are security sensitive. -
+For instance, such details can be used to log in to Imgur and Discord accounts. As such, they must be kept safe.
+It is recommended that certain configuration information also be stored elsewhere outside of the Settings file, in case the Settings file is lost, which is unlikely but possible.
+
+Imgur @ ClientID:
+The “Client ID” component of the Imgur API key, which will be used to access the Imgur API. See the Acquiring API Keys section for further details about API keys and how to acquire them. This information is somewhat security sensitive, and should ideally be kept safe.
+
+Imgur @ ClientSecret:
+The “Client Secret” component of the Imgur API key. As for the Imgur “Client ID”, this should ideally be kept safe.
+
+Imgur / OAuthToken:
+This element contains the components of the OAuth Token that is used by the application to log in to its dedicated Imgur account. See the Acquiring API Keys section for more information.
+
+Imgur / OAuthToken @ Username:
+The “account_username” component of the OAuth Token. This should be the username of the Imgur user account that the OAuth Token grants access to.
+
+Imgur / OAuthToken @ UserID:
+The “account_id” component of the OAuth Token.
+
+Imgur / OAuthToken @ AccessToken:
+The “access_token” component of the OAuth Token. This information is security sensitive — it essentially functions as the password to the account. Anyone with this information can effectively log in to the Imgur account.
+
+Imgur / OAuthToken @ RefreshToken:
+The “refresh_token” component of the OAuth Token. This information is security sensitive; anyone with this information can effectively log in to the Imgur account.
+
+Imgur / OAuthToken @ TokenType:
+The “token_type” component of the OAuth Token. This is typically “bearer”.
+
+Imgur / OAuthToken @ ExpiresAt:
+The point in time at which the Access Token expires. This information is included with the rest of the OAuth Token's details. If it is uncertain, an arbitrary value in the past can be specified, in which case the application will refresh the Access Token upon first logging in to the Imgur account.
+
+Discord @ Token:
+The “Token” component of the Discord API key, which will be used to access the Discord API. Note this is not the same as the “Client Secret” component nor the “Client ID” component of the Discord API key. See the Acquiring API Keys section for further details about API keys and how to acquire them.
+
+Discord @ GuildID:
+The unique integer ID of the Discord Guild (formerly known as a Discord Server) to interact with. A single instance of the application is only capable of interacting with one Discord Guild. If the ID is not known, an invalid value such as “0” can be specified, and the application will log a list of Guilds that are available to it. The application's assigned Discord User must have been invited to the Guild for the Guild to be available to it.
+
+Discord @ LogChannelID:
+The unique integer ID of the Discord Channel to which any log messages are posted. This Channel should be kept secure and accessible to trusted users only, as logging output can contain sensitive information. If the ID of the desired Text Channel is not known, an invalid value such as “0” can be specified, and the application will log a list of Text Channels in the Guild. Note that the ID must be for a Text-type Channel, and not a Voice Channel, private DM Channel, e.t.c..
+If configured to send logging output to Discord, the application will attempt to send it to this Channel. If it is unable to, it will fall back to the application process' STDOUT.
+
+DynamicSettings @ CommentsProcessedUpToInclusive:
+This setting is located outside the Configuration element. When first configuring the application, it should be set to the point in time just before the first Imgur Comment that the application should process. If there are no Comments yet that the application should process, it can be set to today's date, at midnight.
+The application uses this value to limit how far back it checks for Comments to process. This is to avoid reading a complete history of Comments from a user, which would be both resource-intensive and wasteful of Imgur's API bandwidth. Any Comments that were posted at or before this point in time will not be considered by the application.
+
+DynamicSettings / ImgurCommenters / …:
+Finally, there must be at least one Commenter from which to pull Imgur Comments from. The application will periodically poll Imgur for new Comments from each of the users specified here, and check their Comments for the presence of any commands to process.
+Each Commenter is specified by a Commenter sub-element, with a Username attribute specifying their Imgur username.
+
+When finished, be sure the Settings XML file validates against its schema, <Settings.xsd>.
+
+
+
+Running the Application
+
+The application can be run from the command line. Navigate to the directory containing the application, and execute the following command:
+
+dotnet Tagaroo.dll
+
+The application does not take any parameters from the command line.
+
+Startup Process
+To begin with, the application will output log messages to the process' STDOUT, which is typically the command window from which the application was invoked. Specifically, they will be logged to the “Bootstrap” logger; if there are problems during startup, the verbosity level of this logger can be increased for additional logging output.
+One of the first things the application will do is attempt to load <Settings.xml>, and apply the values in the Configuration and StaticSettings elements. This includes logging settings, which is why there will always be logging output when the application starts, before it reaches this point.
+Once the configuration has been applied, the application will attempt setup. Setup primarily involves establishing a connection to Discord, and locating the Guild and relevant Guild Channels. It is at this point that the application will first attempt a network connection. For the application to have a Discord Guild (formerly known as a Discord Server) available to it, the application's associated Discord bot user must have been invited to that Guild, which will be the responsibility of the Guild administrators.
+If all this is successful, the application will begin.
+Note that, unlike Discord, the application does not maintain a persistent connection to Imgur; it will only connect to Imgur briefly in order to make API calls.
+
+
+
+Maintaining Taglists
+
+The Taglists that the application uses are stored in the XML file <Taglists.xml>. Typically this file is located in the same directory as the application, but it can be moved elsewhere, so long as the Setting “StaticSettings @ TaglistDatafilePath” in <Settings.xml> points to its location.
+It is recommended that this file be backed up whenever it is materially changed.
+
+Creating a New Taglist
+To make a new Taglist for the application to manage, simply add a new Taglist element. The Name attribute is the unique identifying name for the Taglist, which must be specified in Tag commands for the Taglist.
+Each Taglist must also be associated with three Discord Channels in the application's Guild; it is in these Channels that the application will archive the details of Tagged items. One Channel is required for each of the three Ratings; Tagged items will be archived to one of the three Channels depending on their Tagged Rating. The Channels are specified by their unique numeric ID; the application will log a list of Channels available to it during startup. The specified Channels do not have to be different.
+No sub-elements need to be added to the new Taglist element.
+
+
+
+Other Settings
+
+There are a few other Settings in the Settings XML file worth mentioning.
+
+StaticSettings @ ImgurMaximumCommentLengthUTF16CodeUnits:
+Comments on Imgur are limited in length. As such, if the application needs to make a Comment longer than this length, it must split the Comment. At present, this maximum is 140; if Imgur changes this value, it can be changed here.
+The units of the value seem to be UTF-16 Code Units, which in most cases is equivalent to a Unicode Character.
+
+
+
+Acquiring API Keys
+
+The application interacts with Imgur and Discord through an API for each. In order to access each API, it needs an API key for each API. When one of the APIs is called, the API key for that API is sent alongside the call. The API key is used by the API to determine which registered application has called it.
+In order to acquire an API key for one of the APIs, an application must be registered with that API. The result of that registration is an API key.
+
+Discord
+To get an API key for the Discord API, an “App” must be created. They can be created at the following URL, after logging in to the Discord website — <//discordapp.com/developers/applications/me>. Enter a name for the App; this name will become the Discord bot's visible username. Ignore the section concerning URI redirects and OAuth. Then create it. Once successfully created, “Create a Bot User” for it.
+Upon success, the Bot section should update with the new bot's full username, and a “Token” — this “Token” is the Discord API key; the “Client ID” and “Client Secret” are not needed. The application does not require OAuth2 from Discord. It is also not recommended to make the bot Public, as a single instance of the application can only interact with one Discord Guild (also previously known as a Discord Server). Take note of the Token and store it in a safe place.
+
+Inviting Discord Bots to Guilds
+The created bot must also be invited to the desired Guild, otherwise the application will not be able to “see” the Guild and connect to it. In order to do this, you must have MANAGE_SERVER permissions for the desired Guild.
+First, retrieve the “Client ID” of the Discord App created earlier, which will be on the App's page. Navigate to the following URL, logging in to the Discord website first if necessary, replacing <Client-ID> with the Client ID—
+
+https://discordapp.com/oauth2/authorize?client_id=<Client-ID>&scope=bot
+
+Select the Guild to invite the bot to from the drop down list. If the Guild does not appear in the list, ensure you have MANAGE_SERVER permissions for that Guild.
+Upon success, the bot should appear as an offline user in the Guild.
+
+Imgur
+To get an API key for the Imgur basic API, the application must be registered with the Imgur API. Log in to Imgur (you may log in to the actual Imgur account the application will use rather than your own account if desired, in which case everyone with access to that account will have access to the Imgur API key), and go to <https://api.imgur.com/oauth2/addclient>. Specify a name for the application. Before continuing, make sure “Authorization Type” is set to “OAuth 2 authorization with a callback URL”, and specify “http://127.0.0.1/” as the “Authorization callback URL”; these settings will be required when later acquiring an Imgur OAuth Token. Any warning stating the callback URL being insecure can be safely ignored, since the OAuth Token will be generated manually; it would be a concern for the usual, automatic generation.
+Upon success, you should receive a “Client ID” and a “Client Secret”. These together form the API key; note them down and store them in a safe place. They can be viewed again in the “Applications” tab of your Imgur account's Settings, where the registered application should have appeared.
+
+Imgur OAuth Token
+An OAuth Token is required to allow the application to log in to Imgur as a particular user, and perform actions as that user. The application needs an Imgur user account so that it can reply to Comments on Imgur, which it will do as that user. An OAuth Token grants API access to a particular user account; it can be thought of as an alternative password for that account. As such, it is very important that the OAuth Token be kept safe; anyone with access to the OAuth Token effectively has access to the associated Imgur user account.
+Generating an OAuth Token for a particular Imgur user account is a nontrivial process. It is also a process that must be repeated in the event that an established OAuth Token is lost. The complexity of the process stems from the fact that it is geared towards web applications, which run on an accessible web server and respond to web requests. This application is not a web application; as such, the process must be completed manually.
+The generated OAuth Token should be for the Imgur user account that was created for the application. It is possible to use an existing Imgur account, but bear in mind that the application will perform actions, such as posting comments, as that user.
+
+Generating an OAuth Token for an Imgur User Account
+To perform this process, have the following details ready — the Client ID part of the Imgur API key. Also ensure that the “Redirect” URI of the registered Imgur application, visible on the “Applications” tab of the registering Imgur user's Settings, is set to “http://127.0.0.1/”.
+First, log in normally to the Imgur user account to create an OAuth Token for. Next navigate to the following URL, replacing <Client-ID> with the Client ID component of the Imgur API key—
+
+https://api.imgur.com/oauth2/authorize/?client_id=<Client-ID>&response_type=token
+
+This will display a page prompting to grant the registered Imgur application access to the currently logged in Imgur user. Once you have pressed the button allowing access, make a note of the current date and time.
+Upon allowing access, your web browser will likely display a standard error page. However, the URL in the address bar should have changed — copy this URL; the fragment of the URL will contain the OAuth Token.
+The URL should begin with “http://127.0.0.1/”, followed by the fragment separator “#”. After this is a series of key-value pairs, looking something like the following—
+
+access_token=0123456789abcdef0123456789abcdef01234567&expires_in=31536000&token_type=bearer&refresh_token=0123456789abcdef0123456789abcdef01234567&account_username=piccard&account_id=99999999
+
+The key-value pairs in this string are separated by the character “&”, and the keys and values are separated by the character “=”. Breaking this down, we are presented with the following information—
+
+Key              Value
+access_token     0123456789abcdef0123456789abcdef01234567
+expires_in       31536000
+token_type       bearer
+refresh_token    abcdef0123456789abcdef0123456789abcdef01
+account_username piccard
+account_id       99999999
+
+These values, collectively, are the OAuth Token.
+Store these values in a safe place, particularly the “access_token” and “refresh_token” values — these values are essentially passwords to the associated Imgur user account; either of them can be used to effectively log in to the account.
+The “expires_in” value specifies the length of time until the OAuth Token expires, and must be refreshed, in seconds. The application will attempt to handle such refreshing automatically, upon which the new OAuth Token that it saves should be backed up. Use this value to calculate the expiry date–time based on the date–time noted down earlier. The expiry date–time given to the application may be earlier than this point, but must not be later.

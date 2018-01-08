@@ -188,6 +188,7 @@ namespace Tagaroo.Discord{
      ChannelID,Guild.Id,Guild.Name
     ));
    }
+   //TODO Remove
    if(NSFW && !Channel.IsNsfw){
     throw new DiscordException(string.Format(
      "The message to send was marked as NSFW, but the Channel it was being sent to, '{0}', is not NSFW",
@@ -228,7 +229,16 @@ namespace Tagaroo.Discord{
   private Task onMessage(SocketMessage Message){
    //TODO Check if calls to this method are properly synchronized
    if(State!=States.Connected){return Task.CompletedTask;}
-   //TODO Handle any desirable messages from other Discord users
+   /*
+   TODO Discord Commands:
+   Shutdown
+   Reload Settings
+   Manual OAuth Token refresh
+   User ID lookup
+   Query Rate remaining
+   Configure Settings
+   Query OAuth Token expiry, also log message on imminent expiry
+   */
    return Task.CompletedTask;
   }
 

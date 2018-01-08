@@ -1,0 +1,144 @@
+﻿This document details the day-to-day running of the application. It is intended for those who are interacting with the application via its various interfaces, Imgur and Discord, and those generally charged with overseeing it. Application administrators should also read this document.
+
+
+
+Imgur Commands
+
+All Imgur Comment commands are of the following form, and can appear anywhere in an Imgur Comment—
+
+@Tagaroo <command> [<command-parameter> <command-parameter> …]
+
+Where <command> is the command to execute, followed by zero or more <command-parameter>, which are parameters to the command. Each part is separated by whitespace (excluding line-breaking characters), such as one or more space characters. Except where otherwise stated, commands are case insensitive. The command is terminated by the first unrecognized character, or the end of the Comment.
+
+
+Tag command:
+
+@Tagaroo [tag] <taglist-name> [<rating>] [ <category> <category> …]
+<taglist-name>        sequence of A-Z, a-z, 0-9, '-', '_'
+<rating>              S, s, Q, q, E, e
+<category>            sequence of A-Z, a-z, 0-9, '-', '_'
+
+Since this is the most common command, the name of the command, “tag”, is optional. <taglist-name> must be the unique identifying name of the Taglist with which to Tag the item. <rating> is optional and specifies the Rating with which to Tag the item, default Explicit, and must be one of “S”/”s” for Safe, “Q”/”q” for Questionable, and “E”/”e” for Explicit. After that, there can be zero or more of <category>, whitespace-separated, each specifying the name of a Category with which to associate the Tagged item; users in the Taglist who have that Category in their Category Blacklist will not be notified of the Tagged item.
+<taglist-name> and <category> are case-sensitive, and permissible characters are A-Z, a-z, 0-9, “-”, and “_”. Note any Taglist name that contains characters outside of these, such as spaces, will not be Tag-able. The command can be terminated with any unrecognized character, such as a period “.”, a comma “,”, a semi-colon “;”, a new line, or simply the end of the Comment.
+Some examples follow.
+
+@Tagaroo tag TheTaglist
+Tags the item with the Taglist with the name “TheTaglist”, with the default Rating of Explicit, with no Categories.
+
+@Tagaroo TheTaglist
+The same as the above.
+
+@tagarOO TheTaglist
+The same as the above.
+
+@Tagaroo Thetaglist
+Tags the item with a different Taglist with the name “Thetaglist”.
+
+@Tagaroo TheTaglist S
+Tags the item with the Taglist with the name “TheTaglist”, with a Rating of Safe, with no Categories.
+
+@Tagaroo TheTaglist s
+The same as the above.
+
+@Tagaroo TheTaglist TheFirstCategory
+Tags the item with the default Rating of Explicit, with a single Category of the name “TheFirstCategory”.
+
+@Tagaroo TheTaglist TheFirstcategory
+Tags the item with a different single Category of the name “TheFirstcategory”.
+
+@Tagaroo TheTaglist TheFirstCategory TheSecondCategory
+Tags the item with two Categories, one of the name “TheFirstCategory”, the other of the name “TheSecondCategory”.
+
+@Tagaroo tag tag
+Tags the item with the Taglist with the name “tag”, with the default Rating of Explicit, and no Categories.
+
+@Tagaroo tag
+The same as the above.
+
+@Tagaroo S Q E
+Tags the item with the Taglist with the name “S”, with the Rating “Q”, and with a single Category of the name “E”.
+
+@Tagaroo tag S Q E
+The same as the above.
+
+@Tagaroo TheTaglist S-
+Tags the item with the Taglist with the name “TheTaglist”, with the default Rating of Explicit, and with a single Category of the name “S-”.
+
+
+
+Important Imgur Maintenance Issues
+
+Imgur API Bandwidth
+The application uses the basic Imgur API to interact with Imgur. The Imgur API will only allow a certain amount of API calls to it over a certain period of time. If this limit is reached a few times, the application will be blocked from accessing Imgur. As such, it is important to keep watch on the application's remaining bandwidth. At present, applications accessing the basic Imgur API are allotted a certain amount of API calls per day; at the end of each day, this limit is reset.
+The application calls the Imgur API when—
+- Pulling Comments to check for new commands
+- Processing a Tagaroo command, to acquire the details of the image being tagged
+- @Mentioning interested users in Replies to a Tagaroo Comment
+- Refreshing the associated Imgur user account's OAuth Token when it expires
+- Checking the remaining API bandwidth (somewhat ironically)
+Imgur refers to this bandwidth restriction as “Rate Limits”; the current Rate Limit scheme in force can be checked at <//apidocs.imgur.com>.
+
+Reducing API Bandwidth Usage
+To reduce the amount of API bandwidth the application consumes, the most effective method is probably to reduce the polling frequency to Imgur for new Comments. This process takes up at least 1 API call per Commenter User; for example, if there are 3 users that the application keeps watch on for Comments to process, at least 3 API calls will be consumed whenever it polls for new Comments. More API calls will be required if there have been a lot of Comments since the last time the application polled for them; one API call is required for every 50 new Comments, and they are retrieved newest Comment first.
+As an example, consider a setup with 4 Commenters being polled for new Comments every 30 seconds. A poll for new Comments from 4 Commenters involves a minimum of 4 API calls per poll. The amount of 30-second-interval polls that will occur over a 24 hour period is 2,880, for a total of 11,520 API calls per day. At time of writing, the current API bandwidth is specified as a total of 12,500 calls per day. As can be seen, this setup comes uncomfortably close to breaching the limit.
+Additionally, as a safety measure, the application places a cap on the number of API calls it makes per-user when polling for new Comments. If this cap is reached, a warning is logged, and no further Comments are retrieved from that user for that poll. This cap can be configured via the PullCommentsPerUserRequestThreshhold Setting.
+
+OAuth Token Expiry
+The application uses what is known as an OAuth Token as the password to access its user account on Imgur. This OAuth Token expires after some period of time. The application will attempt to automatically renew this token when close to its expiry. If successful, it will log a message notifying that the OAuth Token has been updated. The new token will be visible in the application's <Settings.xml> file.
+-It is strongly recommended that the new OAuth Token be backed up.-
+An administrator will need to be notified to do this. If the new OAuth Token is lost, which is unlikely but possible, a fresh OAuth Token will have to be created manually, which is not a simple process.
+
+
+
+The Main Process of the Application
+
+The main activity that the application performs is to pull Comments made by particular users from images on Imgur, scan those Comments for Tag commands, and then Mention the users associated with the Taglist specified in the command in a reply to the Comment. It will also archive the tagged image to a particular Channel in the Discord Guild (also formerly known as a Discord Server), by posting its details. This section goes through the process in more depth.
+
+Polling for Comments
+There is no way for the application to immediately detect when a user posts a new Comment to Imgur. Because of this, the application must instead “poll” Imgur for the latest Comments at regular intervals, to detect if there are any new ones. The value of this interval can be specified with the PullCommentsFrequency Setting; be sure to understand the implications if you intend to use a short interval for frequent polls — see the section regarding Imgur's API Bandwidth.
+The administrator of the application can specify the Imgur users from which to pull Comments from to process, by adding “Commenter” elements to the “DynamicSettings / ImgurCommenters” element in <Settings.xml>.
+
+Identifying New Comments
+Upon a poll for Comments, the application will retrieve a list of Comments for each Imgur user to pull Comments from. It must then determine which of those Comments are “new”; that it hasn't seen or processed before. It does this using two methods.
+The first method is to only retrieve Comments from after a particular date–time. This date–time is stored in the Setting CommentsProcessedUpToInclusive. After processing all the Comments from the poll, this value is updated to reflect the date–time of the most recent Comment. In the event that a problem occurred and a particular Comment could not be processed, this value can be “rewound” to a value just before the posted date–time of the problematic Comment, in order to process it again.
+The second method is to check for Replies to the Comment. Upon successfully processing a Comment, the application will Reply to it. Any Comments which the application has Replied to are deemed “not new”.
+
+Scanning for Commands
+Upon identifying any “new” Comments, the application will scan the contents of those Comments for commands. All commands begin with “@Tagaroo”, and can appear anywhere within the Comment. See the Imgur Commands section for more details.
+
+Identifying Interested Users from a Tag Command
+Upon encountering a Tag command, the application will extract the command's Taglist name, Rating, and collection of Categories from the command. It will then get the details of the Tagged image from Imgur, and also load the details of the Taglist with the specified name. Each Taglist managed by the application has a unique identifying name. The Taglist details include a collection of Imgur users who have registered an interest in the Taglist, and their preferences.
+The application then calculates which users interested in the Taglist would be interested in the Tagged item. It does this using the item's Rating, and the item's Categories, both specified in the Tag command. Only users who have indicated they are interested in the Rating equal to the item's Rating will be notified. On top of this, only users who have not blacklisted any of the item's Categories will be notified.
+
+Mentioning Users
+Once interested Imgur users have been identified, the application proceeds to Mention them, by Replying to the Comment containing the Tag command. Imgur Comments are limited in length, so the application will split out all the Mentions it has to make into multiple Replies.
+
+Archiving Tagged Items
+The application will also archive the Tagged item to the relevant Discord Channel, by posting an Embed of the image there, with details. For Imgur Albums, the embedded image will be the Album's Cover Image.
+Each Tagged image is sent to one of the three Channels associated with the Taglist it was Tagged with. Each Taglist is associated with three Channels, one for each of the three possible Ratings, the Channels being specified when the Taglist is created. The Rating the item was Tagged with will determine into which of the three Channels it will be archived.
+
+Finishing
+Once all Comments from the poll have been looked at, the application saves the date–time of the most recent Comment it encountered, in the Setting CommentsProcessedUpToInclusive. It then pauses for the length of time specified by the PullCommentsFrequency Setting, before repeating the process.
+
+
+
+Logging
+
+The application produces logging output through several loggers. Each logger can have its verbosity level configured by an administrator in <Settings.xml>, at “Configuration / Logging”. The recommended logging level for most loggers is “Information”; only messages deserving some notable level of attention are logged at this level by the application.
+If the Setting “Logging @ LogToDiscord” is true, the application will attempt to send logging output to Discord, falling back to the application process' STDOUT if it fails. During application startup, this will obviously always fail until the application establishes a connection to Discord. The process' STDOUT is typically the command window from which the application was started.
+The various loggers logged to are listed below. Each logger has an associated LoggerLogLevel attribute in the Logging element, specifying its logging verbosity level.
+
+Bootstrap:
+Messages concerning application startup and shutdown are sent to this logger.
+
+Application:
+Messages concerning the general running of the application.
+
+Imgur:
+Messages concerning the application's interaction with Imgur. This includes Tagaroo command parse errors, and notifications of the OAuth Token being updated.
+
+Discord:
+Messages concerning the application's interaction with Discord.
+
+DiscordLibrary:
+This is the logging output produced by the library Discord.Net, which the application depends upon. The nature of these log messages are dependent on the library, and not the application. As such, for normal use, the recommended verbosity level is Error rather than Information.
