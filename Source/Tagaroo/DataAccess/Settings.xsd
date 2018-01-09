@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema 
- targetNamespace="urn:xmlns:tagaroo:Settings"
+ targetNamespace="urn:xmlns:tagaroo:Settings:v1-snapshot"
  elementFormDefault="qualified" attributeFormDefault="unqualified"
- xmlns="urn:xmlns:tagaroo:Settings" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Settings"
+ xmlns="urn:xmlns:tagaroo:Settings:v1-snapshot" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Settings:v1-snapshot"
 >
  
  <xs:element name="Settings"><xs:complexType><xs:sequence>
@@ -54,7 +54,7 @@
      such as posting Comments.
     </xs:documentation></xs:annotation>
     <xs:complexType>
-     <xs:attribute name="Username" type="xs:string" use="required">
+     <xs:attribute name="Username" type="nonEmptyString" use="required">
       <xs:annotation><xs:documentation>
        Username of the Imgur account for which this OAuth Token is for.
       </xs:documentation></xs:annotation>
@@ -66,14 +66,14 @@
        it is a unique integer ID.
       </xs:documentation></xs:annotation>
      </xs:attribute>
-     <xs:attribute name="AccessToken" type="xs:string" use="required">
+     <xs:attribute name="AccessToken" type="nonEmptyString" use="required">
       <xs:annotation><xs:documentation>
        -Keep this value secret and secure-;
        this value essentially serves as the password to the Imgur user account;
        anyone with access to it can effectively log on as that user.
       </xs:documentation></xs:annotation>
      </xs:attribute>
-     <xs:attribute name="RefreshToken" type="xs:string" use="required">
+     <xs:attribute name="RefreshToken" type="nonEmptyString" use="required">
       <xs:annotation><xs:documentation>
        -Keep this value secret and secure-.
        This value is used to generate a new Access Token (along with a new Refresh Token)
@@ -99,7 +99,7 @@
     </xs:complexType>
    </xs:element>
   </xs:sequence>
-  <xs:attribute name="ClientID" type="xs:string" use="required">
+  <xs:attribute name="ClientID" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     The "Client ID" part of the Imgur API key,
     which the application will use to access the Imgur API.
@@ -107,7 +107,7 @@
     and non-guest access alongside an OAuth Token.
    </xs:documentation></xs:annotation>
   </xs:attribute>
-  <xs:attribute name="ClientSecret" type="xs:string" use="required">
+  <xs:attribute name="ClientSecret" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     The "Client Secret" part of the Imgur API key,
     which the application will use to access the Imgur API.
@@ -116,7 +116,7 @@
  </xs:complexType>
  
  <xs:complexType name="ConfigurationDiscord">
-  <xs:attribute name="Token" type="xs:string" use="required">
+  <xs:attribute name="Token" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     The Discord API key,
     which the application will use to access the Discord API.
@@ -189,7 +189,7 @@
     (Characters outside the BMP are unusual).
    </xs:documentation></xs:annotation>
   </xs:attribute>
-  <xs:attribute name="TaglistDatafilePath" type="xs:string" use="required">
+  <xs:attribute name="TaglistDatafilePath" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     File path to the XML data file containing the Taglists.
    </xs:documentation></xs:annotation>
@@ -205,7 +205,7 @@
     </xs:documentation></xs:annotation>
     <xs:complexType><xs:sequence>
      <xs:element name="Commenter" minOccurs="1" maxOccurs="unbounded"><xs:complexType>
-      <xs:attribute name="Username" type="xs:string" use="required"/>
+      <xs:attribute name="Username" type="nonEmptyString" use="required"/>
      </xs:complexType></xs:element>
     </xs:sequence></xs:complexType>
    </xs:element>
@@ -256,6 +256,10 @@
  
  <xs:simpleType name="positiveDuration"><xs:restriction base="xs:duration">
   <xs:minExclusive value="PT0S"/>
+ </xs:restriction></xs:simpleType>
+ 
+ <xs:simpleType name="nonEmptyString"><xs:restriction base="xs:string">
+  <xs:minLength value="1"/>
  </xs:restriction></xs:simpleType>
  
 </xs:schema>

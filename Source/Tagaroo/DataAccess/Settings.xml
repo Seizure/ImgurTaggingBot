@@ -11,7 +11,7 @@ Sensitive information includes, but is not limited to:
 - The "Client Secret" part of the Discord API key
 Anyone with access to the relevant sensitive information can hijack the application's Imgur and Discord accounts.
 -->
-<Settings xmlns="urn:xmlns:tagaroo:Settings">
+<Settings xmlns="urn:xmlns:tagaroo:Settings:v1-snapshot">
  
  <Configuration>
   <Imgur ClientID="" ClientSecret="">
@@ -21,12 +21,12 @@ Anyone with access to the relevant sensitive information can hijack the applicat
     AccessToken=""
     RefreshToken=""
     TokenType="bearer"
-    ExpiresAt="2017-12-01T00:00:00Z"
+    ExpiresAt="1970-01-01T00:00:00Z"
    />
   </Imgur>
   <Discord
-   GuildID="388542416225042435"
-   LogChannelID="388542416225042439"
+   GuildID=""
+   LogChannelID=""
    Token=""
   />
   <Logging
@@ -47,7 +47,7 @@ Anyone with access to the relevant sensitive information can hijack the applicat
  <DynamicSettings
   PullCommentsFrequency="PT1H"
   PullCommentsPerUserRequestThreshhold="10"
-  CommentsProcessedUpToInclusive="2017-12-01T00:00:00Z"
+  CommentsProcessedUpToInclusive=""
  >
   <ImgurCommenters>
    <Commenter Username=""/>

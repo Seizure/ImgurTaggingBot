@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Text;
 
 namespace Tagaroo.Application{
- //TODO Non-Empty strings in Settings XML
  public class ApplicationConfiguration{
   public SourceLevels LogLevelBootstrap { get; }
   public SourceLevels LogLevelApplication { get; }

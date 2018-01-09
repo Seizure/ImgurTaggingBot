@@ -188,13 +188,14 @@ namespace Tagaroo.Discord{
      ChannelID,Guild.Id,Guild.Name
     ));
    }
-   //TODO Remove
+   /*
    if(NSFW && !Channel.IsNsfw){
     throw new DiscordException(string.Format(
      "The message to send was marked as NSFW, but the Channel it was being sent to, '{0}', is not NSFW",
      Channel.Name
     ));
    }
+   */
    try{
     await Channel.SendMessageAsync(Message, embed:EmbeddedItem);
    }catch(HttpException Error){

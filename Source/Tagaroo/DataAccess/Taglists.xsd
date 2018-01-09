@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema 
- targetNamespace="urn:xmlns:tagaroo:Taglists"
+ targetNamespace="urn:xmlns:tagaroo:Taglists:v1-snapshot"
  elementFormDefault="qualified" attributeFormDefault="unqualified"
- xmlns="urn:xmlns:tagaroo:Taglists" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Taglists"
+ xmlns="urn:xmlns:tagaroo:Taglists:v1-snapshot" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Taglists:v1-snapshot"
 >
  
  <xs:element name="Taglists">
@@ -83,7 +83,7 @@
     </xs:unique>
    </xs:element>
   </xs:sequence>
-  <xs:attribute name="Username" type="xs:token" use="required">
+  <xs:attribute name="Username" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     This Imgur user's Mentionable Imgur username.
    </xs:documentation></xs:annotation>
@@ -114,5 +114,9 @@
  <xs:complexType name="Category">
   <xs:attribute name="Name" type="xs:token" use="required"/>
  </xs:complexType>
+ 
+ <xs:simpleType name="nonEmptyString"><xs:restriction base="xs:string">
+  <xs:minLength value="1"/>
+ </xs:restriction></xs:simpleType>
  
 </xs:schema>
