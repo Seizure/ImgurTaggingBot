@@ -38,7 +38,10 @@ namespace Tagaroo.Application{
    ApplicationMessagePump.RunOnCurrentThread(async()=>{
     Log.Bootstrap_.LogVerbose("Application message pump started");
     bool success = await Setup();
-    if(!success){return;}
+    if(!success){
+     ApplicationMessagePump.Finish();
+     return;
+    }
     startupsuccess=true;
     await RunMain();
     await UnSetup();
@@ -66,11 +69,74 @@ namespace Tagaroo.Application{
     Log.Bootstrap_.LogError("Unable to connect to Discord: "+Error.Message);
     return false;
    }
-   return true;
+   bool result=false;
+   try{
+    Log.Bootstrap_.LogVerbose("Verifying Taglists");
+    if(!await CheckTaglists()){
+     return false;
+    }
+    Log.Bootstrap_.LogInfo("Making contact with Imgur");
+    IRateLimit RemainingBandwidth;
+    try{
+     RemainingBandwidth = await Imgur.ReadRemainingBandwidth();
+    }catch(ImgurException Error){
+     Log.Bootstrap_.LogError("Error making initial contact with Imgur: "+Error.Message);
+     return false;
+    }
+    Log.Bootstrap_.LogInfo(
+     "Remaining Imgur API Bandwidth - {0:D} / {1:D}",
+     RemainingBandwidth.ClientRemaining,RemainingBandwidth.ClientLimit
+    );
+    result = true;
+   }finally{
+    if(!result){
+     await UnSetup();
+    }
+   }
+   return result;
   }
 
   private async Task UnSetup(){
    await Discord.Shutdown();
+  }
+
+  private async Task<bool> CheckTaglists(){
+   ICollection<Taglist> Taglists;
+   try{
+    Taglists = await RepositoryTaglists.ReadAllHeaders();
+   }catch(DataAccessException Error){
+    Log.Bootstrap_.LogError("Error accessing Taglists data: "+Error.Message);
+    return false;
+   }
+   foreach(Taglist CheckChannels in Taglists){
+    Log.Bootstrap_.LogVerbose("Verifying Taglist '{0}'",CheckChannels.Name);
+    if(!CheckTaglistChannel(CheckChannels, CheckChannels.ArchiveChannelIDSafe, "Safe Archive")){
+     return false;
+    }
+    if(!CheckTaglistChannel(CheckChannels, CheckChannels.ArchiveChannelIDQuestionable, "Questionable Archive")){
+     return false;
+    }
+    if(!CheckTaglistChannel(CheckChannels, CheckChannels.ArchiveChannelIDExplicit, "Explicit Archive", true)){
+     return false;
+    }
+   }
+   return true;
+  }
+  private bool CheckTaglistChannel(Taglist Check, ulong ChannelID, string ChannelName, bool ShouldBeNSFW=false){
+   if(!Discord.TextChannelExists(ChannelID, out bool NSFW)){
+    Log.Bootstrap_.LogError(
+     "The '{1}' Channel for the Taglist '{0}' (the Channel specified by the ID {2}), does not exist in the Guild",
+     Check.Name,ChannelName,ChannelID
+    );
+    return false;
+   }
+   if(ShouldBeNSFW && !NSFW){
+    Log.Bootstrap_.LogWarning(
+     "The '{1}' Channel for the Taglist '{0}' is not marked as NSFW",
+     Check.Name,ChannelName
+    );
+   }
+   return true;
   }
 
   private async Task RunMain(){
@@ -132,6 +198,7 @@ namespace Tagaroo.Application{
      );
     }
    }
+   await Imgur.LogRemainingBandwidth();
   }
 
   public async Task ProcessComment(IComment Process){

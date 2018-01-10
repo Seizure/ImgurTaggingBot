@@ -181,6 +181,7 @@ namespace Tagaroo.Imgur{
   @Tagaroo tag
   */
 
+  //TODO Configure prefix
   protected const string CommandPrefix = "@Tagaroo2";
   protected const string Command_Tag = "TAG";
   protected const string RatingSpecifier_Safe = "S";

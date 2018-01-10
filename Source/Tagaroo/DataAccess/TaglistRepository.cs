@@ -13,10 +13,16 @@ using Tagaroo.Model;
 
 namespace Tagaroo.DataAccess{
  
- //TODO Check Taglists.xml file exists on startup
- //TODO Check Taglists' Channels exist, warn on non-NSFW E-Rated Channels
  public interface TaglistRepository{
   void Initialize();
+
+  /*
+  /// <exception cref="DataAccessException"/>
+  Task Verify();
+  */
+
+  /// <exception cref="DataAccessException"/>
+  Task<ICollection<Taglist>> ReadAllHeaders();
 
   /// <exception cref="DataAccessException"/>
   Task<IReadOnlyDictionary<string,Taglist>> LoadAll();
@@ -43,6 +49,16 @@ namespace Tagaroo.DataAccess{
    XMLDataFileHandler.Initialize();
   }
   
+  /*
+  public async Task Verify(){
+   try{
+    await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read);
+   }catch(DataAccessException){
+    throw;
+   }
+  }
+  */
+
   /*
   The following types can be converted to XML SimpleTypes,
   and as such are valid Content for XElement/XAttribute objects:
@@ -75,6 +91,28 @@ namespace Tagaroo.DataAccess{
   - TimeSpan
   - GUID
   */
+
+  public async Task<ICollection<Taglist>> ReadAllHeaders(){
+   if(Cache && CachedTaglists!=null){
+    return CachedTaglists.Values.ToList();
+   }
+   return await _ReadAllHeaders();
+  }
+
+  protected async Task<ICollection<Taglist>> _ReadAllHeaders(){
+   XDocument DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read);
+   IEnumerable<Taglist> Results=
+    from TL in DataDocument.Root.Elements(xmlns+"Taglist")
+    select new Taglist(
+     (string)TL.Attribute("Name"),
+     (ulong)TL.Attribute("SafeArchiveChannelID"),
+     (ulong)TL.Attribute("QuestionableArchiveChannelID"),
+     (ulong)TL.Attribute("ExplicitArchiveChannelID"),
+     ImmutableHashSet<TaglistRegisteredUser>.Empty
+    )
+   ;
+   return Results.ToList();
+  }
 
   public async Task<IReadOnlyDictionary<string,Taglist>> LoadAll(){
    if(Cache && CachedTaglists!=null){
@@ -130,6 +168,6 @@ namespace Tagaroo.DataAccess{
   }
   */
 
-  static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Taglists";
+  static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Taglists:v1-snapshot";
  }
 }

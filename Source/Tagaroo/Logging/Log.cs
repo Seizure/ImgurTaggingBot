@@ -5,15 +5,16 @@ using System.Diagnostics;
 
 namespace Tagaroo.Logging{
  internal class Log{
-  //TODO Imgur remaining API bandwidth log
   public Logger Bootstrap{get;}
   public Logger Application{get;}
   public Logger Imgur{get;}
+  public Logger ImgurBandwidth{get;}
   public Logger Discord{get;}
   public Logger DiscordLibrary{get;}
   public SourceSwitch BootstrapLevel{get;} = new SourceSwitch("BootstrapSwitch"){ Level=SourceLevels.Information };
   public SourceSwitch ApplicationLevel{get;} = new SourceSwitch("ApplicationSwitch"){ Level=SourceLevels.Information };
   public SourceSwitch ImgurLevel{get;} = new SourceSwitch("ImgurSwitch"){ Level=SourceLevels.Information };
+  public SourceSwitch ImgurBandwidthLevel{get;} = new SourceSwitch("ImgurBandwidthSwitch"){ Level=SourceLevels.Warning };
   public SourceSwitch DiscordLevel{get;} = new SourceSwitch("DiscordSwitch"){ Level=SourceLevels.Information };
   public SourceSwitch DiscordLibraryLevel{get;} = new SourceSwitch("DiscordLibrarySwitch"){ Level=SourceLevels.Information };
   
@@ -27,6 +28,9 @@ namespace Tagaroo.Logging{
    this.Imgur=new Logger(new TraceSource("Imgur"){
     Switch=this.ImgurLevel
    });
+   this.ImgurBandwidth=new Logger(new TraceSource("ImgurBandwidth"){
+    Switch=this.ImgurBandwidthLevel
+   });
    this.Discord=new Logger(new TraceSource("Discord"){
     Switch=this.DiscordLevel
    });
@@ -39,6 +43,7 @@ namespace Tagaroo.Logging{
    Bootstrap.AddListener(Add);
    Application.AddListener(Add);
    Imgur.AddListener(Add);
+   ImgurBandwidth.AddListener(Add);
    Discord.AddListener(Add);
    DiscordLibrary.AddListener(Add);
   }
@@ -47,6 +52,7 @@ namespace Tagaroo.Logging{
    Bootstrap.RemoveListener(Name);
    Application.RemoveListener(Name);
    Imgur.RemoveListener(Name);
+   ImgurBandwidth.RemoveListener(Name);
    Discord.RemoveListener(Name);
    DiscordLibrary.RemoveListener(Name);
   }
@@ -56,6 +62,7 @@ namespace Tagaroo.Logging{
   static public Logger Bootstrap_ {get{return Instance.Bootstrap;}}
   static public Logger Application_ {get{return Instance.Application;}}
   static public Logger Imgur_ {get{return Instance.Imgur;}}
+  static public Logger ImgurBandwidth_ {get{return Instance.ImgurBandwidth;}}
   static public Logger Discord_ {get{return Instance.Discord;}}
  }
 }

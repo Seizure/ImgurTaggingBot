@@ -47,12 +47,17 @@ namespace Tagaroo.Imgur{
    int ItemParentCommentID,
    ISet<string> UsernamesToMention
   );
+
+  /// <exception cref="ImgurException"/>
+  Task<IRateLimit> ReadRemainingBandwidth();
+
+  Task LogRemainingBandwidth();
  }
 
- //TODO Make contact with Imgur during startup; acquire rate limit
  public class ImgurInterfacerMain : ImgurInterfacer{
   private readonly IApiClient Client,ClientAuthenticated;
   private readonly IOAuth2Endpoint APIOAuth;
+  private readonly IRateLimitEndpoint APIBandwidth;
   private readonly IAccountEndpoint APIUserAccount;
   private readonly ICommentEndpoint APIComments;
   private readonly IImageEndpoint APIImage;
@@ -142,6 +147,7 @@ namespace Tagaroo.Imgur{
     )
    );
    this.APIOAuth=new EndpointsImpl.OAuth2Endpoint(ClientAuthenticated);
+   this.APIBandwidth=new EndpointsImpl.RateLimitEndpoint(Client);
    this.APIUserAccount=new EndpointsImpl.AccountEndpoint(Client);
    this.APIComments=new EndpointsImpl.CommentEndpoint(ClientAuthenticated);
    this.APIImage=new EndpointsImpl.ImageEndpoint(Client);
@@ -172,8 +178,9 @@ namespace Tagaroo.Imgur{
    }
    //TODO Security–Convenience issues regarding logging this information to Discord
    Log.Imgur_.LogCritical(
-    "A new Imgur OAuth Token has been acquired - '{0}' (Refresh '{1}'), which expires at {2:u}. It is highly recommended that this Token be backed up, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
-    NewToken.AccessToken,NewToken.RefreshToken,NewToken.ExpiresAt
+    "A new Imgur OAuth Token has been acquired, which expires at {2:u}. It is highly recommended that this Token be backed up from the settings file, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated."
+    //"A new Imgur OAuth Token has been acquired - '{0}' (Refresh '{1}'), which expires at {2:u}. It is highly recommended that this Token be backed up, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
+    //NewToken.AccessToken,NewToken.RefreshToken,NewToken.ExpiresAt
    );
    ClientAuthenticated.SetOAuth2Token(NewToken);
    try{
@@ -186,6 +193,28 @@ namespace Tagaroo.Imgur{
     );
    }
    return NewToken;
+  }
+
+  public async Task<IRateLimit> ReadRemainingBandwidth(){
+   try{
+    return await APIBandwidth.GetRateLimitAsync();
+   }catch(ImgurException){
+    throw;
+   }
+  }
+
+  public async Task LogRemainingBandwidth(){
+   IRateLimit RemainingBandwidth;
+   try{
+    RemainingBandwidth = await ReadRemainingBandwidth();
+   }catch(ImgurException Error){
+    Log.ImgurBandwidth_.LogError("Error acquiring API Bandwidth details: "+Error.Message);
+    return;
+   }
+   Log.ImgurBandwidth_.LogInfo(
+    "Remaining Imgur API Bandwidth - {0:D} / {1:D}",
+    RemainingBandwidth.ClientRemaining,RemainingBandwidth.ClientLimit
+   );
   }
 
   public async Task<IDictionary<string,IList<IComment>>> ReadCommentsSince(

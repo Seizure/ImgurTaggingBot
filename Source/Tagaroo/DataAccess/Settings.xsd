@@ -166,6 +166,11 @@
     Messages concerning the application's interactions with Imgur.
    </xs:documentation></xs:annotation>
   </xs:attribute>
+  <xs:attribute name="ImgurBandwidthLogLevel" type="LogLevel" use="required">
+   <xs:annotation><xs:documentation>
+    Updates regarding the application's remaining Imgur API Bandwidth will be posted here.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
   <xs:attribute name="DiscordLogLevel" type="LogLevel" use="required">
    <xs:annotation><xs:documentation>
     Messages concerning the application's interactions with Discord.

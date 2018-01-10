@@ -20,6 +20,9 @@ namespace Tagaroo.Discord{
   
   Task Shutdown();
   
+  bool TextChannelExists(ulong channelID);
+  bool TextChannelExists(ulong channelID,out bool IsNSFW);
+
   /// <exception cref="DiscordException"/>
   Task PostGalleryItemDetails(ulong ChannelID, GalleryItem ToPost);
   
@@ -134,6 +137,16 @@ namespace Tagaroo.Discord{
    this.State = States.Disconnected;
    this.Guild=null;
    this.LogChannel=null;
+  }
+
+  public bool TextChannelExists(ulong ChannelID){
+   return TextChannelExists(ChannelID,out bool _);
+  }
+  public bool TextChannelExists(ulong ChannelID,out bool IsNSFW){
+   if(State!=States.Connected){throw new InvalidOperationException("Not connected");}
+   ITextChannel Result = Guild.GetTextChannel(ChannelID);
+   IsNSFW = Result?.IsNsfw ?? false;
+   return !(Result is null);
   }
 
   public async Task PostGalleryItemDetails(ulong ChannelID,GalleryItem ToPost){

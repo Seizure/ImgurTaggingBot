@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="DataAccess\Settings.xml">
+    <Content Include="DataAccess\Settings template.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Link>Settings.xml</Link>
+      <Link>Settings template.xml</Link>
       <Visible>false</Visible>
     </Content>
     <Content Include="DataAccess\Taglists.xml">
