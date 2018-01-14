@@ -376,8 +376,9 @@ namespace Tagaroo{
    Console.Write("Imgur OAuth Refresh Token > ");
    OAuthRefreshToken=Console.ReadLine();
    */
+   Imgur.ImgurInterfacer _Imgur;
    CoreProcess Core=new CoreProcess(
-    new Imgur.ImgurInterfacerMain(
+    _Imgur=new Imgur.ImgurInterfacerMain(
      new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
      ImgurAuthenticationID,ImgurAuthenticationSecret,
      "wereleven",77530931,
@@ -390,7 +391,8 @@ namespace Tagaroo{
      388542416225042435UL,388542416225042439UL
     ),
     new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true),
-    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml")
+    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
+    new Imgur.ImgurCommandParser("@Tagaroo2",_Imgur)
    );
    Core.Run();
   }

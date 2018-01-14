@@ -4,6 +4,7 @@
 
 Imgur Commands
 
+Note — This section assumes the Imgur command prefix is the string “@Tagaroo”; however, this can be changed by the administrator, via the “ImgurCommandPrefix” Setting.
 All Imgur Comment commands are of the following form, and can appear anywhere in an Imgur Comment—
 
 @Tagaroo <command> [<command-parameter> <command-parameter> …]
@@ -72,8 +73,8 @@ Imgur API Bandwidth
 The application uses the basic Imgur API to interact with Imgur. The Imgur API will only allow a certain amount of API calls to it over a certain period of time. If this limit is reached a few times, the application will be blocked from accessing Imgur. As such, it is important to keep watch on the application's remaining bandwidth. At present, applications accessing the basic Imgur API are allotted a certain amount of API calls per day; at the end of each day, this limit is reset.
 The application calls the Imgur API when—
 - Pulling Comments to check for new commands
-- Processing a Tagaroo command, to acquire the details of the image being tagged
-- @Mentioning interested users in Replies to a Tagaroo Comment
+- Processing a Tag command, to acquire the details of the image being tagged
+- @Mentioning interested users in Replies to a Tag command Comment
 - Refreshing the associated Imgur user account's OAuth Token when it expires
 - Checking the remaining API bandwidth (somewhat ironically)
 Imgur refers to this bandwidth restriction as “Rate Limits”; the current Rate Limit scheme in force can be checked at <//apidocs.imgur.com>.
@@ -104,7 +105,7 @@ The first method is to only retrieve Comments from after a particular date–tim
 The second method is to check for Replies to the Comment. Upon successfully processing a Comment, the application will Reply to it. Any Comments which the application has Replied to are deemed “not new”.
 
 Scanning for Commands
-Upon identifying any “new” Comments, the application will scan the contents of those Comments for commands. All commands begin with “@Tagaroo”, and can appear anywhere within the Comment. See the Imgur Commands section for more details.
+Upon identifying any “new” Comments, the application will scan the contents of those Comments for commands. All commands begin with the Imgur command prefix, which is typically “@Tagaroo” but this can be changed by the administrator, and can appear anywhere within the Comment. See the Imgur Commands section for more details.
 
 Identifying Interested Users from a Tag Command
 Upon encountering a Tag command, the application will extract the command's Taglist name, Rating, and collection of Categories from the command. It will then get the details of the Tagged image from Imgur, and also load the details of the Taglist with the specified name. Each Taglist managed by the application has a unique identifying name. The Taglist details include a collection of Imgur users who have registered an interest in the Taglist, and their preferences.
@@ -135,7 +136,7 @@ Application:
 Messages concerning the general running of the application.
 
 Imgur:
-Messages concerning the application's interaction with Imgur. This includes Tagaroo command parse errors, and notifications of the OAuth Token being updated.
+Messages concerning the application's interaction with Imgur. This includes Imgur Comment command parse errors, and notifications of the OAuth Token being updated.
 
 Discord:
 Messages concerning the application's interaction with Discord.

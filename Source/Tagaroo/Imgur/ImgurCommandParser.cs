@@ -12,9 +12,70 @@ using ImgurException=Imgur.API.ImgurException;
 
 namespace Tagaroo.Imgur{
  public class ImgurCommandParser{
-  private readonly ImgurInterfacer Imgur;
-  public ImgurCommandParser(ImgurInterfacer Imgur){
+  //protected readonly string CommandPrefixEscaped;
+  protected readonly ImgurInterfacer Imgur;
+  public ImgurCommandParser(string CommandPrefix, ImgurInterfacer Imgur){
+   string CommandPrefixEscaped = Regex.Escape(CommandPrefix);
    this.Imgur=Imgur;
+   
+   this.Pattern_Command=new Regex(
+    /*
+    The expression for matching the command specifier should be the same as for matching a Taglist name,
+    as a Taglist name may appear instead of a command specifier
+    as shorthand for the "tag" command.
+    */
+    CommandPrefixEscaped + @" (?>[\p{Zs}\t]+) (?>([a-z0-9_-]+))",
+    RegexOptions.IgnoreCase|RegexOptions.CultureInvariant
+    |RegexOptions.IgnorePatternWhitespace|RegexOptions.Compiled
+   );
+
+   /*
+   @Tagaroo [tag] <taglist-name> [<rating>] [ <category> <category> ... ]
+   Whitespace-delimited; terminated by a new line or other unrecognized character.
+   Optional elements should not be ommitted if they conflict with subsequent elements,
+   such as a Taglist with the name "tag", or a Category "S".
+   The command is case-insensitive except for <taglist-name> and <category>, which are case-sensitive.
+   Permissible characters for <taglist-name> & <category> are A-Z, a-z, 0-9, '-', '_'.
+   <rating> must be one of 'S', 'Q', 'E' (case-insensitive).
+  
+   Note:
+   Take care when permitting additional characters in Category names;
+   the expression will attempt to match as many Category names as possible,
+   which may stray beyond what the tagger thinks would be the end of the command.
+   */
+   this.Pattern_Tag=new Regex(@"
+#Prefix, 'tag' command optional
+\G "+CommandPrefixEscaped+@" (?: (?>[\p{Zs}\t]+) tag )?
+#Capture Taglist name
+#If adding permissible characters to Taglist names, be sure to update the PatternCommand expression as well
+(?>[\p{Zs}\t]+) (?>([a-z0-9_-]+))
+#Capture Rating, optional
+#If adding permissible characters to Category names, be sure to update the lookahead here as well
+(?: (?>[\p{Zs}\t]+) ([SQE])(?![a-z0-9_-]) )?
+#Capture Categories until unrecognized character
+(?>(?:
+(?>[\p{Zs}\t]+) (?>([a-z0-9_-]+))
+)*)
+",
+    RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|
+    RegexOptions.IgnorePatternWhitespace|RegexOptions.Compiled
+   );
+   /*
+   Test Inputs:
+   @Tagaroo tag taglist-name
+   @Tagaroo taglist-name
+   @Tagaroo tag taglist-name S
+   @Tagaroo taglist-name S
+   @Tagaroo taglist-name S S-Category
+   @Tagaroo taglist-name S-Category
+   @Tagaroo taglist-name S-
+   @Tagaroo taglist-name S; #Should match excluding semicolon
+   @Tagaroo taglist-name S-Category S
+   @Tagaroo S S S S
+   @Tagaroo tag tag tag tag
+   @Tagaroo tag tag S tag tag
+   @Tagaroo tag
+   */
   }
 
   public async Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback){
@@ -122,67 +183,10 @@ namespace Tagaroo.Imgur{
    }
   }
 
-  protected readonly Regex Pattern_Command=new Regex(
-   /*
-   The expression for matching the command specifier should be the same as for matching a Taglist name,
-   as a Taglist name may appear instead of a command specifier
-   as shorthand for the "tag" command.
-   */
-   CommandPrefix + @" (?>[\p{Zs}\t]+) (?>([a-z0-9_-]+))",
-   RegexOptions.IgnoreCase|RegexOptions.CultureInvariant
-   |RegexOptions.IgnorePatternWhitespace|RegexOptions.Compiled
-  );
+  protected readonly Regex Pattern_Command;
   
-  /*
-  @Tagaroo [tag] <taglist-name> [<rating>] [ <category> <category> ... ]
-  Whitespace-delimited; terminated by a new line or other unrecognized character.
-  Optional elements should not be ommitted if they conflict with subsequent elements,
-  such as a Taglist with the name "tag", or a Category "S".
-  The command is case-insensitive except for <taglist-name> and <category>, which are case-sensitive.
-  Permissible characters for <taglist-name> & <category> are A-Z, a-z, 0-9, '-', '_'.
-  <rating> must be one of 'S', 'Q', 'E' (case-insensitive).
-  
-  Note:
-  Take care when permitting additional characters in Category names;
-  the expression will attempt to match as many Category names as possible,
-  which may stray beyond what the tagger thinks would be the end of the command.
-  */
-  protected readonly Regex Pattern_Tag=new Regex(@"
-#Prefix, 'tag' command optional
-\G "+CommandPrefix+@" (?: (?>[\p{Zs}\t]+) tag )?
-#Capture Taglist name
-#If adding permissible characters to Taglist names, be sure to update the PatternCommand expression as well
-(?>[\p{Zs}\t]+) (?>([a-z0-9_-]+))
-#Capture Rating, optional
-#If adding permissible characters to Category names, be sure to update the lookahead here as well
-(?: (?>[\p{Zs}\t]+) ([SQE])(?![a-z0-9_-]) )?
-#Capture Categories until unrecognized character
-(?>(?:
-(?>[\p{Zs}\t]+) (?>([a-z0-9_-]+))
-)*)
-",
-   RegexOptions.IgnoreCase|RegexOptions.CultureInvariant|
-   RegexOptions.IgnorePatternWhitespace|RegexOptions.Compiled
-  );
-  /*
-  Test Inputs:
-  @Tagaroo tag taglist-name
-  @Tagaroo taglist-name
-  @Tagaroo tag taglist-name S
-  @Tagaroo taglist-name S
-  @Tagaroo taglist-name S S-Category
-  @Tagaroo taglist-name S-Category
-  @Tagaroo taglist-name S-
-  @Tagaroo taglist-name S; #Should match excluding semicolon
-  @Tagaroo taglist-name S-Category S
-  @Tagaroo S S S S
-  @Tagaroo tag tag tag tag
-  @Tagaroo tag tag S tag tag
-  @Tagaroo tag
-  */
+  protected readonly Regex Pattern_Tag;
 
-  //TODO Configure prefix
-  protected const string CommandPrefix = "@Tagaroo2";
   protected const string Command_Tag = "TAG";
   protected const string RatingSpecifier_Safe = "S";
   protected const string RatingSpecifier_Questionable = "Q";

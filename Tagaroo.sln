@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2003
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tagaroo", "Source\Tagaroo\Tagaroo.csproj", "{230F56DA-BF99-4EDF-A736-D98EBB9ACD23}"
 EndProject
@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		Copyright.txt = Copyright.txt
+		Documentation\Documentation - Setup & Maintenance.txt = Documentation\Documentation - Setup & Maintenance.txt
+		Documentation\Documentation.txt = Documentation\Documentation.txt
 	EndProjectSection
 EndProject
 Global

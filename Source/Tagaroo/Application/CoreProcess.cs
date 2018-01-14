@@ -24,12 +24,12 @@ namespace Tagaroo.Application{
   private readonly CancellationTokenSource ShutdownSignal=new CancellationTokenSource();
   private Settings CurrentSettings;
   
-  public CoreProcess(ImgurInterfacer Imgur, DiscordInterfacer Discord, TaglistRepository RepositoryTaglists, SettingsRepository RepositorySettings){
+  public CoreProcess(ImgurInterfacer Imgur, DiscordInterfacer Discord, TaglistRepository RepositoryTaglists, SettingsRepository RepositorySettings, ImgurCommandParser CommandParserImgur){
    this.Imgur=Imgur;
    this.Discord=Discord;
    this.RepositoryTaglists=RepositoryTaglists;
    this.RepositorySettings=RepositorySettings;
-   this.CommandParserImgur=new ImgurCommandParser(Imgur);
+   this.CommandParserImgur=CommandParserImgur;
   }
 
   public bool Run(){

@@ -36,10 +36,12 @@ namespace Tagaroo{
    Log.Instance.ImgurLevel.Level          = Configuration.LogLevelImgur;
    Log.Instance.DiscordLevel.Level        = Configuration.LogLevelDiscord;
    Log.Instance.DiscordLibraryLevel.Level = Configuration.LogLevelDiscordLibrary;
+   Log.Instance.ImgurBandwidthLevel.Level = Configuration.LogLevelImgurBandwidth;
    Log.Bootstrap_.LogVerbose("Applying Configuration: Constructing Application");
    DiscordInterfacer Discord;
+   ImgurInterfacer Imgur;
    CoreProcess Application=new CoreProcess(
-    new ImgurInterfacerMain(
+    Imgur=new ImgurInterfacerMain(
      RepositorySettings,
      Configuration.ImgurClientID,
      Configuration.ImgurClientSecret,
@@ -59,7 +61,8 @@ namespace Tagaroo{
     new TaglistRepositoryMain(
      Configuration.TaglistDataFilePath, true
     ),
-    RepositorySettings
+    RepositorySettings,
+    new ImgurCommandParser(Configuration.ImgurCommandPrefix, Imgur)
    );
    Log.Bootstrap_.LogVerbose("Applying Configuration: Logging output");
    if(Configuration.LogToDiscord){

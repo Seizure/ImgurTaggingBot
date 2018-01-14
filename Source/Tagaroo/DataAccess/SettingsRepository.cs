@@ -57,6 +57,7 @@ namespace Tagaroo.DataAccess{
     Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("ImgurLogLevel")),
     Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("DiscordLogLevel")),
     Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("DiscordLibraryLogLevel")),
+    Enum.Parse<SourceLevels>((string)ConfigurationLoggingElement.Attribute("ImgurBandwidthLogLevel")),
     (bool)ConfigurationLoggingElement.Attribute("LogToDiscord"),
     (string)ConfigurationImgurElement.Attribute("ClientID"),
     (string)ConfigurationImgurElement.Attribute("ClientSecret"),
@@ -70,7 +71,8 @@ namespace Tagaroo.DataAccess{
     (string)ConfigurationDiscordElement.Attribute("Token"),
     (ulong)ConfigurationDiscordElement.Attribute("GuildID"),
     (ulong)ConfigurationDiscordElement.Attribute("LogChannelID"),
-    (string)StaticSettingsElement.Attribute("TaglistDatafilePath")
+    (string)StaticSettingsElement.Attribute("TaglistDatafilePath"),
+    (string)StaticSettingsElement.Attribute("ImgurCommandPrefix")
    );
   }
 

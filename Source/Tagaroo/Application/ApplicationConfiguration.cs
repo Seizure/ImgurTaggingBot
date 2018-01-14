@@ -10,6 +10,7 @@ namespace Tagaroo.Application{
   public SourceLevels LogLevelImgur { get; }
   public SourceLevels LogLevelDiscord { get; }
   public SourceLevels LogLevelDiscordLibrary { get; }
+  public SourceLevels LogLevelImgurBandwidth { get; }
   public bool LogToDiscord { get; }
   public string ImgurClientID { get; }
   public string ImgurClientSecret { get; }
@@ -24,6 +25,7 @@ namespace Tagaroo.Application{
   public ulong DiscordGuildID { get; }
   public ulong DiscordChannelIDLog { get; }
   public string TaglistDataFilePath { get; }
+  public string ImgurCommandPrefix { get; internal set; }
 
   public ApplicationConfiguration(
    SourceLevels logLevelBootstrap,
@@ -31,6 +33,7 @@ namespace Tagaroo.Application{
    SourceLevels logLevelImgur,
    SourceLevels logLevelDiscord,
    SourceLevels logLevelDiscordLibrary,
+   SourceLevels logLevelImgurBandwidth,
    bool LogToDiscord,
    string imgurClientID,
    string imgurClientSecret,
@@ -44,7 +47,8 @@ namespace Tagaroo.Application{
    string discordAuthenticationToken,
    ulong discordGuildID,
    ulong discordChannelIDLog,
-   string taglistDataFilePath
+   string taglistDataFilePath,
+   string ImgurCommandPrefix
    ){
    if(imgurMaximumCommentLengthUTF16CodeUnits<=0){throw new ArgumentOutOfRangeException();}
    this.LogLevelBootstrap=logLevelBootstrap;
@@ -52,6 +56,7 @@ namespace Tagaroo.Application{
    this.LogLevelImgur=logLevelImgur;
    this.LogLevelDiscord=logLevelDiscord;
    this.LogLevelDiscordLibrary=logLevelDiscordLibrary;
+   this.LogLevelImgurBandwidth=logLevelImgurBandwidth;
    this.LogToDiscord=LogToDiscord;
    this.ImgurClientID=imgurClientID;
    this.ImgurClientSecret=imgurClientSecret;
@@ -66,6 +71,7 @@ namespace Tagaroo.Application{
    this.DiscordGuildID=discordGuildID;
    this.DiscordChannelIDLog=discordChannelIDLog;
    this.TaglistDataFilePath=taglistDataFilePath;
+   this.ImgurCommandPrefix=ImgurCommandPrefix;
   }
  }
 }

@@ -199,6 +199,12 @@
     File path to the XML data file containing the Taglists.
    </xs:documentation></xs:annotation>
   </xs:attribute>
+  <xs:attribute name="ImgurCommandPrefix" type="nonEmptyString" use="required">
+   <xs:annotation><xs:documentation>
+    All Imgur commands contained in Comments must begin with this string prefix.
+    This allows the Comment commands to begin with something other than "@Tagaroo …".
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
  </xs:complexType>
  
  <xs:complexType name="DynamicSettings">
