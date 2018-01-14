@@ -92,44 +92,26 @@ namespace Tagaroo.DataAccess{
   }
 
   public async Task SaveWritableSettings(Settings ToSave){
-   Stream DataFile = XMLDataFileHandler.OpenFile(FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-   try{
-    XDocument WholeDocument = await XMLDataFileHandler.Load(DataFile);
-    XElement DynamicSettingsElement = WholeDocument.Root.Elements(xmlns+"DynamicSettings").First();
-    DynamicSettingsElement.Element(xmlns+"ImgurCommenters").ReplaceNodes(
-     from C in ToSave.CommenterUsernames
-     select new XElement(xmlns+"Commenter",new XAttribute("Username",C))
-    );
-    DynamicSettingsElement.SetAttributeValue("PullCommentsFrequency", ToSave.PullCommentsFrequency);
-    DynamicSettingsElement.SetAttributeValue("CommentsProcessedUpToInclusive", ToSave.CommentsProcessedUpToInclusive);
-    DynamicSettingsElement.SetAttributeValue("PullCommentsPerUserRequestThreshhold", ToSave.RequestThreshholdPullCommentsPerUser);
-    //TODO Backup old data
-    DataFile.SetLength(0);
-    await WholeDocument.SaveAsync(DataFile,SavingOptions,CancellationToken.None);
-   }catch(IOException Error){
-    throw new DataAccessException("IO error whilst loading/saving data file: "+Error.Message,Error);
-   }finally{
-    DataFile.Close();
-   }
+   XDocument WholeDocument = await XMLDataFileHandler.LoadFile(FileAccess.ReadWrite,FileShare.Read);
+   XElement DynamicSettingsElement = WholeDocument.Root.Elements(xmlns+"DynamicSettings").First();
+   DynamicSettingsElement.Element(xmlns+"ImgurCommenters").ReplaceNodes(
+    from C in ToSave.CommenterUsernames
+    select new XElement(xmlns+"Commenter",new XAttribute("Username",C))
+   );
+   DynamicSettingsElement.SetAttributeValue("PullCommentsFrequency", ToSave.PullCommentsFrequency);
+   DynamicSettingsElement.SetAttributeValue("CommentsProcessedUpToInclusive", ToSave.CommentsProcessedUpToInclusive);
+   DynamicSettingsElement.SetAttributeValue("PullCommentsPerUserRequestThreshhold", ToSave.RequestThreshholdPullCommentsPerUser);
+   await XMLDataFileHandler.Save(WholeDocument, SavingOptions);
   }
 
   public async Task SaveNewImgurUserAuthorizationToken(IOAuth2Token AuthorizationToken){
-   Stream DataFile = XMLDataFileHandler.OpenFile(FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-   try{
-    XDocument WholeDocument = await XMLDataFileHandler.Load(DataFile);
-    XElement OAuthElement = WholeDocument.Root.Elements(xmlns+"Configuration").Elements(xmlns+"Imgur").Elements(xmlns+"OAuthToken").First();
-    OAuthElement.SetAttributeValue("AccessToken", AuthorizationToken.AccessToken);
-    OAuthElement.SetAttributeValue("RefreshToken", AuthorizationToken.RefreshToken);
-    OAuthElement.SetAttributeValue("TokenType", AuthorizationToken.TokenType);
-    OAuthElement.SetAttributeValue("ExpiresAt", AuthorizationToken.ExpiresAt);
-    //TODO Backup old data
-    DataFile.SetLength(0);
-    await WholeDocument.SaveAsync(DataFile,SavingOptions,CancellationToken.None);
-   }catch(IOException Error){
-    throw new DataAccessException("IO error whilst loading/saving data file: "+Error.Message,Error);
-   }finally{
-    DataFile.Close();
-   }
+   XDocument WholeDocument = await XMLDataFileHandler.LoadFile(FileAccess.ReadWrite,FileShare.Read);
+   XElement OAuthElement = WholeDocument.Root.Elements(xmlns+"Configuration").Elements(xmlns+"Imgur").Elements(xmlns+"OAuthToken").First();
+   OAuthElement.SetAttributeValue("AccessToken", AuthorizationToken.AccessToken);
+   OAuthElement.SetAttributeValue("RefreshToken", AuthorizationToken.RefreshToken);
+   OAuthElement.SetAttributeValue("TokenType", AuthorizationToken.TokenType);
+   OAuthElement.SetAttributeValue("ExpiresAt", AuthorizationToken.ExpiresAt);
+   await XMLDataFileHandler.Save(WholeDocument, SavingOptions);
   }
 
   private const SaveOptions SavingOptions=SaveOptions.DisableFormatting|SaveOptions.OmitDuplicateNamespaces;

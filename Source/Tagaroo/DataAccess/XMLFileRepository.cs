@@ -13,6 +13,7 @@ using System.Reflection;
 namespace Tagaroo.DataAccess{
  internal class XMLFileRepository{
   private readonly string DataFilePath;
+  private readonly string NewFilePath, OldFilePath;
   private readonly XmlSchemaSet Schema=new XmlSchemaSet();
   private readonly XNamespace xmlns;
   private readonly string ResourceStreamName;
@@ -21,6 +22,8 @@ namespace Tagaroo.DataAccess{
    this.DataFilePath=DataFilePath;
    this.xmlns=xmlns;
    this.ResourceStreamName=ResourceStreamName;
+   this.NewFilePath = DataFilePath + SuffixNewFile;
+   this.OldFilePath = DataFilePath + SuffixOldFile;
   }
 
   public void Initialize(){
@@ -31,26 +34,29 @@ namespace Tagaroo.DataAccess{
   }
 
   /// <exception cref="DataAccessException"/>
-  public Stream OpenFile(FileMode Mode,FileAccess Access,FileShare SharedAccess){
+  public FileStream OpenFile(FileMode Mode,FileAccess Access,FileShare SharedAccess){
    //Initialize();
+   return OpenFile(DataFilePath,Mode,Access,SharedAccess);
+  }
+  protected FileStream OpenFile(string Path,FileMode Mode,FileAccess Access,FileShare SharedAccess){
    try{
-    return new FileStream(this.DataFilePath, Mode, Access, SharedAccess);
+    return new FileStream(Path, Mode, Access, SharedAccess);
    }catch(FileNotFoundException Error){
-    throw new DataAccessException(string.Format("The file '{0}' was not found; current working directory is {1}",DataFilePath,Environment.CurrentDirectory),Error);
+    throw new DataAccessException(string.Format("The file '{0}' was not found; current working directory is {1}",Path,Environment.CurrentDirectory),Error);
    }catch(DirectoryNotFoundException Error){
-    throw new DataAccessException(string.Format("One of the directories on the file's path '{0}' could not be opened",DataFilePath),Error);
+    throw new DataAccessException(string.Format("One of the directories on the file's path '{0}' could not be opened",Path),Error);
    }catch(PathTooLongException Error){
-    throw new DataAccessException(string.Format("The file path '{0}' is too long for the current host platform",DataFilePath),Error);
+    throw new DataAccessException(string.Format("The file path '{0}' is too long for the current host platform",Path),Error);
    }catch(IOException Error){
     throw new DataAccessException(string.Format("IO error opening file: {0}",Error.Message),Error);
    }catch(UnauthorizedAccessException Error){
-    throw new DataAccessException(string.Format("Access denied to file at '{0}'",DataFilePath),Error);
+    throw new DataAccessException(string.Format("Access denied to file at '{0}'",Path),Error);
    }catch(System.Security.SecurityException Error){
-    throw new DataAccessException(string.Format("Access denied to file at '{0}'",DataFilePath),Error);
+    throw new DataAccessException(string.Format("Access denied to file at '{0}'",Path),Error);
    }catch(ArgumentException Error){
-    throw new DataAccessException(string.Format("The file path '{0}' is not a valid file path",DataFilePath),Error);
+    throw new DataAccessException(string.Format("The file path '{0}' is not a valid file path",Path),Error);
    }catch(NotSupportedException Error){
-    throw new DataAccessException(string.Format("The file path '{0}' is not a valid file path",DataFilePath),Error);
+    throw new DataAccessException(string.Format("The file path '{0}' is not a valid file path",Path),Error);
    }
   }
 
@@ -87,5 +93,40 @@ namespace Tagaroo.DataAccess{
     DataFile.Close();
    }
   }
+
+  /// <exception cref="DataAccessException"/>
+  public async Task Save(XDocument ToSave, SaveOptions SavingOptions){
+   FileStream NewFile = OpenFile(NewFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+   try{
+    try{
+     NewFile.SetLength(0);
+    }catch(IOException Error){
+     throw new DataAccessException("IO error whilst writing new data: "+Error.Message,Error);
+    }
+    try{
+     await ToSave.SaveAsync(NewFile, SavingOptions, CancellationToken.None);
+    }catch(IOException Error){
+     throw new DataAccessException("IO error whilst writing data: "+Error.Message,Error);
+    }
+   }finally{
+    NewFile.Close();
+   }
+   try{
+    File.Replace(NewFilePath, DataFilePath, OldFilePath, true);
+   }catch(DriveNotFoundException Error){
+    throw new DataAccessException(string.Format("Could not find the drive/filesystem for the file '{0}': ",DataFilePath)+Error.Message,Error);
+   }catch(FileNotFoundException Error){
+    throw new DataAccessException("A file could not be found during the save operation: "+Error.Message,Error);
+   }catch(PathTooLongException Error){
+    throw new DataAccessException(string.Format("The file path '{0}' is too long for the current host platform",DataFilePath),Error);
+   }catch(IOException Error){
+    throw new DataAccessException("IO error whilst saving data file: "+Error.Message,Error);
+   }catch(UnauthorizedAccessException Error){
+    throw new DataAccessException(string.Format("The file '{0}' or one of its reserved file names may have been marked as read-only, or a directory may have been created with one of those names: ",DataFilePath)+Error.Message,Error);
+   }
+  }
+
+  private const string SuffixNewFile=".new";
+  private const string SuffixOldFile=".old";
  }
 }

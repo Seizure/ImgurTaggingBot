@@ -18,12 +18,13 @@ Tagaroo.dll:
 The application executable, runnable with the command “dotnet”.
 
 Settings.xml:
-XML application configuration and settings file. This file will be read at startup and also at relevant points while the application is running. See the Settings section for further details. Be careful when editing this file while the application is running, as the application will write updated Settings to this file periodically; it is recommended that Settings be updated through the application rather than by modifying the file directly for this reason. Depending on how the file is opened, keeping the file open in an editor may cause errors when the application tries to update the Settings, or the editor may overwrite changes that the application has made since the file was opened in it, both of which may lead to problems.
+XML application configuration and settings file. This file will be read at startup and also at relevant points while the application is running. See the Settings section for further details. Be careful when editing this file while the application is running, as the application will write updated Settings to this file periodically; while the application is running it is recommended that Settings be updated through the application rather than by modifying the file directly for this reason. Depending on how the file is opened, keeping the file open in an editor may cause errors when the application tries to update the Settings, or the editor may overwrite changes that the application has made since the file was opened in it, or the changes made in the editor may be lost without warning when saved, all of which may lead to problems.
 
 Other important files that do not need to be in the same directory as the application's executable are as follows…
 
 Taglists.xml:
-XML file where details of all of the application's Taglists are stored, including all users registered to a Taglist, and their preferences. Generally this file resides in the same directory as the executable, but its location can be configured in Settings. As for the Settings XML file, be careful when editing the file while the application is running, as the application will write updates to it; changes to Taglists should be made through the application rather than by editing the file manually.
+XML file where details of all of the application's Taglists are stored, including all users registered to a Taglist, and their preferences. Generally this file resides in the same directory as the executable, but its location can be configured in Settings. As for the Settings XML file, be careful when editing the file while the application is running, as the application will write updates to it; while the application is running, changes to Taglists should be made through the application rather than by editing the file manually.
+It is recommended that the administrator take periodic backups of this file in case it is lost, such as either through a fault with the application, or a fault with the host system.
 
 Settings.xsd:
 XML Schema for the Settings XML file, including documentation. This is provided to aid users in construction and editing of the Settings XML file. The Settings XML file must be valid with respect to this schema.
@@ -33,6 +34,14 @@ XML Schema for the Taglists XML file, including documentation. This is provided 
 
 *.dll:
 The application uses a number of libraries, present as DLL files. These must be kept in the same directory as the application.
+
+The following file names are reserved, and should not be used to store information…
+
+Settings.xml.old & Settings.xml.new:
+These files are created alongside the Settings.xml file when the application updates the Settings.xml file. Any Settings.xml.old file will contain the previous copy of Settings.xml after an update, and any Settings.xml.new file will contain the new copy of Settings.xml just before an update. The latter file will not normally be present, unless there has been a problem updating Settings.xml.
+
+Taglists.xml.old & Taglists.xml.new:
+As above, but for the Taglists.xml file. Note that if the Taglists XML file has been given a different name, such as Taglists2.xml, the reserved file names will also match — Taglists2.xml.old & Taglists2.xml.new. These files will be created in the same directory as the Taglists XML file.
 
 
 
