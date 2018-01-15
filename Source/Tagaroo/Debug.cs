@@ -105,21 +105,24 @@ namespace Tagaroo{
   }
 
   const string ImgurUser="wereleven";
+  const int ImgurUserID=77530931;
 
   public async Task RunImgUR(){
    Console.Write("Authentication ID > ");
    string ImgurAuthenticationID=Console.ReadLine();
+   /*
    Console.Write("Authentication Secret > ");
    string ImgurAuthenticationSecret=Console.ReadLine();
    Console.Write("OAuth Access Token > ");
    string OAuthAccessToken=Console.ReadLine();
+   */
    IApiClient ClientImgur=new AuthenticationImpl.ImgurClient(ImgurAuthenticationID);
-   IApiClient ClientImgurAuthenticated=new AuthenticationImpl.ImgurClient(ImgurAuthenticationID,ImgurAuthenticationSecret,new ModelsImpl.OAuth2Token(OAuthAccessToken,string.Empty,"bearer","77530931","wereleven",315360000));
-   ImgurEndpoints.AccountEndpoint AccountAPI=new ImgurEndpoints.AccountEndpoint(ClientImgur);
+   //IApiClient ClientImgurAuthenticated=new AuthenticationImpl.ImgurClient(ImgurAuthenticationID,ImgurAuthenticationSecret,new ModelsImpl.OAuth2Token(OAuthAccessToken,string.Empty,"bearer","77530931","wereleven",315360000));
+   Imgur.LibraryEnhancements.AccountEndpointEnhanced AccountAPI =new Imgur.LibraryEnhancements.AccountEndpointEnhanced(ClientImgur);
    ImgurEndpoints.ImageEndpoint ImageAPI=new ImgurEndpoints.ImageEndpoint(ClientImgur);
    ImgurEndpoints.AlbumEndpoint AlbumAPI=new ImgurEndpoints.AlbumEndpoint(ClientImgur);
-   ImgurEndpoints.CommentEndpoint CommentAPIAuthenticated=new ImgurEndpoints.CommentEndpoint(ClientImgurAuthenticated);
-   ImgurEndpoints.OAuth2Endpoint OAuthAPI=new ImgurEndpoints.OAuth2Endpoint(ClientImgurAuthenticated);
+   //ImgurEndpoints.CommentEndpoint CommentAPIAuthenticated=new ImgurEndpoints.CommentEndpoint(ClientImgurAuthenticated);
+   //ImgurEndpoints.OAuth2Endpoint OAuthAPI=new ImgurEndpoints.OAuth2Endpoint(ClientImgurAuthenticated);
    ImgurEndpoints.RateLimitEndpoint LimitAPI=new ImgurEndpoints.RateLimitEndpoint(ClientImgur);
    try{
     /*
@@ -144,7 +147,8 @@ namespace Tagaroo{
     Console.WriteLine();
     */
     Console.WriteLine("Retrieving Account details...");
-    IAccount Account=await AccountAPI.GetAccountAsync(ImgurUser);
+    //IAccount Account=await AccountAPI.GetAccountAsync(ImgurUser);
+    IAccount Account=await AccountAPI.GetAccountAsync(ImgurUserID);
     Console.WriteLine("ID - {0}",Account.Id);
     Console.WriteLine("Username - {0}",Account.Url);
     Console.WriteLine("Created - {0}",Account.Created);
@@ -206,6 +210,7 @@ namespace Tagaroo{
      Console.WriteLine("Animated - {0}",Image.Animated);
      Console.WriteLine("Description - {0}",Image.Description);
      Console.WriteLine();
+     /*
      Console.Write("Enter Comment to post, or blank to skip > ");
      string CommentReply=Console.ReadLine();
      if(!string.IsNullOrWhiteSpace(CommentReply)){
@@ -213,6 +218,7 @@ namespace Tagaroo{
       Console.WriteLine("Created Comment ID - {0}",ReplyID);
      }
      Console.WriteLine();
+     */
     }else{
      Console.WriteLine();
     }
@@ -397,15 +403,13 @@ namespace Tagaroo{
    Core.Run();
   }
 
-  /*
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   new Debug().RunDebug().Wait();
+   new Debug().RunImgUR().Wait();
    //new Debug().RunCore();
    //new Program().Main();
    Console.ReadKey(true);
   }
-  */
 
   /*
   private static Assembly ResolveAssembly(object Origin,ResolveEventArgs Event){
