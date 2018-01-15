@@ -29,9 +29,13 @@
       <xs:element name="TaglistUser" type="TaglistUser" minOccurs="0" maxOccurs="unbounded"/>
      </xs:sequence>
     </xs:complexType>
-    <xs:unique name="UniqueTaglistUsers">
+    <xs:unique name="UniqueTaglistUsernames">
      <xs:selector xpath="this:TaglistUser"/>
      <xs:field xpath="@Username"/>
+    </xs:unique>
+    <xs:unique name="UniqueTaglistUsers">
+     <xs:selector xpath="this:TaglistUser"/>
+     <xs:field xpath="@UserID"/>
     </xs:unique>
    </xs:element>
   </xs:sequence>
@@ -86,6 +90,12 @@
   <xs:attribute name="Username" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     This Imgur user's Mentionable Imgur username.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="UserID" type="xs:int" use="required">
+   <xs:annotation><xs:documentation>
+    This Imgur user's unique integer ID.
+    Imgur users can change their users, so this ID forms their permanent identity.
    </xs:documentation></xs:annotation>
   </xs:attribute>
   <xs:attribute name="InterestedInSafe" type="xs:boolean" default="false">

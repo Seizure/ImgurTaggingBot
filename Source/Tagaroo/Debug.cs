@@ -405,7 +405,7 @@ namespace Tagaroo{
 
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   new Debug().RunImgUR().Wait();
+   new Debug().RunDebug().Wait();
    //new Debug().RunCore();
    //new Program().Main();
    Console.ReadKey(true);

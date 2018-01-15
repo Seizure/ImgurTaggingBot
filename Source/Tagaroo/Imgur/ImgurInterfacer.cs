@@ -8,6 +8,7 @@ using Imgur.API.Models;
 using Imgur.API.Enums;
 using Imgur.API.Authentication;
 using Imgur.API.Endpoints;
+using Tagaroo.Imgur.LibraryEnhancements;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
 using Tagaroo.Logging;
@@ -58,7 +59,7 @@ namespace Tagaroo.Imgur{
   private readonly IApiClient Client,ClientAuthenticated;
   private readonly IOAuth2Endpoint APIOAuth;
   private readonly IRateLimitEndpoint APIBandwidth;
-  private readonly IAccountEndpoint APIUserAccount;
+  private readonly AccountEndpointEnhanced APIUserAccount;
   private readonly ICommentEndpoint APIComments;
   private readonly IImageEndpoint APIImage;
   private readonly IAlbumEndpoint APIAlbum;
@@ -148,7 +149,7 @@ namespace Tagaroo.Imgur{
    );
    this.APIOAuth=new EndpointsImpl.OAuth2Endpoint(ClientAuthenticated);
    this.APIBandwidth=new EndpointsImpl.RateLimitEndpoint(Client);
-   this.APIUserAccount=new EndpointsImpl.AccountEndpoint(Client);
+   this.APIUserAccount=new AccountEndpointEnhanced(Client);
    this.APIComments=new EndpointsImpl.CommentEndpoint(ClientAuthenticated);
    this.APIImage=new EndpointsImpl.ImageEndpoint(Client);
    this.APIAlbum=new EndpointsImpl.AlbumEndpoint(Client);

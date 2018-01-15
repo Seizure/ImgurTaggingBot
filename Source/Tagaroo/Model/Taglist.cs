@@ -52,11 +52,13 @@ namespace Tagaroo.Model{
 
  public class TaglistRegisteredUser : IEquatable<TaglistRegisteredUser>{
   public string Username{get;}
+  public int ID{get;}
   public RatingFlags AcceptedRatings{get;}
   public ISet<string> CategoryBlacklist{get;set;}
   
-  public TaglistRegisteredUser(string Username,RatingFlags AcceptedRatings,ICollection<string> CategoryBlacklist){
+  public TaglistRegisteredUser(string Username,int ID,RatingFlags AcceptedRatings,ICollection<string> CategoryBlacklist){
    this.Username = Username.Normalize(NormalizationForm.FormKD);
+   this.ID=ID;
    this.AcceptedRatings=AcceptedRatings;
    this.CategoryBlacklist = (
     from C in CategoryBlacklist select C.Normalize(NormalizationForm.FormKD)

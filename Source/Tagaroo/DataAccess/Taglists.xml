@@ -2,222 +2,222 @@
 <Taglists xmlns="urn:xmlns:tagaroo:Taglists:v1-snapshot">
  
  <Taglist Name="SampleTaglist" SafeArchiveChannelID="388542416225042439" QuestionableArchiveChannelID="388542416225042439" ExplicitArchiveChannelID="388542416225042439"><RegisteredUsers>
-  <TaglistUser Username="None-A" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="None-A" UserID="0" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None-B" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="None-B" UserID="1" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None-C" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="None-C" UserID="2" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-A" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-A" UserID="3" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-B" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-B" UserID="4" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-C" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-C" UserID="5" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-A" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-A" UserID="6" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-B" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-B" UserID="7" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-C" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-C" UserID="8" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-A" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Safe-A" UserID="9" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-B" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Safe-B" UserID="10" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-C" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Safe-C" UserID="11" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-A" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-A" UserID="12" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-B" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-B" UserID="13" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-C" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-C" UserID="14" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-A" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-A" UserID="15" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-B" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-B" UserID="16" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-C" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-C" UserID="17" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-A" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-A" UserID="18" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-B" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-B" UserID="19" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-C" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-C" UserID="20" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-A" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="All-A" UserID="21" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-B" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="All-B" UserID="22" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-C" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="All-C" UserID="23" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None-AB" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
-   <Category Name="A"/>
-   <Category Name="B"/>
-  </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None-AC" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
-   <Category Name="A"/>
-   <Category Name="C"/>
-  </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None-BC" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
-   <Category Name="B"/>
-   <Category Name="C"/>
-  </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-AB" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="None-AB" UserID="24" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-AC" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="None-AC" UserID="25" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-BC" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="None-BC" UserID="26" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-AB" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-AB" UserID="27" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-AC" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-AC" UserID="28" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-BC" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-BC" UserID="29" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-AB" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-AB" UserID="30" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-AC" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-AC" UserID="31" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-BC" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-BC" UserID="32" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-AB" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Safe-AB" UserID="33" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-AC" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Safe-AC" UserID="34" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-BC" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Safe-BC" UserID="35" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-AB" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-AB" UserID="36" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-AC" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-AC" UserID="37" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-BC" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-BC" UserID="38" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-AB" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-AB" UserID="39" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-AC" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-AC" UserID="40" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-BC" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-BC" UserID="41" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-AB" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-AB" UserID="42" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-AC" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-AC" UserID="43" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-BC" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-BC" UserID="44" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None-ABC" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="All-AB" UserID="45" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
+  </CategoryBlacklist></TaglistUser>
+  <TaglistUser Username="All-AC" UserID="46" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+   <Category Name="A"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Explicit-ABC" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="All-BC" UserID="47" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+   <Category Name="B"/>
+   <Category Name="C"/>
+  </CategoryBlacklist></TaglistUser>
+  <TaglistUser Username="None-ABC" UserID="48" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Question-ABC" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Explicit-ABC" UserID="49" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="Safe-ABC" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="Question-ABC" UserID="50" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="QuestionExplicit-ABC" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="Safe-ABC" UserID="51" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeExplicit-ABC" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="QuestionExplicit-ABC" UserID="52" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="SafeQuestion-ABC" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
+  <TaglistUser Username="SafeExplicit-ABC" UserID="53" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="All-ABC" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+  <TaglistUser Username="SafeQuestion-ABC" UserID="54" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"><CategoryBlacklist>
    <Category Name="A"/>
    <Category Name="B"/>
    <Category Name="C"/>
   </CategoryBlacklist></TaglistUser>
-  <TaglistUser Username="None" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"/>
-  <TaglistUser Username="Explicit" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"/>
-  <TaglistUser Username="Question" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"/>
-  <TaglistUser Username="Safe" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"/>
-  <TaglistUser Username="QuestionExplicit" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"/>
-  <TaglistUser Username="SafeExplicit" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"/>
-  <TaglistUser Username="SafeQuestion" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"/>
-  <TaglistUser Username="All" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"/>
+  <TaglistUser Username="All-ABC" UserID="55" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"><CategoryBlacklist>
+   <Category Name="A"/>
+   <Category Name="B"/>
+   <Category Name="C"/>
+  </CategoryBlacklist></TaglistUser>
+  <TaglistUser Username="None" UserID="56" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="false"/>
+  <TaglistUser Username="Explicit" UserID="57" InterestedInSafe="false" InterestedInQuestionable="false" InterestedInExplicit="true"/>
+  <TaglistUser Username="Question" UserID="58" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="false"/>
+  <TaglistUser Username="Safe" UserID="59" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="false"/>
+  <TaglistUser Username="QuestionExplicit" UserID="60" InterestedInSafe="false" InterestedInQuestionable="true" InterestedInExplicit="true"/>
+  <TaglistUser Username="SafeExplicit" UserID="61" InterestedInSafe="true" InterestedInQuestionable="false" InterestedInExplicit="true"/>
+  <TaglistUser Username="SafeQuestion" UserID="62" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"/>
+  <TaglistUser Username="All" UserID="63" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"/>
  </RegisteredUsers></Taglist>
 
 </Taglists>

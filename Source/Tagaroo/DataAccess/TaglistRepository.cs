@@ -138,6 +138,7 @@ namespace Tagaroo.DataAccess{
       from U in TL.Element(xmlns+"RegisteredUsers").Elements(xmlns+"TaglistUser")
       select new TaglistRegisteredUser(
        (string)U.Attribute("Username"),
+       (int)U.Attribute("UserID"),
        ((bool)U.Attribute("InterestedInSafe") ? TaglistRegisteredUser.RatingFlags.Safe : TaglistRegisteredUser.RatingFlags.None)
        |((bool)U.Attribute("InterestedInQuestionable") ? TaglistRegisteredUser.RatingFlags.Questionable : TaglistRegisteredUser.RatingFlags.None)
        |((bool)U.Attribute("InterestedInExplicit") ? TaglistRegisteredUser.RatingFlags.Explicit : TaglistRegisteredUser.RatingFlags.None),
