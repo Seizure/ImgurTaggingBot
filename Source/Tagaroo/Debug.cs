@@ -17,6 +17,7 @@ using Imgur.API.Enums;
 using ImgurEndpoints=Imgur.API.Endpoints.Impl;
 using Tagaroo.Application;
 using Tagaroo.Model;
+using Tagaroo.Infrastructure;
 
 /*
 Dumping ground for testing out stuff
@@ -355,6 +356,37 @@ namespace Tagaroo{
    ApplicationConfiguration ModelConfiguration=await RepositorySettings.LoadConfiguration();
   }
   
+  public void RunDebugSynchronized(){
+   var SynchronizationContext=new SingleThreadSynchronizationContext();
+   SynchronizationContext.RunOnCurrentThread(async() => {
+    Infrastructure.TaskScheduler Scheduler=new Infrastructure.TaskScheduler();
+    Scheduler.AddTask(ScheduledTask.NewLaterTask(
+     TimeSpan.FromSeconds(2),
+     () => {
+      Console.WriteLine("Two seconds");
+      return Task.CompletedTask;
+     }
+    ));
+    Scheduler.AddTask(ScheduledTask.NewImmediateTask(
+     TimeSpan.FromSeconds(6),
+     () => {
+      Console.WriteLine("Six seconds");
+      return Task.CompletedTask;
+     }
+    ));
+    Scheduler.AddTask(ScheduledTask.NewLaterTask(
+     TimeSpan.FromSeconds(30),
+     () => {
+      Console.WriteLine("Shutdown");
+      Scheduler.Stop();
+      return Task.CompletedTask;
+     }
+    ));
+    await Scheduler.Run();
+    SynchronizationContext.Finish();
+   });
+  }
+
   Task Imgur.ImgurCommandHandler.ProcessTagCommand(Tag Parsed){
    Console.WriteLine("Taglist - {0}",Parsed.TaglistName);
    Console.WriteLine("Rating - {0}",Parsed.Rating);
@@ -382,34 +414,50 @@ namespace Tagaroo{
    Console.Write("Imgur OAuth Refresh Token > ");
    OAuthRefreshToken=Console.ReadLine();
    */
+   Discord.DiscordInterfacerMain _Discord;
    Imgur.ImgurInterfacer _Imgur;
-   CoreProcess Core=new CoreProcess(
-    _Imgur=new Imgur.ImgurInterfacerMain(
+   Program Core=new Program(
+    new ProcessLatestCommentsActivity(
+     _Imgur=new Imgur.ImgurInterfacerMain(
+      new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
+      ImgurAuthenticationID,ImgurAuthenticationSecret,
+      "wereleven",77530931,
+      OAuthAccessToken,OAuthRefreshToken,"bearer",
+      DateTimeOffset.UtcNow+TimeSpan.FromDays(11),
+      140
+     ),
      new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
-     ImgurAuthenticationID,ImgurAuthenticationSecret,
-     "wereleven",77530931,
-     OAuthAccessToken,OAuthRefreshToken,"bearer",
-     DateTimeOffset.UtcNow+TimeSpan.FromDays(11),
-     140
+     new ProcessCommentActivity(
+      new Imgur.ImgurCommandParser("@Tagaroo2",_Imgur),
+      new ProcessTagCommandActivity(
+       _Imgur,
+       _Discord=new Discord.DiscordInterfacerMain(
+        DiscordAuthorizationToken,
+        388542416225042435UL,388542416225042439UL
+       ),
+       new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true)
+      )
+     )
     ),
-    new Discord.DiscordInterfacerMain(
-     DiscordAuthorizationToken,
-     388542416225042435UL,388542416225042439UL
-    ),
+    _Imgur,
+    _Discord,
     new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true),
     new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
-    new Imgur.ImgurCommandParser("@Tagaroo2",_Imgur)
+    TimeSpan.FromMinutes(5)
    );
    Core.Run();
   }
 
+  /*
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   new Debug().RunDebug().Wait();
+   //new Debug().RunDebug().Wait();
+   new Debug().RunDebugSynchronized();
    //new Debug().RunCore();
    //new Program().Main();
    Console.ReadKey(true);
   }
+  */
 
   /*
   private static Assembly ResolveAssembly(object Origin,ResolveEventArgs Event){

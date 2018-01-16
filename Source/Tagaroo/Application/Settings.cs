@@ -15,6 +15,7 @@ namespace Tagaroo.Application{
 
   public Settings(){}
 
+  /*
   public TimeSpan PullCommentsFrequency{
    get{return _PullCommentsFrequency;}
    set{
@@ -22,5 +23,6 @@ namespace Tagaroo.Application{
     this._PullCommentsFrequency=value;
    }
   }
+  */
  }
 }

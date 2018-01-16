@@ -71,6 +71,7 @@ namespace Tagaroo.DataAccess{
     (string)ConfigurationDiscordElement.Attribute("Token"),
     (ulong)ConfigurationDiscordElement.Attribute("GuildID"),
     (ulong)ConfigurationDiscordElement.Attribute("LogChannelID"),
+    (TimeSpan)StaticSettingsElement.Attribute("PullCommentsFrequency"),
     (string)StaticSettingsElement.Attribute("TaglistDatafilePath"),
     (string)StaticSettingsElement.Attribute("ImgurCommandPrefix")
    );
@@ -81,7 +82,7 @@ namespace Tagaroo.DataAccess{
    XDocument DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read);
    XElement DynamicSettingsElement = DataDocument.Root.Elements(xmlns+"DynamicSettings").First();
    return new Settings(){
-    PullCommentsFrequency = (TimeSpan)DynamicSettingsElement.Attribute("PullCommentsFrequency"),
+    //PullCommentsFrequency = (TimeSpan)DynamicSettingsElement.Attribute("PullCommentsFrequency"),
     CommentsProcessedUpToInclusive = (DateTimeOffset)DynamicSettingsElement.Attribute("CommentsProcessedUpToInclusive"),
     RequestThreshholdPullCommentsPerUser = (byte)(short)DynamicSettingsElement.Attribute("PullCommentsPerUserRequestThreshhold"),
     CommenterUsernames = (
@@ -98,7 +99,7 @@ namespace Tagaroo.DataAccess{
     from C in ToSave.CommenterUsernames
     select new XElement(xmlns+"Commenter",new XAttribute("Username",C))
    );
-   DynamicSettingsElement.SetAttributeValue("PullCommentsFrequency", ToSave.PullCommentsFrequency);
+   //DynamicSettingsElement.SetAttributeValue("PullCommentsFrequency", ToSave.PullCommentsFrequency);
    DynamicSettingsElement.SetAttributeValue("CommentsProcessedUpToInclusive", ToSave.CommentsProcessedUpToInclusive);
    DynamicSettingsElement.SetAttributeValue("PullCommentsPerUserRequestThreshhold", ToSave.RequestThreshholdPullCommentsPerUser);
    await XMLDataFileHandler.Save(WholeDocument, SavingOptions);

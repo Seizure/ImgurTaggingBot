@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Tagaroo.Application{
+namespace Tagaroo{
  public class ApplicationConfiguration{
   public SourceLevels LogLevelBootstrap { get; }
   public SourceLevels LogLevelApplication { get; }
@@ -24,6 +24,7 @@ namespace Tagaroo.Application{
   public string DiscordAuthenticationToken { get; }
   public ulong DiscordGuildID { get; }
   public ulong DiscordChannelIDLog { get; }
+  public TimeSpan PullCommentsFrequency{get;}
   public string TaglistDataFilePath { get; }
   public string ImgurCommandPrefix { get; internal set; }
 
@@ -47,6 +48,7 @@ namespace Tagaroo.Application{
    string discordAuthenticationToken,
    ulong discordGuildID,
    ulong discordChannelIDLog,
+   TimeSpan PullCommentsFrequency,
    string taglistDataFilePath,
    string ImgurCommandPrefix
    ){
@@ -70,6 +72,7 @@ namespace Tagaroo.Application{
    this.DiscordAuthenticationToken=discordAuthenticationToken;
    this.DiscordGuildID=discordGuildID;
    this.DiscordChannelIDLog=discordChannelIDLog;
+   this.PullCommentsFrequency=PullCommentsFrequency;
    this.TaglistDataFilePath=taglistDataFilePath;
    this.ImgurCommandPrefix=ImgurCommandPrefix;
   }

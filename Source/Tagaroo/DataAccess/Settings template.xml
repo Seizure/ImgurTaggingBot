@@ -41,13 +41,13 @@ Anyone with access to the relevant sensitive information can hijack the applicat
  </Configuration>
  
  <StaticSettings
+  PullCommentsFrequency="PT1H"
   ImgurMaximumCommentLengthUTF16CodeUnits="140"
   TaglistDatafilePath="Taglists.xml"
   ImgurCommandPrefix="@Tagaroo"
  />
  
  <DynamicSettings
-  PullCommentsFrequency="PT1H"
   PullCommentsPerUserRequestThreshhold="10"
   CommentsProcessedUpToInclusive=""
  >

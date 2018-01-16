@@ -1,93 +1,188 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Globalization;
-using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
+using Imgur.API.Models;
+using Tagaroo.Infrastructure;
+using Tagaroo.Model;
 using Tagaroo.Application;
-using Tagaroo.DataAccess;
 using Tagaroo.Imgur;
 using Tagaroo.Discord;
+using Tagaroo.DataAccess;
 using Tagaroo.Logging;
 
+using ImgurException=Imgur.API.ImgurException;
+using TaskScheduler=Tagaroo.Infrastructure.TaskScheduler;
+
 namespace Tagaroo{
- internal class Program{
-  public Program(){}
+ public class Program{
+  private readonly ImgurInterfacer Imgur;
+  private readonly DiscordInterfacer Discord;
+  private readonly TaglistRepository RepositoryTaglists;
+  private readonly SettingsRepository RepositorySettings;
+  private readonly ProcessLatestCommentsActivity ActivityProcessComments;
+  private readonly SingleThreadSynchronizationContext ApplicationMessagePump = new SingleThreadSynchronizationContext();
+  private readonly TaskScheduler Scheduler=new TaskScheduler();
+  private Settings CurrentSettings;
+  private readonly TimeSpan PullCommentsFrequency;
+  
+  public Program(
+   ProcessLatestCommentsActivity ActivityProcessComments,
+   ImgurInterfacer Imgur,
+   DiscordInterfacer Discord,
+   TaglistRepository RepositoryTaglists,
+   SettingsRepository RepositorySettings,
+   TimeSpan PullCommentsFrequency
+  ){
+   if(PullCommentsFrequency < TimeSpan.Zero){
+    throw new ArgumentOutOfRangeException(nameof(PullCommentsFrequency),"Cannot be negative or infinite");
+   }
+   this.Imgur=Imgur;
+   this.Discord=Discord;
+   this.RepositoryTaglists=RepositoryTaglists;
+   this.RepositorySettings=RepositorySettings;
+   this.ActivityProcessComments=ActivityProcessComments;
+   this.PullCommentsFrequency=PullCommentsFrequency;
+  }
 
-  public int Main(){
-   Log.Instance.AddTraceListener(new TextWriterTraceListener(Console.Out,"StdOutListener"));
-   Log.Instance.BootstrapLevel.Level = SourceLevels.Verbose;
-   Log.Bootstrap_.LogInfo("Application starting");
-   CultureInfo.CurrentCulture = CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-   SettingsRepository RepositorySettings=new SettingsRepositoryMain(SettingsFilePath);
-   Log.Bootstrap_.LogVerbose("Initializing Settings repository");
+  public bool Run(){
+   bool startupsuccess=false;
+   Log.Bootstrap_.LogVerbose("Beginning application message pump");
+   ApplicationMessagePump.RunOnCurrentThread(async()=>{
+    Log.Bootstrap_.LogVerbose("Application message pump started");
+    bool success = await Setup();
+    if(!success){
+     ApplicationMessagePump.Finish();
+     return;
+    }
+    startupsuccess=true;
+    await RunMain();
+    await UnSetup();
+    ApplicationMessagePump.Finish();
+   });
+   return startupsuccess;
+  }
+
+  private async Task<bool> Setup(){
+   Log.Bootstrap_.LogVerbose("Initializing repositories");
    RepositorySettings.Initialize();
-   Log.Bootstrap_.LogInfo("Loading Configuration");
-   ApplicationConfiguration Configuration;
+   RepositoryTaglists.Initialize();
+   Log.Bootstrap_.LogInfo("Reading Settings");
    try{
-    Configuration = RepositorySettings.LoadConfiguration().Result;
+    this.CurrentSettings = await RepositorySettings.LoadSettings();
    }catch(DataAccessException Error){
-    Log.Bootstrap_.LogError("Unable to start; could not load application configuration: "+Error.Message);
-    return Return_ConfigurationLoadError;
+    Log.Bootstrap_.LogError("Could not load Settings: "+Error.Message);
    }
-   Log.Bootstrap_.LogInfo("Applying Configuration");
-   Log.Bootstrap_.LogVerbose("Applying Configuration: Logging");
-   Log.Instance.BootstrapLevel.Level      = Configuration.LogLevelBootstrap;
-   Log.Instance.ApplicationLevel.Level    = Configuration.LogLevelApplication;
-   Log.Instance.ImgurLevel.Level          = Configuration.LogLevelImgur;
-   Log.Instance.DiscordLevel.Level        = Configuration.LogLevelDiscord;
-   Log.Instance.DiscordLibraryLevel.Level = Configuration.LogLevelDiscordLibrary;
-   Log.Instance.ImgurBandwidthLevel.Level = Configuration.LogLevelImgurBandwidth;
-   Log.Bootstrap_.LogVerbose("Applying Configuration: Constructing Application");
-   DiscordInterfacer Discord;
-   ImgurInterfacer Imgur;
-   CoreProcess Application=new CoreProcess(
-    Imgur=new ImgurInterfacerMain(
-     RepositorySettings,
-     Configuration.ImgurClientID,
-     Configuration.ImgurClientSecret,
-     Configuration.ImgurUserAccountUsername,
-     Configuration.ImgurUserAccountID,
-     Configuration.ImgurOAuthAccessToken,
-     Configuration.ImgurOAuthRefreshToken,
-     Configuration.ImgurOAuthTokenType,
-     Configuration.ImgurOAuthTokenExpiry,
-     Configuration.ImgurMaximumCommentLengthUTF16CodeUnits
-    ),
-    Discord = new DiscordInterfacerMain(
-     Configuration.DiscordAuthenticationToken,
-     Configuration.DiscordGuildID,
-     Configuration.DiscordChannelIDLog
-    ),
-    new TaglistRepositoryMain(
-     Configuration.TaglistDataFilePath, true
-    ),
-    RepositorySettings,
-    new ImgurCommandParser(Configuration.ImgurCommandPrefix, Imgur)
-   );
-   Log.Bootstrap_.LogVerbose("Applying Configuration: Logging output");
-   if(Configuration.LogToDiscord){
-    Log.Instance.AddTraceListener(
-     new DiscordTraceListener("DiscordListener", Discord, new TextWriterTraceListener(Console.Out))
+   if(this.CurrentSettings is null){return false;}
+   Log.Bootstrap_.LogInfo("Connecting to Discord...");
+   try{
+    await Discord.Connect();
+    Log.Bootstrap_.LogInfo("Discord connection established");
+   }catch(DiscordException Error){
+    Log.Bootstrap_.LogError("Unable to connect to Discord: "+Error.Message);
+    return false;
+   }
+   bool result=false;
+   try{
+    Log.Bootstrap_.LogVerbose("Verifying Taglists");
+    if(!await CheckTaglists()){
+     return false;
+    }
+    Log.Bootstrap_.LogInfo("Making contact with Imgur");
+    IRateLimit RemainingBandwidth;
+    try{
+     RemainingBandwidth = await Imgur.ReadRemainingBandwidth();
+    }catch(ImgurException Error){
+     Log.Bootstrap_.LogError("Error making initial contact with Imgur: "+Error.Message);
+     return false;
+    }
+    Log.Bootstrap_.LogInfo(
+     "Remaining Imgur API Bandwidth - {0:D} / {1:D}",
+     RemainingBandwidth.ClientRemaining,RemainingBandwidth.ClientLimit
     );
-    Log.Instance.RemoveTraceListener("StdOutListener");
+    result = true;
+   }finally{
+    if(!result){
+     await UnSetup();
+    }
    }
-   Log.Bootstrap_.LogInfo("Configuration applied; starting application");
-   bool startupsuccess=Application.Run();
-   Log.Bootstrap_.LogInfo("Application ended");
-   if(!startupsuccess){
-    return Return_ApplicationStartError;
-   }
-   return 0;
+   return result;
   }
 
-  /*
-  static int Main(string[] Parameters){
-   return new Program().Main();
+  private async Task UnSetup(){
+   await Discord.Shutdown();
   }
-  */
 
-  const string SettingsFilePath=@"Settings.xml";
-  public const int Return_ApplicationStartError=-1;
-  public const int Return_ConfigurationLoadError=-2;
+  private async Task<bool> CheckTaglists(){
+   ICollection<Taglist> Taglists;
+   try{
+    Taglists = await RepositoryTaglists.ReadAllHeaders();
+   }catch(DataAccessException Error){
+    Log.Bootstrap_.LogError("Error accessing Taglists data: "+Error.Message);
+    return false;
+   }
+   foreach(Taglist CheckChannels in Taglists){
+    Log.Bootstrap_.LogVerbose("Verifying Taglist '{0}'",CheckChannels.Name);
+    if(!CheckTaglistChannel(CheckChannels, CheckChannels.ArchiveChannelIDSafe, "Safe Archive")){
+     return false;
+    }
+    if(!CheckTaglistChannel(CheckChannels, CheckChannels.ArchiveChannelIDQuestionable, "Questionable Archive")){
+     return false;
+    }
+    if(!CheckTaglistChannel(CheckChannels, CheckChannels.ArchiveChannelIDExplicit, "Explicit Archive", true)){
+     return false;
+    }
+   }
+   return true;
+  }
+  
+  private bool CheckTaglistChannel(Taglist Check, ulong ChannelID, string ChannelName, bool ShouldBeNSFW=false){
+   if(!Discord.TextChannelExists(ChannelID, out bool NSFW)){
+    Log.Bootstrap_.LogError(
+     "The '{1}' Channel for the Taglist '{0}' (the Channel specified by the ID {2}), does not exist in the Guild",
+     Check.Name,ChannelName,ChannelID
+    );
+    return false;
+   }
+   if(ShouldBeNSFW && !NSFW){
+    Log.Bootstrap_.LogWarning(
+     "The '{1}' Channel for the Taglist '{0}' is not marked as NSFW",
+     Check.Name,ChannelName
+    );
+   }
+   return true;
+  }
+
+  private async Task RunMain(){
+   Scheduler.AddTask(ScheduledTask.NewImmediateTask(
+    PullCommentsFrequency,
+    () => ActivityProcessComments.Execute(CurrentSettings)
+   ));
+   Log.Bootstrap_.LogInfo("Setup complete, running application");
+   await Scheduler.Run();
+   /*
+   bool run=true;
+   while(run){
+    await ProcessLatestComments();
+    try{
+     //await Task.Delay(6000);
+     //this.Shutdown();
+     await Task.Delay(
+      CurrentSettings.PullCommentsFrequency,
+      ShutdownSignal.Token
+     );
+    }catch(TaskCanceledException){
+     run=false;
+     Log.Bootstrap_.LogInfo("Received shutdown signal");
+    }
+   }
+   */
+  }
+
+  public void Shutdown(){
+   Scheduler.Stop();
+  }
  }
 }

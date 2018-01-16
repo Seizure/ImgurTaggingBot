@@ -186,6 +186,11 @@
  </xs:complexType>
  
  <xs:complexType name="StaticSettings">
+  <xs:attribute name="PullCommentsFrequency" type="positiveDuration32BitMilliseconds" use="required">
+   <xs:annotation><xs:documentation>
+    How often the application polls Imgur for new Comments.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
   <xs:attribute name="ImgurMaximumCommentLengthUTF16CodeUnits" type="positiveShort" use="required">
    <xs:annotation><xs:documentation>
     The maximum length of a single Imgur Comment.
@@ -221,11 +226,6 @@
     </xs:sequence></xs:complexType>
    </xs:element>
   </xs:sequence>
-  <xs:attribute name="PullCommentsFrequency" type="positiveDuration" use="required">
-   <xs:annotation><xs:documentation>
-    How often the application polls Imgur for new Comments.
-   </xs:documentation></xs:annotation>
-  </xs:attribute>
   <xs:attribute name="PullCommentsPerUserRequestThreshhold" type="xs:unsignedByte" use="required">
    <xs:annotation><xs:documentation>
     The maximum amount of "get Comments" requests to send per user when retrieving a Commenter's Comments.
@@ -265,7 +265,11 @@
   <xs:minExclusive value="0"/>
  </xs:restriction></xs:simpleType>
  
- <xs:simpleType name="positiveDuration"><xs:restriction base="xs:duration">
+ <xs:simpleType name="duration32BitMilliseconds"><xs:restriction base="xs:duration">
+  <xs:minInclusive value="-PT2147483.648S"/>
+  <xs:maxExclusive value="PT2147483.648S"/>
+ </xs:restriction></xs:simpleType>
+ <xs:simpleType name="positiveDuration32BitMilliseconds"><xs:restriction base="duration32BitMilliseconds">
   <xs:minExclusive value="PT0S"/>
  </xs:restriction></xs:simpleType>
  

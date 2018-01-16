@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tagaroo.Application{
+namespace Tagaroo.Infrastructure{
  internal class SingleThreadSynchronizationContext : SynchronizationContext{
   private readonly BlockingCollection<Tuple<SendOrPostCallback,object>> MessageQueue
    = new BlockingCollection<Tuple<SendOrPostCallback, object>>( new ConcurrentQueue<Tuple<SendOrPostCallback, object>>() );
