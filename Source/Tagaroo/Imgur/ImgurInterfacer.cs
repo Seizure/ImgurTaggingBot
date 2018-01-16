@@ -17,6 +17,7 @@ using AuthenticationImpl=Imgur.API.Authentication.Impl;
 using ModelsImpl=Imgur.API.Models.Impl;
 using EndpointsImpl=Imgur.API.Endpoints.Impl;
 using ImgurException=Imgur.API.ImgurException;
+using HttpRequestException=System.Net.Http.HttpRequestException;
 
 namespace Tagaroo.Imgur{
  
@@ -176,6 +177,8 @@ namespace Tagaroo.Imgur{
     NewToken = await APIOAuth.GetTokenByRefreshTokenAsync(ClientAuthenticated.OAuth2Token.RefreshToken);
    }catch(ImgurException){
     throw;
+   }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
    }
    //TODO Security–Convenience issues regarding logging this information to Discord
    Log.Imgur_.LogCritical(
@@ -201,6 +204,8 @@ namespace Tagaroo.Imgur{
     return await APIBandwidth.GetRateLimitAsync();
    }catch(ImgurException){
     throw;
+   }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
    }
   }
 
@@ -263,6 +268,8 @@ namespace Tagaroo.Imgur{
      ).ToList();
     }catch(ImgurException){
      throw;
+    }catch(HttpRequestException Error){
+     throw ToImgurException(Error);
     }
     Result.AddRange(UserComments);
     more = UserComments.Count >= CommentsPerPage;
@@ -285,6 +292,8 @@ namespace Tagaroo.Imgur{
     return (await APIComments.GetRepliesAsync(RepliesTo.Id)).Children;
    }catch(ImgurException){
     throw;
+   }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
    }
   }
 
@@ -322,6 +331,8 @@ namespace Tagaroo.Imgur{
     }
    }catch(ImgurException){
     throw;
+   }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
    }
   }
 
@@ -344,6 +355,8 @@ namespace Tagaroo.Imgur{
      );
     }catch(ImgurException){
      throw;
+    }catch(HttpRequestException Error){
+     throw ToImgurException(Error);
     }
    }
   }
@@ -380,6 +393,10 @@ namespace Tagaroo.Imgur{
     Result.Add(Current.ToString());
    }
    return Result;
+  }
+
+  protected ImgurException ToImgurException(HttpRequestException From){
+   return new ImgurException("Network Error: "+From.Message,From);
   }
 
   #if RELEASE
