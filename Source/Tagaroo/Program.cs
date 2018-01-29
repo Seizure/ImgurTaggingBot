@@ -118,8 +118,8 @@ namespace Tagaroo{
    return result;
   }
 
-  private async Task UnSetup(){
-   await Discord.Shutdown();
+  private Task UnSetup(){
+   return Discord.Shutdown();
   }
 
   private async Task<bool> CheckTaglists(){
@@ -162,13 +162,13 @@ namespace Tagaroo{
    return true;
   }
 
-  private async Task RunMain(){
+  private Task RunMain(){
    Scheduler.AddTask(ScheduledTask.NewImmediateTask(
     PullCommentsFrequency,
     () => ActivityProcessComments.Execute(CurrentSettings)
    ));
    Log.Bootstrap_.LogInfo("Setup complete, running application");
-   await Scheduler.Run();
+   return Scheduler.Run();
    /*
    bool run=true;
    while(run){

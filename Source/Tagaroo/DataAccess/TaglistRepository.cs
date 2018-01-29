@@ -92,11 +92,11 @@ namespace Tagaroo.DataAccess{
   - GUID
   */
 
-  public async Task<ICollection<Taglist>> ReadAllHeaders(){
+  public Task<ICollection<Taglist>> ReadAllHeaders(){
    if(Cache && CachedTaglists!=null){
-    return CachedTaglists.Values.ToList();
+    return Task.FromResult<ICollection<Taglist>>(CachedTaglists.Values.ToList());
    }
-   return await _ReadAllHeaders();
+   return _ReadAllHeaders();
   }
 
   protected async Task<ICollection<Taglist>> _ReadAllHeaders(){
@@ -162,7 +162,7 @@ namespace Tagaroo.DataAccess{
   }
 
   /*
-  public async Task SaveAll(ICollection<Taglist> Save){
+  public Task SaveAll(ICollection<Taglist> Save){
    Initialize();
    ...
    this.CachedTaglists=null;

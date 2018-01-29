@@ -164,10 +164,11 @@ namespace Tagaroo.Imgur{
   }
 
   /// <exception cref="ImgurException"/>
-  protected async Task EnsureUserAuthenticationTokenCurrent(){
+  protected Task EnsureUserAuthenticationTokenCurrent(){
    if( (ClientAuthenticated.OAuth2Token.ExpiresAt - ExpiryPrecision) <= DateTimeOffset.UtcNow ){
-    await RefreshUserAuthenticationToken();
+    return RefreshUserAuthenticationToken();
    }
+   return Task.CompletedTask;
   }
 
   public async Task<IOAuth2Token> RefreshUserAuthenticationToken(){
@@ -297,11 +298,11 @@ namespace Tagaroo.Imgur{
    }
   }
 
-  public async Task<GalleryItem> ReadGalleryImage(string ID){
-   return await ReadGalleryItem(ID,false);
+  public Task<GalleryItem> ReadGalleryImage(string ID){
+   return ReadGalleryItem(ID,false);
   }
-  public async Task<GalleryItem> ReadGalleryAlbum(string ID){
-   return await ReadGalleryItem(ID,true);
+  public Task<GalleryItem> ReadGalleryAlbum(string ID){
+   return ReadGalleryItem(ID,true);
   }
   
   /// <exception cref="ImgurException"/>

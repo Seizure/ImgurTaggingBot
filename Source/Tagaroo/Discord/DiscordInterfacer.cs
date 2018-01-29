@@ -193,7 +193,7 @@ namespace Tagaroo.Discord{
    return !(Result is null);
   }
 
-  public async Task PostGalleryItemDetails(ulong ChannelID,GalleryItem ToPost){
+  public Task PostGalleryItemDetails(ulong ChannelID,GalleryItem ToPost){
    if(State!=States.Connected){throw new InvalidOperationException("Not connected");}
    EmbedBuilder MessageEmbed = new EmbedBuilder()
    .WithTimestamp(ToPost.Created);
@@ -226,7 +226,7 @@ namespace Tagaroo.Discord{
      ToPost.Description.Length <= RemainingSpace ? ToPost.Description : ToPost.Description.Substring(0,RemainingSpace)
     );
    }
-   await SendMessage(
+   return SendMessage(
     ChannelID,
     ToPost.hasTitle
     ? string.Format("{1}\r\n{0}",ToPost.LinkPage,ToPost.Title)
@@ -262,8 +262,8 @@ namespace Tagaroo.Discord{
    }
   }
 
-  public async Task<IResult> ExecuteCommand(SocketUserMessage CommandMessage,int CommandStartOffset=0){
-   return await CommandExecuter.ExecuteAsync(
+  public Task<IResult> ExecuteCommand(SocketUserMessage CommandMessage,int CommandStartOffset=0){
+   return CommandExecuter.ExecuteAsync(
     new SocketCommandContext(Client,CommandMessage),
     CommandStartOffset,
     CommandServices

@@ -21,12 +21,12 @@ namespace Tagaroo.Application{
    );
   }
 
-  public async Task ExecuteIfNew(IComment Process){
-   await CommandParser.ProcessCommands(Process,CommandHandler);
+  public Task ExecuteIfNew(IComment Process){
+   return CommandParser.ProcessCommands(Process,CommandHandler);
   }
 
-  public async Task ExecuteUnconditionally(IComment Process){
-   await CommandParser.ProcessCommandsUnconditionally(Process,CommandHandler);
+  public Task ExecuteUnconditionally(IComment Process){
+   return CommandParser.ProcessCommandsUnconditionally(Process,CommandHandler);
   }
  }
 
@@ -36,8 +36,8 @@ namespace Tagaroo.Application{
    this.CommandHandler_Tag=CommandHandler_Tag;
   }
 
-  public async Task ProcessTagCommand(Tag CommandParameter){
-   await CommandHandler_Tag.Execute(CommandParameter);
+  public Task ProcessTagCommand(Tag CommandParameter){
+   return CommandHandler_Tag.Execute(CommandParameter);
   }
  }
 }

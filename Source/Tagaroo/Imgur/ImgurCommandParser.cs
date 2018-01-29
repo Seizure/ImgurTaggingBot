@@ -78,11 +78,11 @@ namespace Tagaroo.Imgur{
    */
   }
 
-  public async Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback){
-   await ProcessCommands(HostComment,Callback,true);
+  public Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback){
+   return ProcessCommands(HostComment,Callback,true);
   }
-  public async Task ProcessCommandsUnconditionally(IComment HostComment,ImgurCommandHandler Callback){
-   await ProcessCommands(HostComment,Callback,false);
+  public Task ProcessCommandsUnconditionally(IComment HostComment,ImgurCommandHandler Callback){
+   return ProcessCommands(HostComment,Callback,false);
   }
 
   protected async Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback,bool CheckForReplies){
