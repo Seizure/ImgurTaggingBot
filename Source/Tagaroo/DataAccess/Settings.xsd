@@ -132,6 +132,16 @@
     for the Guild to appear in the list of available Guilds.
    </xs:documentation></xs:annotation>
   </xs:attribute>
+  <xs:attribute name="CommandChannelID" type="xs:unsignedLong" use="required">
+   <xs:annotation><xs:documentation>
+    The numerical ID of the Discord Channel in the Guild
+    where the application will listen for commands issued to it.
+    Any users allowed to post messages in this Channel
+    will be able to execute commands.
+    Commands will only be listened for on this Channel;
+    any commands issued in any other Channel won't be picked up.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
   <xs:attribute name="LogChannelID" type="xs:unsignedLong" use="required">
    <xs:annotation><xs:documentation>
     -Keep this Channel secure, and only allow access to it by administrative users-;
@@ -208,6 +218,12 @@
    <xs:annotation><xs:documentation>
     All Imgur commands contained in Comments must begin with this string prefix.
     This allows the Comment commands to begin with something other than "@Tagaroo …".
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="DiscordCommandPrefix" type="xs:string" use="required">
+   <xs:annotation><xs:documentation>
+    Commands issued to the application over Discord must begin with this string.
+    Any Channel post not beginning with this string is ignored.
    </xs:documentation></xs:annotation>
   </xs:attribute>
  </xs:complexType>

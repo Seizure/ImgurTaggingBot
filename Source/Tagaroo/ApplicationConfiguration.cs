@@ -24,9 +24,11 @@ namespace Tagaroo{
   public string DiscordAuthenticationToken { get; }
   public ulong DiscordGuildID { get; }
   public ulong DiscordChannelIDLog { get; }
+  public ulong DiscordChannelIDCommands { get; }
+  public string DiscordCommandPrefix { get; }
   public TimeSpan PullCommentsFrequency{get;}
   public string TaglistDataFilePath { get; }
-  public string ImgurCommandPrefix { get; internal set; }
+  public string ImgurCommandPrefix { get; }
 
   public ApplicationConfiguration(
    SourceLevels logLevelBootstrap,
@@ -48,6 +50,8 @@ namespace Tagaroo{
    string discordAuthenticationToken,
    ulong discordGuildID,
    ulong discordChannelIDLog,
+   ulong DiscordChannelIDCommands,
+   string DiscordCommandPrefix,
    TimeSpan PullCommentsFrequency,
    string taglistDataFilePath,
    string ImgurCommandPrefix
@@ -72,6 +76,8 @@ namespace Tagaroo{
    this.DiscordAuthenticationToken=discordAuthenticationToken;
    this.DiscordGuildID=discordGuildID;
    this.DiscordChannelIDLog=discordChannelIDLog;
+   this.DiscordChannelIDCommands=DiscordChannelIDCommands;
+   this.DiscordCommandPrefix=DiscordCommandPrefix;
    this.PullCommentsFrequency=PullCommentsFrequency;
    this.TaglistDataFilePath=taglistDataFilePath;
    this.ImgurCommandPrefix=ImgurCommandPrefix;

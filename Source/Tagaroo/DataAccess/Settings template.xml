@@ -26,6 +26,7 @@ Anyone with access to the relevant sensitive information can hijack the applicat
   </Imgur>
   <Discord
    GuildID=""
+   CommandChannelID=""
    LogChannelID=""
    Token=""
   />
@@ -45,6 +46,7 @@ Anyone with access to the relevant sensitive information can hijack the applicat
   ImgurMaximumCommentLengthUTF16CodeUnits="140"
   TaglistDatafilePath="Taglists.xml"
   ImgurCommandPrefix="@Tagaroo"
+  DiscordCommandPrefix="/"
  />
  
  <DynamicSettings

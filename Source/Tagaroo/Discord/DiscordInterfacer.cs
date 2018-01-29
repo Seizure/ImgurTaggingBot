@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Reflection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Net.Providers.WS4Net;
+using Discord.Commands;
 using Tagaroo.Model;
 using Tagaroo.Logging;
 
@@ -15,6 +17,8 @@ using HttpRequestException=System.Net.Http.HttpRequestException;
 namespace Tagaroo.Discord{
 
  public interface DiscordInterfacer{
+  void Initialize(IServiceProvider CommandServices);
+
   /// <exception cref="DiscordException"/>
   Task Connect();
   
@@ -32,17 +36,31 @@ namespace Tagaroo.Discord{
   Task<bool> LogMessage(string Message);
  }
 
- public class DiscordInterfacerMain : DiscordInterfacer{
+ public interface DiscordCommandInterfacer{
+  Task<IResult> ExecuteCommand(SocketUserMessage CommandMessage,int CommandStartOffset=0);
+
+  /// <exception cref="DiscordException"/>
+  Task SendMessage(ulong ChannelID, string Message, bool NSFW, Embed EmbeddedItem=null);
+ }
+
+ public class DiscordInterfacerMain : DiscordInterfacer, DiscordCommandInterfacer{
   private readonly DiscordSocketClient Client;
   private readonly string AuthenticationToken;
   private readonly ulong GuildID;
   private readonly ulong LogChannelID;
+  private readonly CommandService CommandExecuter;
+  private readonly IReadOnlyDictionary<ulong,CommandChannel> CommandChannelSources;
+  private IServiceProvider CommandServices;
   private States State=States.Disconnected;
+  private ulong? Self;
   private SocketGuild Guild=null;
   private ITextChannel LogChannel=null;
   private bool loggingmessage=false;
   
-  public DiscordInterfacerMain(string AuthenticationToken,ulong GuildID,ulong LogChannelID){
+  public DiscordInterfacerMain(
+   string AuthenticationToken,ulong GuildID,ulong LogChannelID,
+   ulong CommandChannelID,string CommandChannelPrefix
+  ){
    this.Client=new DiscordSocketClient(new DiscordSocketConfig(){
     WebSocketProvider=WS4NetProvider.Instance,
     HandlerTimeout=null
@@ -50,6 +68,14 @@ namespace Tagaroo.Discord{
    this.AuthenticationToken=AuthenticationToken;
    this.GuildID=GuildID;
    this.LogChannelID=LogChannelID;
+   this.CommandExecuter=new CommandService(new CommandServiceConfig(){
+    CaseSensitiveCommands=false,
+    ThrowOnError=false,
+    LogLevel=LogSeverity.Debug
+   });
+   this.CommandChannelSources=new Dictionary<ulong,CommandChannel>{
+    {CommandChannelID, new CommandChannel(this, CommandChannelID, CommandChannelPrefix)}
+   };
    /*
    Many of these event handlers are not called in a synchronized manner,
    and so may need to be properly synchronized to the current SynchronizationContext
@@ -60,6 +86,17 @@ namespace Tagaroo.Discord{
    Client.Connected+=onConnected;
    Client.LoggedIn+=onLoggedIn;
    Client.LoggedIn+=onLoggedOut;
+   CommandExecuter.Log+=onClientLogMessage;
+  }
+
+  public void Initialize(IServiceProvider CommandServices){
+   if(this.CommandServices!=null){throw new InvalidOperationException();}
+   this.CommandServices=CommandServices;
+   Log.Bootstrap_.LogInfo("Loading Discord commands");
+   ICollection<ModuleInfo> LoadedCommands=CommandExecuter.AddModulesAsync(
+    Assembly.GetExecutingAssembly()
+   ).Result.ToList();
+   Log.Bootstrap_.LogVerbose("Discord command modules loaded: {0}",LoadedCommands.Count);
   }
 
   public async Task Connect(){
@@ -87,6 +124,7 @@ namespace Tagaroo.Discord{
    }
    await BecomingReady.Task;
    Client.Ready -= OnReady;
+   this.Self=Client.CurrentUser.Id;
    this.State = States.Connected;
    //Log.Bootstrap_.LogInfo("Successfully connected to Discord");
    IdentifyChannels(this.GuildID, this.LogChannelID, out this.Guild, out this.LogChannel);
@@ -137,6 +175,12 @@ namespace Tagaroo.Discord{
    this.State = States.Disconnected;
    this.Guild=null;
    this.LogChannel=null;
+   this.Self=null;
+  }
+
+  protected bool isSelf(ulong DiscordUserID){
+   if(State!=States.Connected){throw new InvalidOperationException("Not connected");}
+   return DiscordUserID==this.Self;
   }
 
   public bool TextChannelExists(ulong ChannelID){
@@ -218,6 +262,14 @@ namespace Tagaroo.Discord{
    }
   }
 
+  public async Task<IResult> ExecuteCommand(SocketUserMessage CommandMessage,int CommandStartOffset=0){
+   return await CommandExecuter.ExecuteAsync(
+    new SocketCommandContext(Client,CommandMessage),
+    CommandStartOffset,
+    CommandServices
+   );
+  }
+
   public async Task<bool> LogMessage(string Message){
    if(
     State!=States.Connected
@@ -243,6 +295,7 @@ namespace Tagaroo.Discord{
   private Task onMessage(SocketMessage Message){
    //TODO Check if calls to this method are properly synchronized
    if(State!=States.Connected){return Task.CompletedTask;}
+   if(isSelf(Message.Author.Id)){return Task.CompletedTask;}
    /*
    TODO Discord Commands:
    Shutdown
@@ -253,6 +306,12 @@ namespace Tagaroo.Discord{
    Configure Settings
    Query OAuth Token expiry, also log message on imminent expiry
    */
+   if(CommandChannelSources.TryGetValue(Message.Channel.Id, out CommandChannel CommandSource)){
+    SocketUserMessage UserMessage=Message as SocketUserMessage;
+    if(UserMessage!=null){
+     return CommandSource.MessageReceived(UserMessage);
+    }
+   }
    return Task.CompletedTask;
   }
 

@@ -18,6 +18,7 @@ using ImgurEndpoints=Imgur.API.Endpoints.Impl;
 using Tagaroo.Application;
 using Tagaroo.Model;
 using Tagaroo.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 /*
 Dumping ground for testing out stuff
@@ -271,15 +272,16 @@ namespace Tagaroo{
   public void RunDebugDiscord(){
    Console.Write("Authentication Token > ");
    string DiscordAuthorizationToken=Console.ReadLine();
-   Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL);
+   Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL,388542416225042439UL,"/");
+   Discord.Initialize(new ServiceCollection().AddSingleton<Discord.DiscordInterfacer>(Discord).AddSingleton<Imgur.ImgurInterfacer>(new TestImgurInterfacer()).BuildServiceProvider());
    //Logging.Log.Instance.AddTraceListener(new Logging.DiscordTraceListener("DiscordListener",Discord,new System.Diagnostics.TextWriterTraceListener(Console.Out)));
    Logging.Log.Instance.DiscordLevel.Level=System.Diagnostics.SourceLevels.Verbose;
    Logging.Log.Instance.DiscordLibraryLevel.Level=System.Diagnostics.SourceLevels.Warning;
    SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext();
    RunOn.RunOnCurrentThread(async()=>{
     await Discord.Connect();
-    await Task.Delay(1000);
     /*
+    await Task.Delay(1000);
     await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
      "Q","Gallery Link","https://imgur.com/gallery/YYL69",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
     ));
@@ -433,7 +435,8 @@ namespace Tagaroo{
        _Imgur,
        _Discord=new Discord.DiscordInterfacerMain(
         DiscordAuthorizationToken,
-        388542416225042435UL,388542416225042439UL
+        388542416225042435UL,388542416225042439UL,
+        388542416225042439UL,"/"
        ),
        new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true)
       )
@@ -452,7 +455,7 @@ namespace Tagaroo{
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
    //new Debug().RunDebug().Wait();
-   new Debug().RunDebugSynchronized();
+   new Debug().RunDebugDiscord();
    //new Debug().RunCore();
    //new Program().Main();
    Console.ReadKey(true);
@@ -467,5 +470,40 @@ namespace Tagaroo{
   }
   */
  }
+
+ #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+ class TestImgurInterfacer:Imgur.ImgurInterfacer{
+  public bool isCommentByThisApplication(IComment operand){
+   return false;
+  }
+  public async Task<IOAuth2Token> RefreshUserAuthenticationToken() {
+   return new ModelsImpl.OAuth2Token("Access Token","Refresh Token","Token Type","Account ID","Account Name",(int)TimeSpan.FromDays(1).TotalSeconds);
+  }
+  public async Task<IDictionary<string,IList<IComment>>> ReadCommentsSince(DateTimeOffset SinceExclusive,ISet<string> ByUsernames,short RequestsPerUserLimit) {
+   return new Dictionary<string,IList<IComment>>(0);
+  }
+  public async Task<IEnumerable<IComment>> ReadCommentReplies(IComment RepliesTo){
+   return new List<IComment>(0);
+  }
+  public async Task<GalleryItem> ReadGalleryImage(string ID){
+   return new GalleryItem(ID,"Title","Image Page URL","Image Resource URL","Author","Description",false,DateTimeOffset.UtcNow,"Categories",800,600);
+  }
+  public async Task<GalleryItem> ReadGalleryAlbum(string ID){
+   return await ReadGalleryImage(ID);
+  }
+  public async Task MentionUsers(string OnItemID,int ItemParentCommentID,ISet<string> UsernamesToMention) {
+   return;
+  }
+  public async Task<IRateLimit> ReadRemainingBandwidth(){
+   return new ModelsImpl.RateLimit(){
+    ClientRemaining=999,
+    ClientLimit=1000
+   };
+  }
+  public async Task LogRemainingBandwidth(){
+   return;
+  }
+ }
+ #pragma warning restore CS1998
 }
 #endif

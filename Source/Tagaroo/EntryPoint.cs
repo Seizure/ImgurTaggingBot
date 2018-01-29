@@ -55,7 +55,9 @@ namespace Tagaroo{
    DiscordInterfacer Discord=new DiscordInterfacerMain(
     Configuration.DiscordAuthenticationToken,
     Configuration.DiscordGuildID,
-    Configuration.DiscordChannelIDLog
+    Configuration.DiscordChannelIDLog,
+    Configuration.DiscordChannelIDCommands,
+    Configuration.DiscordCommandPrefix
    );
    Program Application=new Program(
     new ProcessLatestCommentsActivity(

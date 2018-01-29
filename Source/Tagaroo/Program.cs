@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Imgur.API.Models;
 using Tagaroo.Infrastructure;
 using Tagaroo.Model;
@@ -25,6 +26,7 @@ namespace Tagaroo{
   private readonly ProcessLatestCommentsActivity ActivityProcessComments;
   private readonly SingleThreadSynchronizationContext ApplicationMessagePump = new SingleThreadSynchronizationContext();
   private readonly TaskScheduler Scheduler=new TaskScheduler();
+  private readonly IServiceCollection DiscordCommandServices;
   private Settings CurrentSettings;
   private readonly TimeSpan PullCommentsFrequency;
   
@@ -45,6 +47,10 @@ namespace Tagaroo{
    this.RepositorySettings=RepositorySettings;
    this.ActivityProcessComments=ActivityProcessComments;
    this.PullCommentsFrequency=PullCommentsFrequency;
+   this.DiscordCommandServices=new ServiceCollection()
+    .AddSingleton<DiscordInterfacer>(Discord)
+    .AddSingleton<ImgurInterfacer>(Imgur)
+   ;
   }
 
   public bool Run(){
@@ -76,6 +82,7 @@ namespace Tagaroo{
     Log.Bootstrap_.LogError("Could not load Settings: "+Error.Message);
    }
    if(this.CurrentSettings is null){return false;}
+   Discord.Initialize(DiscordCommandServices.BuildServiceProvider());
    Log.Bootstrap_.LogInfo("Connecting to Discord...");
    try{
     await Discord.Connect();

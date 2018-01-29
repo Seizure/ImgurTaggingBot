@@ -71,6 +71,8 @@ namespace Tagaroo.DataAccess{
     (string)ConfigurationDiscordElement.Attribute("Token"),
     (ulong)ConfigurationDiscordElement.Attribute("GuildID"),
     (ulong)ConfigurationDiscordElement.Attribute("LogChannelID"),
+    (ulong)ConfigurationDiscordElement.Attribute("CommandChannelID"),
+    (string)StaticSettingsElement.Attribute("DiscordCommandPrefix"),
     (TimeSpan)StaticSettingsElement.Attribute("PullCommentsFrequency"),
     (string)StaticSettingsElement.Attribute("TaglistDatafilePath"),
     (string)StaticSettingsElement.Attribute("ImgurCommandPrefix")

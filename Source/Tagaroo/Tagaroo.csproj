@@ -38,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net.Commands" Version="1.0.2" />
     <PackageReference Include="Discord.Net.WebSocket" Version="1.0.2" />
     <PackageReference Include="Imgur.API" Version="4.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
