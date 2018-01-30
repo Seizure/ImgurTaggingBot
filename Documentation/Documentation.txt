@@ -75,9 +75,13 @@ The application calls the Imgur API when—
 - Pulling Comments to check for new commands
 - Processing a Tag command, to acquire the details of the image being tagged
 - @Mentioning interested users in Replies to a Tag command Comment
+- Executing certain Discord commands issued to the application by users
 - Refreshing the associated Imgur user account's OAuth Token when it expires
 - Checking the remaining API bandwidth (somewhat ironically)
 Imgur refers to this bandwidth restriction as “Rate Limits”; the current Rate Limit scheme in force can be checked at <//apidocs.imgur.com>.
+
+Checking Remaining Bandwidth
+Remaining bandwidth can be checked via the “APIUsage” Discord command.
 
 Reducing API Bandwidth Usage
 To reduce the amount of API bandwidth the application consumes, the most effective method is probably to reduce the polling frequency to Imgur for new Comments. This process takes up at least 1 API call per Commenter User; for example, if there are 3 users that the application keeps watch on for Comments to process, at least 3 API calls will be consumed whenever it polls for new Comments. More API calls will be required if there have been a lot of Comments since the last time the application polled for them; one API call is required for every 50 new Comments, and they are retrieved newest Comment first.
@@ -88,6 +92,28 @@ OAuth Token Expiry
 The application uses what is known as an OAuth Token as the password to access its user account on Imgur. This OAuth Token expires after some period of time. The application will attempt to automatically renew this token when close to its expiry. If successful, it will log a message notifying that the OAuth Token has been updated. The new token will be visible in the application's <Settings.xml> file.
 -It is strongly recommended that the new OAuth Token be backed up.-
 An administrator will need to be notified to do this. If the new OAuth Token is lost, which is unlikely but possible, a fresh OAuth Token will have to be created manually, which is not a simple process.
+
+
+
+Discord Commands
+
+Note — This section assumes the Discord command prefix is the string “/”; however, this can be changed by the administrator, via the “DiscordCommandPrefix” Setting.
+To execute any of these commands, you must have permission to post in the application's dedicated command Discord Channel, which the administrator will have set up. Commands begin with the command prefix, such as “/”, followed by the command name, followed by any whitespace separated parameters of the command. If a particular parameter value contains whitespace, it should be surrounded by double quotes. Command names are case-insensitive.
+Bear in mind that some commands call the Imgur API, and so consume API bandwidth, albeit usually in very small amounts.
+
+Check Remaining Imgur API Bandwidth:
+
+/APIUsage
+This will display the remaining “bandwidth” that the application has for accessing the Imgur API. See the “Imgur API Bandwidth” section.
+
+Convert To and From Imgur User Account IDs:
+
+/ToImgurUserID <username>
+/FromImgurUserID <account-ID>
+Use these commands to convert to and from Imgur user account IDs.
+<username> is the username of an Imgur account, the ID of which will be retrieved and displayed. <account-ID> is the unique numeric ID of an Imgur account, which must be an integer, the username of which will be retrieved and displayed.
+Users on Imgur are uniquely identified by two properties — their username, which can be changed, and their numeric ID, which is fixed. The application stores both the username and the ID of Imgur users registered to a Taglist. Unfortunately there is no easy way on Imgur to translate to and from a particular user's numeric ID, which is where these commands come in.
+This command calls the Imgur API.
 
 
 

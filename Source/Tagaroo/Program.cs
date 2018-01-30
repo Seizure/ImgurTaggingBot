@@ -18,6 +18,7 @@ using ImgurException=Imgur.API.ImgurException;
 using TaskScheduler=Tagaroo.Infrastructure.TaskScheduler;
 
 namespace Tagaroo{
+ //TODO Shutdown signal
  public class Program{
   private readonly ImgurInterfacer Imgur;
   private readonly DiscordInterfacer Discord;
@@ -82,7 +83,7 @@ namespace Tagaroo{
     Log.Bootstrap_.LogError("Could not load Settings: "+Error.Message);
    }
    if(this.CurrentSettings is null){return false;}
-   Discord.Initialize(DiscordCommandServices.BuildServiceProvider());
+   Discord.Initialize( DiscordCommandServices.BuildServiceProvider(), ApplicationMessagePump );
    Log.Bootstrap_.LogInfo("Connecting to Discord...");
    try{
     await Discord.Connect();

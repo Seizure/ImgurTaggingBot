@@ -273,11 +273,11 @@ namespace Tagaroo{
    Console.Write("Authentication Token > ");
    string DiscordAuthorizationToken=Console.ReadLine();
    Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL,388542416225042439UL,"/");
-   Discord.Initialize(new ServiceCollection().AddSingleton<Discord.DiscordInterfacer>(Discord).AddSingleton<Imgur.ImgurInterfacer>(new TestImgurInterfacer()).BuildServiceProvider());
+   SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext();
+   Discord.Initialize(new ServiceCollection().AddSingleton<Discord.DiscordInterfacer>(Discord).AddSingleton<Imgur.ImgurInterfacer>(new TestImgurInterfacer()).BuildServiceProvider(),RunOn);
    //Logging.Log.Instance.AddTraceListener(new Logging.DiscordTraceListener("DiscordListener",Discord,new System.Diagnostics.TextWriterTraceListener(Console.Out)));
    Logging.Log.Instance.DiscordLevel.Level=System.Diagnostics.SourceLevels.Verbose;
    Logging.Log.Instance.DiscordLibraryLevel.Level=System.Diagnostics.SourceLevels.Warning;
-   SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext();
    RunOn.RunOnCurrentThread(async()=>{
     await Discord.Connect();
     /*
@@ -503,6 +503,27 @@ namespace Tagaroo{
   public async Task LogRemainingBandwidth(){
    return;
   }
+  public async Task<IAccount> ReadUserDetails(string Username){
+   return new ModelsImpl.Account(){
+    Url=Username,
+    Id=3,
+    Created=DateTimeOffset.FromUnixTimeSeconds(0),
+    Reputation=0,
+    Bio="Bio"
+   };
+  }
+  public async Task<IAccount> ReadUserDetails(int UserID){
+   return new ModelsImpl.Account(){
+    Url="Username",
+    Id=UserID,
+    Created=DateTimeOffset.FromUnixTimeSeconds(0),
+    Reputation=0,
+    Bio="Bio"
+   };
+  }
+  public DateTimeOffset OAuthTokenExpiry{get{
+   return DateTimeOffset.UtcNow.AddMonths(1);
+  }}
  }
  #pragma warning restore CS1998
 }

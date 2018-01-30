@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Reflection;
@@ -17,7 +18,7 @@ using HttpRequestException=System.Net.Http.HttpRequestException;
 namespace Tagaroo.Discord{
 
  public interface DiscordInterfacer{
-  void Initialize(IServiceProvider CommandServices);
+  void Initialize(IServiceProvider CommandServices,SynchronizationContext SynchronizationContext);
 
   /// <exception cref="DiscordException"/>
   Task Connect();
@@ -51,6 +52,7 @@ namespace Tagaroo.Discord{
   private readonly CommandService CommandExecuter;
   private readonly IReadOnlyDictionary<ulong,CommandChannel> CommandChannelSources;
   private IServiceProvider CommandServices;
+  private SynchronizationContext SynchronizationContext;
   private States State=States.Disconnected;
   private ulong? Self;
   private SocketGuild Guild=null;
@@ -81,7 +83,7 @@ namespace Tagaroo.Discord{
    and so may need to be properly synchronized to the current SynchronizationContext
    */
    Client.Log+=onClientLogMessage;
-   Client.MessageReceived+=onMessage;
+   Client.MessageReceived+=_onMessage;
    Client.Disconnected+=onDisconnected;
    Client.Connected+=onConnected;
    Client.LoggedIn+=onLoggedIn;
@@ -89,9 +91,11 @@ namespace Tagaroo.Discord{
    CommandExecuter.Log+=onClientLogMessage;
   }
 
-  public void Initialize(IServiceProvider CommandServices){
+  public void Initialize(IServiceProvider CommandServices,SynchronizationContext SynchronizationContext){
    if(this.CommandServices!=null){throw new InvalidOperationException();}
+   if(SynchronizationContext==null){throw new ArgumentNullException();}
    this.CommandServices=CommandServices;
+   this.SynchronizationContext=SynchronizationContext;
    Log.Bootstrap_.LogInfo("Loading Discord commands");
    ICollection<ModuleInfo> LoadedCommands=CommandExecuter.AddModulesAsync(
     Assembly.GetExecutingAssembly()
@@ -292,20 +296,17 @@ namespace Tagaroo.Discord{
    return false;
   }
 
+  private Task _onMessage(SocketMessage Message){
+   SynchronizationContext.Post(
+    (object _) => onMessage(Message),
+    null
+   );
+   return Task.CompletedTask;
+  }
+
   private Task onMessage(SocketMessage Message){
-   //TODO Check if calls to this method are properly synchronized
    if(State!=States.Connected){return Task.CompletedTask;}
    if(isSelf(Message.Author.Id)){return Task.CompletedTask;}
-   /*
-   TODO Discord Commands:
-   Shutdown
-   Reload Settings
-   Manual OAuth Token refresh
-   User ID lookup
-   Query Rate remaining
-   Configure Settings
-   Query OAuth Token expiry, also log message on imminent expiry
-   */
    if(CommandChannelSources.TryGetValue(Message.Channel.Id, out CommandChannel CommandSource)){
     SocketUserMessage UserMessage=Message as SocketUserMessage;
     if(UserMessage!=null){

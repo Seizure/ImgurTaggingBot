@@ -22,11 +22,18 @@ using HttpRequestException=System.Net.Http.HttpRequestException;
 namespace Tagaroo.Imgur{
  
  public interface ImgurInterfacer{
+  DateTimeOffset OAuthTokenExpiry{get;}
+
   bool isCommentByThisApplication(IComment operand);
   
   /// <exception cref="ImgurException"/>
   Task<IOAuth2Token> RefreshUserAuthenticationToken();
   
+  /// <exception cref="ImgurException"/>
+  Task<IAccount> ReadUserDetails(string Username);
+  /// <exception cref="ImgurException"/>
+  Task<IAccount> ReadUserDetails(int UserID);
+
   /// <exception cref="ImgurException"/>
   Task<IDictionary<string,IList<IComment>>> ReadCommentsSince(
    DateTimeOffset SinceExclusive,
@@ -159,6 +166,10 @@ namespace Tagaroo.Imgur{
    this.RepositorySettings=RepositorySettings;
   }
 
+  public DateTimeOffset OAuthTokenExpiry{get{
+   return ClientAuthenticated.OAuth2Token.ExpiresAt;
+  }}
+
   public bool isCommentByThisApplication(IComment operand){
    return operand.AuthorId == this.UserID;
   }
@@ -172,6 +183,7 @@ namespace Tagaroo.Imgur{
   }
 
   public async Task<IOAuth2Token> RefreshUserAuthenticationToken(){
+   //TODO Log message on imminent OAuth Token expiry
    //TODO API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
    IOAuth2Token NewToken;
    try{
@@ -222,6 +234,25 @@ namespace Tagaroo.Imgur{
     "Remaining Imgur API Bandwidth - {0:D} / {1:D}",
     RemainingBandwidth.ClientRemaining,RemainingBandwidth.ClientLimit
    );
+  }
+
+  public async Task<IAccount> ReadUserDetails(string Username){
+   try{
+    return await APIUserAccount.GetAccountAsync(Username);
+   }catch(ImgurException){
+    throw;
+   }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
+   }
+  }
+  public async Task<IAccount> ReadUserDetails(int UserID){
+   try{
+    return await APIUserAccount.GetAccountAsync(UserID);
+   }catch(ImgurException){
+    throw;
+   }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
+   }
   }
 
   public async Task<IDictionary<string,IList<IComment>>> ReadCommentsSince(
