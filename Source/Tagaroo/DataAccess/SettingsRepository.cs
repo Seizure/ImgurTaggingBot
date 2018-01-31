@@ -117,7 +117,7 @@ namespace Tagaroo.DataAccess{
    await XMLDataFileHandler.Save(WholeDocument, SavingOptions);
   }
 
-  private const SaveOptions SavingOptions=SaveOptions.DisableFormatting|SaveOptions.OmitDuplicateNamespaces;
+  protected const SaveOptions SavingOptions=SaveOptions.DisableFormatting|SaveOptions.OmitDuplicateNamespaces;
   static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Settings:v1-snapshot";
  }
 }

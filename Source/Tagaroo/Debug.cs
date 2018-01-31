@@ -351,11 +351,28 @@ namespace Tagaroo{
    Model.CommentsProcessedUpToInclusive=DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(1));
    await Repository.SaveWritableSettings(Model);
    */
+   /*
    DataAccess.SettingsRepository RepositorySettings=new DataAccess.SettingsRepositoryMain(@"Settings.xml");
    DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"Taglists.xml",true);
    Settings ModelSettings=await RepositorySettings.LoadSettings();
    var ModelTaglists=await RepositoryTaglist.LoadAll();
    ApplicationConfiguration ModelConfiguration=await RepositorySettings.LoadConfiguration();
+   */
+   DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"Taglists.xml",true);
+   RepositoryTaglist.Initialize();
+   var ModelAndLock=await RepositoryTaglist.LoadAndLock("SampleTaglist");
+   Taglist Model=ModelAndLock.Item1;
+   DataAccess.Lock Lock=ModelAndLock.Item2;
+   Model.UnRegisterUser("All");
+   Model.UnRegisterUser(56);
+   Model.RegisterUser(new TaglistRegisteredUser("None",56,TaglistRegisteredUser.RatingFlags.None,new List<string>(0)));
+   Model.RegisterUser(new TaglistRegisteredUser("New Many",255,TaglistRegisteredUser.RatingFlags.Safe|TaglistRegisteredUser.RatingFlags.Questionable|TaglistRegisteredUser.RatingFlags.Explicit,new List<string>{"Category A","Category B","Category C"}));
+   try{
+    Model.RegisterUser(new TaglistRegisteredUser("Explicit",257,TaglistRegisteredUser.RatingFlags.Explicit,new List<string>(0)));
+   }catch(AlreadyExistsException Error){
+   }
+   Model.RegisterUser(new TaglistRegisteredUser("Safe",59,TaglistRegisteredUser.RatingFlags.Safe,new List<string>{"NotSafe"}));
+   await RepositoryTaglist.Save(Model,Lock);
   }
   
   public void RunDebugSynchronized(){
@@ -454,8 +471,8 @@ namespace Tagaroo{
   /*
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   //new Debug().RunDebug().Wait();
-   new Debug().RunDebugDiscord();
+   new Debug().RunDebug().Wait();
+   //new Debug().RunDebugDiscord();
    //new Debug().RunCore();
    //new Program().Main();
    Console.ReadKey(true);

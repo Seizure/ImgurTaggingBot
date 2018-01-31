@@ -61,14 +61,14 @@ namespace Tagaroo.DataAccess{
   }
 
   /// <exception cref="DataAccessException"/>
-  public async Task<XDocument> Load(Stream DataFile){
+  public async Task<XDocument> Load(Stream DataFile,bool IgnoreWhitespace=false){
    Initialize();
    XmlReaderSettings FileReaderSettings=new XmlReaderSettings(){
     Schemas = this.Schema,
     ValidationType = ValidationType.Schema,
     ValidationFlags = XmlSchemaValidationFlags.ProcessIdentityConstraints,
     Async = true,
-    IgnoreWhitespace = false,
+    IgnoreWhitespace = IgnoreWhitespace,
     CloseInput = false,
     XmlResolver = null
    };
@@ -85,44 +85,81 @@ namespace Tagaroo.DataAccess{
   }
 
   /// <exception cref="DataAccessException"/>
-  public async Task<XDocument> LoadFile(FileAccess Access,FileShare SharedAccess){
+  public async Task<XDocument> LoadFile(FileAccess Access,FileShare SharedAccess,bool IgnoreWhitespace=false){
    Stream DataFile = OpenFile(FileMode.Open, Access, SharedAccess);
    try{
-    return await Load(DataFile);
+    return await Load(DataFile,IgnoreWhitespace);
    }finally{
     DataFile.Close();
    }
   }
 
   /// <exception cref="DataAccessException"/>
-  public async Task Save(XDocument ToSave, SaveOptions SavingOptions){
-   FileStream NewFile = OpenFile(NewFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+  public async Task<Tuple<XDocument,Lock>> LoadFileAndLock(FileAccess Access,FileShare SharedAccess,bool IgnoreWhitespace=false){
+   Stream DataFile = OpenFile(FileMode.Open, Access, SharedAccess);
+   XDocument Result=null;
    try{
-    try{
-     NewFile.SetLength(0);
-    }catch(IOException Error){
-     throw new DataAccessException("IO error whilst writing new data: "+Error.Message,Error);
-    }
-    try{
-     await ToSave.SaveAsync(NewFile, SavingOptions, CancellationToken.None);
-    }catch(IOException Error){
-     throw new DataAccessException("IO error whilst writing data: "+Error.Message,Error);
-    }
+    Result=await Load(DataFile,IgnoreWhitespace);
    }finally{
-    NewFile.Close();
+    if(Result is null){
+     DataFile.Close();
+    }
+   }
+   return new Tuple<XDocument,Lock>(
+    Result,
+    new FileLock(DataFile)
+   );
+  }
+
+  /// <exception cref="DataAccessException"/>
+  public Task Save(XDocument ToSave, SaveOptions SavingOptions){
+   return Save(ToSave,SavingOptions,null);
+  }
+
+  /// <exception cref="DataAccessException"/>
+  public async Task Save(XDocument ToSave, SaveOptions SavingOptions, Lock Lock){
+   FileLock DataFileLock=null;
+   if(!(Lock is null)){
+    DataFileLock = Lock as FileLock;
+    if(DataFileLock is null){throw new ArgumentException("The supplied Lock was not returned by this class");}
    }
    try{
-    File.Replace(NewFilePath, DataFilePath, OldFilePath, true);
-   }catch(DriveNotFoundException Error){
-    throw new DataAccessException(string.Format("Could not find the drive/filesystem for the file '{0}': ",DataFilePath)+Error.Message,Error);
-   }catch(FileNotFoundException Error){
-    throw new DataAccessException("A file could not be found during the save operation: "+Error.Message,Error);
-   }catch(PathTooLongException Error){
-    throw new DataAccessException(string.Format("The file path '{0}' is too long for the current host platform",DataFilePath),Error);
-   }catch(IOException Error){
-    throw new DataAccessException("IO error whilst saving data file: "+Error.Message,Error);
-   }catch(UnauthorizedAccessException Error){
-    throw new DataAccessException(string.Format("The file '{0}' or one of its reserved file names may have been marked as read-only, or a directory may have been created with one of those names: ",DataFilePath)+Error.Message,Error);
+    try{
+     ToSave.Validate(this.Schema,null);
+    }catch(XmlSchemaValidationException Error){
+     throw new DataAccessException(string.Format("Schema validation error when converting to XML: {0}",Error.Message),Error);
+    }
+    FileStream NewFile = OpenFile(NewFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+    try{
+     try{
+      NewFile.SetLength(0);
+     }catch(IOException Error){
+      throw new DataAccessException("IO error whilst writing new data: "+Error.Message,Error);
+     }
+     try{
+      await ToSave.SaveAsync(NewFile, SavingOptions, CancellationToken.None);
+     }catch(IOException Error){
+      throw new DataAccessException("IO error whilst writing data: "+Error.Message,Error);
+     }
+    }finally{
+     NewFile.Close();
+    }
+    DataFileLock?.Release();
+    try{
+     File.Replace(NewFilePath, DataFilePath, OldFilePath, true);
+    }catch(DriveNotFoundException Error){
+     throw new DataAccessException(string.Format("Could not find the drive/filesystem for the file '{0}': ",DataFilePath)+Error.Message,Error);
+    }catch(FileNotFoundException Error){
+     throw new DataAccessException("A file could not be found during the save operation: "+Error.Message,Error);
+    }catch(PathTooLongException Error){
+     throw new DataAccessException(string.Format("The file path '{0}' is too long for the current host platform",DataFilePath),Error);
+    }catch(IOException Error){
+     throw new DataAccessException("IO error whilst saving data file: "+Error.Message,Error);
+    }catch(UnauthorizedAccessException Error){
+     throw new DataAccessException(string.Format("The file '{0}' or one of its reserved file names may have been marked as read-only, or a directory may have been created with one of those names: ",DataFilePath)+Error.Message,Error);
+    }
+   }finally{
+    DataFileLock?.Release();
    }
   }
 

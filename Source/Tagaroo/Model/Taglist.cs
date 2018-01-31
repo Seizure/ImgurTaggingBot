@@ -6,8 +6,9 @@ using System.Linq;
 
 namespace Tagaroo.Model{
  public class Taglist{
+  private readonly IDictionary<string,TaglistRegisteredUser> RegisteredUsersByName;
+  private readonly IDictionary<int,TaglistRegisteredUser> RegisteredUsersByID;
   public string Name {get;}
-  public ISet<TaglistRegisteredUser> RegisteredUsers {get;}
   public ulong ArchiveChannelIDSafe {get;}
   public ulong ArchiveChannelIDQuestionable {get;}
   public ulong ArchiveChannelIDExplicit {get;}
@@ -23,8 +24,19 @@ namespace Tagaroo.Model{
    this.ArchiveChannelIDSafe=ArchiveChannelIDSafe;
    this.ArchiveChannelIDQuestionable=ArchiveChannelIDQuestionable;
    this.ArchiveChannelIDExplicit=ArchiveChannelIDExplicit;
-   this.RegisteredUsers=RegisteredUsers;
+   this.RegisteredUsersByID=new Dictionary<int,TaglistRegisteredUser>(
+    from U in RegisteredUsers
+    select new KeyValuePair<int,TaglistRegisteredUser>(U.ID, U)
+   );
+   this.RegisteredUsersByName=new Dictionary<string,TaglistRegisteredUser>(
+    from U in RegisteredUsers
+    select new KeyValuePair<string,TaglistRegisteredUser>(U.Username, U)
+   );
   }
+
+  public ISet<TaglistRegisteredUser> RegisteredUsers{get{
+   return RegisteredUsersByID.Values.ToImmutableHashSet();
+  }}
 
   public ISet<string> FilterByUsersInterestedIn(Ratings Rating,ISet<string> Categories){
    /*
@@ -47,6 +59,42 @@ namespace Tagaroo.Model{
     case Ratings.Explicit:     return ArchiveChannelIDExplicit;
     default:throw new ArgumentException();
    }
+  }
+
+  /// <exception cref="AlreadyExistsException"/>
+  public bool RegisterUser(TaglistRegisteredUser ToRegister){
+   if(RegisteredUsersByName.TryGetValue( ToRegister.Username, out TaglistRegisteredUser ExistingUser )){
+    if(ToRegister.ID != ExistingUser.ID){
+     throw new AlreadyExistsException(string.Format(
+      "The username '{0}' is already registered under a different user ID of {1:D}",
+      ToRegister.Username,ExistingUser.ID
+     ));
+    }
+   }
+   bool Added = !RegisteredUsersByID.Remove(ToRegister.ID);
+   RegisteredUsersByName.Remove(ToRegister.Username);
+   RegisteredUsersByID.Add(ToRegister.ID,ToRegister);
+   RegisteredUsersByName.Add(ToRegister.Username,ToRegister);
+   return Added;
+  }
+
+  public bool UnRegisterUser(int UserID){
+   if(RegisteredUsersByID.TryGetValue(UserID,out TaglistRegisteredUser ToRemove)){
+    Remove(ToRemove);
+    return true;
+   }
+   return false;
+  }
+  public bool UnRegisterUser(string Username){
+   if(RegisteredUsersByName.TryGetValue(Username,out TaglistRegisteredUser ToRemove)){
+    Remove(ToRemove);
+    return true;
+   }
+   return false;
+  }
+  private void Remove(TaglistRegisteredUser ToRemove){
+   RegisteredUsersByID.Remove(ToRemove.ID);
+   RegisteredUsersByName.Remove(ToRemove.Username);
   }
  }
 
@@ -79,10 +127,10 @@ namespace Tagaroo.Model{
   }
   public bool Equals(TaglistRegisteredUser operand){
    if(operand is null){return false;}
-   return this.Username.Equals(operand.Username,StringComparison.Ordinal);
+   return this.ID.Equals(operand.ID);
   }
   public override int GetHashCode(){
-   return this.Username.GetHashCode();
+   return this.ID.GetHashCode();
   }
 
   [Flags]
