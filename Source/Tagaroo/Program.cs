@@ -124,7 +124,7 @@ namespace Tagaroo{
   }
 
   private async Task<bool> CheckTaglists(){
-   ICollection<Taglist> Taglists;
+   IReadOnlyCollection<Taglist> Taglists;
    try{
     Taglists = await RepositoryTaglists.ReadAllHeaders();
    }catch(DataAccessException Error){

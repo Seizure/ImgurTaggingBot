@@ -22,7 +22,7 @@ namespace Tagaroo.DataAccess{
   */
 
   /// <exception cref="DataAccessException"/>
-  Task<ICollection<Taglist>> ReadAllHeaders();
+  Task<IReadOnlyCollection<Taglist>> ReadAllHeaders();
 
   /// <exception cref="DataAccessException"/>
   Task<IReadOnlyDictionary<string,Taglist>> LoadAll();
@@ -38,13 +38,10 @@ namespace Tagaroo.DataAccess{
  public class TaglistRepositoryMain : TaglistRepository{
   private readonly XMLFileRepository XMLDataFileHandler;
   private readonly string DataFilePath;
-  private readonly bool Cache;
-  private IReadOnlyDictionary<string,Taglist> CachedTaglists=null;
   
-  public TaglistRepositoryMain(string DataFilePath,bool Cache){
+  public TaglistRepositoryMain(string DataFilePath){
    this.XMLDataFileHandler = new XMLFileRepository(DataFilePath,xmlns,"Tagaroo.DataAccess.Taglists.xsd");
    this.DataFilePath=DataFilePath;
-   this.Cache=Cache;
   }
 
   public void Initialize(){
@@ -94,14 +91,7 @@ namespace Tagaroo.DataAccess{
   - GUID
   */
 
-  public Task<ICollection<Taglist>> ReadAllHeaders(){
-   if(Cache && CachedTaglists!=null){
-    return Task.FromResult<ICollection<Taglist>>(CachedTaglists.Values.ToList());
-   }
-   return _ReadAllHeaders();
-  }
-
-  protected async Task<ICollection<Taglist>> _ReadAllHeaders(){
+  public async Task<IReadOnlyCollection<Taglist>> ReadAllHeaders(){
    XDocument DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read, true);
    IEnumerable<Taglist> Results=
     from TL in DataDocument.Root.Elements(xmlns+"Taglist")
@@ -117,16 +107,6 @@ namespace Tagaroo.DataAccess{
   }
 
   public async Task<IReadOnlyDictionary<string,Taglist>> LoadAll(){
-   if(Cache && CachedTaglists!=null){
-    return CachedTaglists;
-   }
-   IReadOnlyDictionary<string,Taglist> Result=await _LoadAll();
-   this.CachedTaglists=Result;
-   return Result;
-  }
-
-  /// <exception cref="DataAccessException"/>
-  protected async Task<IReadOnlyDictionary<string,Taglist>> _LoadAll(){
    Dictionary<string,Taglist> Results;
    XDocument DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read, true);
    IEnumerable<Taglist> ResultsSource=
@@ -189,11 +169,10 @@ namespace Tagaroo.DataAccess{
    }
    XElement NewTaglistElement = ToTaglistXML(ToSave);
    DataDocument.Root.Add(NewTaglistElement);
-   this.CachedTaglists=null;
    return XMLDataFileHandler.Save(DataDocument,SavingOptions,DataFileLock.Decorated);
   }
 
-  private Taglist FromTaglistXML(XElement TL){
+  protected Taglist FromTaglistXML(XElement TL){
    return new Taglist(
     (string)TL.Attribute("Name"),
     (ulong)TL.Attribute("SafeArchiveChannelID"),
@@ -216,7 +195,7 @@ namespace Tagaroo.DataAccess{
    );
   }
 
-  private XElement ToTaglistXML(Taglist Model){
+  protected XElement ToTaglistXML(Taglist Model){
    return new XElement(xmlns+"Taglist",
     new XAttribute("Name",Model.Name),
     new XAttribute("SafeArchiveChannelID",Model.ArchiveChannelIDSafe),

@@ -38,8 +38,9 @@ namespace Tagaroo{
    Log.Instance.ImgurBandwidthLevel.Level = Configuration.LogLevelImgurBandwidth;
    Log.Bootstrap_.LogVerbose("Applying Configuration: Constructing Application");
    TaglistRepository RepositoryTaglists=new TaglistRepositoryMain(
-    Configuration.TaglistDataFilePath, true
+    Configuration.TaglistDataFilePath
    );
+   CacheingTaglistRepository RepositoryTaglistsCacheing=new CacheingTaglistRepository(RepositoryTaglists);
    ImgurInterfacer Imgur=new ImgurInterfacerMain(
     RepositorySettings,
     Configuration.ImgurClientID,
@@ -61,11 +62,11 @@ namespace Tagaroo{
    );
    Program Application=new Program(
     new ProcessLatestCommentsActivity(
-     Imgur, RepositorySettings,
+     Imgur, RepositorySettings, RepositoryTaglistsCacheing,
      new ProcessCommentActivity(
       new ImgurCommandParser(Configuration.ImgurCommandPrefix, Imgur),
       new ProcessTagCommandActivity(
-       Imgur, Discord, RepositoryTaglists
+       Imgur, Discord, RepositoryTaglistsCacheing
       )
      )
     ),

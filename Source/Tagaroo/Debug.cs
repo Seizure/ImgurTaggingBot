@@ -358,7 +358,7 @@ namespace Tagaroo{
    var ModelTaglists=await RepositoryTaglist.LoadAll();
    ApplicationConfiguration ModelConfiguration=await RepositorySettings.LoadConfiguration();
    */
-   DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"Taglists.xml",true);
+   DataAccess.TaglistRepository RepositoryTaglist=new DataAccess.TaglistRepositoryMain(@"Taglists.xml");
    RepositoryTaglist.Initialize();
    var ModelAndLock=await RepositoryTaglist.LoadAndLock("SampleTaglist");
    Taglist Model=ModelAndLock.Item1;
@@ -369,7 +369,7 @@ namespace Tagaroo{
    Model.RegisterUser(new TaglistRegisteredUser("New Many",255,TaglistRegisteredUser.RatingFlags.Safe|TaglistRegisteredUser.RatingFlags.Questionable|TaglistRegisteredUser.RatingFlags.Explicit,new List<string>{"Category A","Category B","Category C"}));
    try{
     Model.RegisterUser(new TaglistRegisteredUser("Explicit",257,TaglistRegisteredUser.RatingFlags.Explicit,new List<string>(0)));
-   }catch(AlreadyExistsException Error){
+   }catch(AlreadyExistsException){
    }
    Model.RegisterUser(new TaglistRegisteredUser("Safe",59,TaglistRegisteredUser.RatingFlags.Safe,new List<string>{"NotSafe"}));
    await RepositoryTaglist.Save(Model,Lock);
@@ -435,6 +435,7 @@ namespace Tagaroo{
    */
    Discord.DiscordInterfacerMain _Discord;
    Imgur.ImgurInterfacer _Imgur;
+   Application.CacheingTaglistRepository RepositoryTaglists;
    Program Core=new Program(
     new ProcessLatestCommentsActivity(
      _Imgur=new Imgur.ImgurInterfacerMain(
@@ -446,6 +447,7 @@ namespace Tagaroo{
       140
      ),
      new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
+     RepositoryTaglists=new CacheingTaglistRepository(new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml")),
      new ProcessCommentActivity(
       new Imgur.ImgurCommandParser("@Tagaroo2",_Imgur),
       new ProcessTagCommandActivity(
@@ -455,13 +457,13 @@ namespace Tagaroo{
         388542416225042435UL,388542416225042439UL,
         388542416225042439UL,"/"
        ),
-       new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true)
+       RepositoryTaglists
       )
      )
     ),
     _Imgur,
     _Discord,
-    new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml",true),
+    new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml"),
     new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
     TimeSpan.FromMinutes(5)
    );
