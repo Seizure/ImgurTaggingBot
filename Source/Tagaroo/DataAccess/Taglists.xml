@@ -219,5 +219,9 @@
   <TaglistUser Username="SafeQuestion" UserID="62" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="false"/>
   <TaglistUser Username="All" UserID="63" InterestedInSafe="true" InterestedInQuestionable="true" InterestedInExplicit="true"/>
  </RegisteredUsers></Taglist>
+ 
+ <Taglist Name="SecondTaglist" SafeArchiveChannelID="388542416225042439" QuestionableArchiveChannelID="388542416225042439" ExplicitArchiveChannelID="388542416225042439">
+  <RegisteredUsers/>
+ </Taglist>
 
 </Taglists>

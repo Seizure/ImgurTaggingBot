@@ -51,6 +51,8 @@ namespace Tagaroo{
    this.DiscordCommandServices=new ServiceCollection()
     .AddSingleton<DiscordInterfacer>(Discord)
     .AddSingleton<ImgurInterfacer>(Imgur)
+    .AddSingleton<TaglistRepository>(RepositoryTaglists)
+    .AddSingleton<SettingsRepository>(RepositorySettings)
    ;
   }
 

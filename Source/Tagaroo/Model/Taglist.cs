@@ -38,7 +38,7 @@ namespace Tagaroo.Model{
    return RegisteredUsersByID.Values.ToImmutableHashSet();
   }}
 
-  public ISet<string> FilterByUsersInterestedIn(Ratings Rating,ISet<string> Categories){
+  public ISet<TaglistRegisteredUser> FilterByUsersInterestedIn(Ratings Rating,ISet<string> Categories){
    /*
    A user is interested in a Tagged item with a particular Rating and set of Categories,
    if they are interested in items with that Rating,
@@ -48,7 +48,7 @@ namespace Tagaroo.Model{
     from U in RegisteredUsers
     where U.AcceptsRating(Rating)
     && Categories.Intersect( U.CategoryBlacklist,StringComparer.OrdinalIgnoreCase ).Count() <= 0
-    select U.Username
+    select U
    ).ToHashSet();
   }
 
@@ -59,6 +59,20 @@ namespace Tagaroo.Model{
     case Ratings.Explicit:     return ArchiveChannelIDExplicit;
     default:throw new ArgumentException();
    }
+  }
+
+  public bool TryGetRegisteredUser(string Username,out TaglistRegisteredUser Result){
+   return RegisteredUsersByName.TryGetValue(Username,out Result);
+  }
+  public bool TryGetRegisteredUser(int UserID,out TaglistRegisteredUser Result){
+   return RegisteredUsersByID.TryGetValue(UserID,out Result);
+  }
+
+  public bool hasRegisteredUser(string Username){
+   return RegisteredUsersByName.ContainsKey(Username);
+  }
+  public bool hasRegisteredUser(int UserID){
+   return RegisteredUsersByID.ContainsKey(UserID);
   }
 
   /// <exception cref="AlreadyExistsException"/>

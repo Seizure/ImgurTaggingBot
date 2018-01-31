@@ -29,6 +29,10 @@ namespace Tagaroo.DataAccess{
 
   /// <exception cref="EntityNotFoundException"/>
   /// <exception cref="DataAccessException"/>
+  Task<Taglist> Load(string TaglistName);
+
+  /// <exception cref="EntityNotFoundException"/>
+  /// <exception cref="DataAccessException"/>
   Task<Tuple<Taglist,Lock>> LoadAndLock(string TaglistName);
 
   /// <exception cref="DataAccessException"/>
@@ -124,11 +128,25 @@ namespace Tagaroo.DataAccess{
    return Results;
   }
 
-  public async Task<Tuple<Taglist,Lock>> LoadAndLock(string TaglistName){
+  public async Task<Taglist> Load(string TaglistName){
+   return (await Load(TaglistName,false)).Item1;
+  }
+  
+  public Task<Tuple<Taglist,Lock>> LoadAndLock(string TaglistName){
+   return Load(TaglistName,true);
+  }
+
+  protected async Task<Tuple<Taglist,Lock>> Load(string TaglistName,bool LockDataFile){
    TaglistName=TaglistName.Normalize(NormalizationForm.FormKD);
-   var LoadResult = await XMLDataFileHandler.LoadFileAndLock(FileAccess.ReadWrite, FileShare.None, true);
-   XDocument DataDocument = LoadResult.Item1;
-   Lock DataFileLock = LoadResult.Item2;
+   XDocument DataDocument;
+   Lock DataFileLock=null;
+   if(LockDataFile){
+    var LoadResult = await XMLDataFileHandler.LoadFileAndLock(FileAccess.ReadWrite, FileShare.None, true);
+    DataDocument = LoadResult.Item1;
+    DataFileLock = LoadResult.Item2;
+   }else{
+    DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.ReadWrite, FileShare.None, true);
+   }
    bool success=false;
    try{
     Taglist Result=(
@@ -146,7 +164,7 @@ namespace Tagaroo.DataAccess{
     return new Tuple<Taglist,Lock>(Result,new TaglistRepositoryLock(DataFileLock,DataDocument));
    }finally{
     if(!success){
-     DataFileLock.Release();
+     DataFileLock?.Release();
     }
    }
   }

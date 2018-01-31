@@ -12,6 +12,9 @@ namespace Tagaroo.Discord.Commands{
   protected CommandBase(){}
 
   protected override Task<IUserMessage> ReplyAsync(string message,bool isTTS=false,Embed embed=null,RequestOptions options=null){
+   if(string.IsNullOrEmpty(message)){
+    message="-";
+   }
    try{
     return base.ReplyAsync(message,isTTS,embed,options);
    }catch(HttpException){

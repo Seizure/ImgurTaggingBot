@@ -102,12 +102,32 @@ To execute any of these commands, you must have permission to post in the applic
 Bear in mind that some commands call the Imgur API, and so consume API bandwidth, albeit usually in very small amounts.
 
 Check Remaining Imgur API Bandwidth:
-
 /APIUsage
 This will display the remaining “bandwidth” that the application has for accessing the Imgur API. See the “Imgur API Bandwidth” section.
 
-Convert To and From Imgur User Account IDs:
+Display All Taglists:
+/Taglists
+Displays a list of the names of all the Taglists that the application manages.
 
+Display all Users Registered to a Taglist:
+/Taglist <taglist-name>
+Displays a list of all the Users that are Registered to the Taglist with the name specified in <taglist-name>.
+
+Simulate a @Tagaroo Tag command:
+/Taglist <taglist-name> <rating> [<category> <category> …]
+This displays a list of all the Registered Users that would be notified if a @Tagaroo Tag command were issued to the Taglist with the name <taglist-name>, the Rating <rating>, and the Categories specified by each <category>. <rating> is case insensitive and must be one of 'S' for Safe, 'Q' for Questionable, and 'E' for Explicit. <category> can appear zero or more times, each one separated by whitespace.
+
+Display details of a particular Registered User in a Taglist:
+/TaglistUser <taglist-name> <username>
+/TaglistUser <taglist-name> <user-ID>
+Displays the details of a particular Registered User of a particular Taglist, including the Ratings they are interested in, and their blacklisted Categories. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>. <taglist-name> is the name of the Taglist they are Registered in.
+
+Find All the Taglists a User is in:
+/UserTaglists <username>
+/UserTaglists <user-ID>
+Displays a list of the names of all the Taglists that a User with the specified username or numeric user ID is Registered in. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>.
+
+Convert To and From Imgur User Account IDs:
 /ToImgurUserID <username>
 /FromImgurUserID <account-ID>
 Use these commands to convert to and from Imgur user account IDs.

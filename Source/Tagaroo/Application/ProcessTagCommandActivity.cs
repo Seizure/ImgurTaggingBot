@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 using Tagaroo.Model;
 using Tagaroo.Imgur;
 using Tagaroo.Discord;
@@ -58,7 +59,11 @@ namespace Tagaroo.Application{
   }
 
   protected async Task MentionInterestedUsers(Tag Command,Taglist SpecifiedTaglist){
-   ISet<string> InterestedUsernames = SpecifiedTaglist.FilterByUsersInterestedIn( Command.Rating, Command.Categories );
+   ISet<TaglistRegisteredUser> InterestedUsers = SpecifiedTaglist.FilterByUsersInterestedIn( Command.Rating, Command.Categories );
+   ISet<string> InterestedUsernames=(
+    from U in InterestedUsers
+    select U.Username
+   ).ToHashSet();
    try{
     await Imgur.MentionUsers(Command.ItemID, Command.HostCommentID, InterestedUsernames);
    }catch(ImgurException Error){

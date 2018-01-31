@@ -107,6 +107,17 @@ namespace Tagaroo.Application{
    return Cache;
   }
 
+  public Task<Taglist> Load(string TaglistName){
+   TaglistName = TaglistName.Normalize(NormalizationForm.FormKD);
+   if(Cache is null){
+    return Decorate.Load(TaglistName);
+   }
+   if(Cache.TryGetValue(TaglistName,out Taglist Result)){
+    return Task.FromResult(Result);
+   }
+   return Task.FromException<Taglist>(new EntityNotFoundException());
+  }
+
   public Task<Tuple<Taglist,Lock>> LoadAndLock(string TaglistName){
    return Decorate.LoadAndLock(TaglistName);
   }
