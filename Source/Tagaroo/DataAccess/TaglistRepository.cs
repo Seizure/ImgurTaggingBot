@@ -239,7 +239,7 @@ namespace Tagaroo.DataAccess{
   }
 
   protected const SaveOptions SavingOptions=SaveOptions.OmitDuplicateNamespaces;
-  static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Taglists:v1-snapshot";
+  static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Taglists:v1.0";
  }
 
  internal class TaglistRepositoryLock : Lock{

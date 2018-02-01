@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema 
- targetNamespace="urn:xmlns:tagaroo:Settings:v1-snapshot"
+ targetNamespace="urn:xmlns:tagaroo:Settings:v1.0"
  elementFormDefault="qualified" attributeFormDefault="unqualified"
- xmlns="urn:xmlns:tagaroo:Settings:v1-snapshot" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Settings:v1-snapshot"
+ xmlns="urn:xmlns:tagaroo:Settings:v1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:this="urn:xmlns:tagaroo:Settings:v1.0"
 >
  
  <xs:element name="Settings"><xs:complexType><xs:sequence>

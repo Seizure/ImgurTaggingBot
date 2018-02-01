@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?> 
+<!--
+Define your Taglists here,
+then rename this file to "Taglists.xml".
+Make sure the edits made to this file validate with respect to its schema, in "Taglists.xsd".
+
+To create a new Taglist, simply add another Taglist element
+with an empty RegisteredUsers subelement.
+You can then either add Registered Users to the Taglist using the application's Discord commands,
+or by manually adding them to this file.
+-->
+<Taglists xmlns="urn:xmlns:tagaroo:Taglists:v1.0">
+ 
+ <Taglist Name="TaglistName" SafeArchiveChannelID="0" QuestionableArchiveChannelID="0" ExplicitArchiveChannelID="0">
+  <RegisteredUsers>
+  </RegisteredUsers>
+ </Taglist>
+
+</Taglists>

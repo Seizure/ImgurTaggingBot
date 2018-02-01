@@ -118,6 +118,6 @@ namespace Tagaroo.DataAccess{
   }
 
   protected const SaveOptions SavingOptions=SaveOptions.DisableFormatting|SaveOptions.OmitDuplicateNamespaces;
-  static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Settings:v1-snapshot";
+  static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Settings:v1.0";
  }
 }

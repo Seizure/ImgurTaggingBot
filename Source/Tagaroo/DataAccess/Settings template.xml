@@ -1,17 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?> 
 <!--
--Do Not- commit this file to the source code repository if it contains sensitive information!
-The source code repository is public.
-If changes to this file need to be committed to the repository, remove the sensitive information first,
-and keep it stored in a safe place.
-Sensitive information includes, but is not limited to:
-- The Imgur OAuth Access Token and Refresh Token
-- The "Token" part of the Discord API key
-- The "Client Secret" part of the Imgur API key
-- The "Client Secret" part of the Discord API key
-Anyone with access to the relevant sensitive information can hijack the application's Imgur and Discord accounts.
+Edit this file, filling out the details as described in the documentation,
+then rename it so "Settings.xml".
+Make sure the edits made are valid with respect to the schema, in "Settings.xsd".
 -->
-<Settings xmlns="urn:xmlns:tagaroo:Settings:v1-snapshot">
+<Settings xmlns="urn:xmlns:tagaroo:Settings:v1.0">
  
  <Configuration>
   <Imgur ClientID="" ClientSecret="">

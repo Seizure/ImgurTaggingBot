@@ -73,8 +73,9 @@ namespace Tagaroo.DataAccess{
     XmlResolver = null
    };
    XmlReader FileReader=XmlReader.Create(DataFile, FileReaderSettings);
+   XDocument Result;
    try{
-    return await XDocument.LoadAsync(FileReader, LoadOptions.None, CancellationToken.None);
+    Result = await XDocument.LoadAsync(FileReader, LoadOptions.None, CancellationToken.None);
    }catch(XmlException Error){
     throw new DataAccessException(string.Format("XML data file parse error: {0}",Error.Message),Error);
    }catch(XmlSchemaValidationException Error){
@@ -82,6 +83,10 @@ namespace Tagaroo.DataAccess{
    }catch(IOException Error){
     throw new DataAccessException(string.Format("IO Error while reading data file: {0}",Error.Message),Error);
    }
+   if( ! Result.Root.Name.Namespace.Equals(xmlns)){
+    throw new DataAccessException(string.Format("The XML data file is not valid with respect to its schema: The namespace of the root element, '{1}', does not match the expected namespace '{0}'",xmlns,Result.Root.Name.Namespace));
+   }
+   return Result;
   }
 
   /// <exception cref="DataAccessException"/>

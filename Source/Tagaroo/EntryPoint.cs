@@ -23,7 +23,7 @@ namespace Tagaroo{
    Log.Bootstrap_.LogInfo("Loading Configuration");
    ApplicationConfiguration Configuration;
    try{
-    Configuration = RepositorySettings.LoadConfiguration().Result;
+    Configuration = RepositorySettings.LoadConfiguration().GetAwaiter().GetResult();
    }catch(DataAccessException Error){
     Log.Bootstrap_.LogError("Unable to start; could not load application configuration: "+Error.Message);
     return Return_ConfigurationLoadError;

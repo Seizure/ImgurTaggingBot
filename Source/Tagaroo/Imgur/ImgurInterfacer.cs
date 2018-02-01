@@ -432,7 +432,7 @@ namespace Tagaroo.Imgur{
   }
 
   #if RELEASE
-  //protected const string MentionPrefix = "@";
+  protected const string MentionPrefix = "@";
   #else
   protected const string MentionPrefix = "$";
   #endif
