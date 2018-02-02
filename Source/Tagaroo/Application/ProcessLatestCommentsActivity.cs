@@ -42,13 +42,18 @@ namespace Tagaroo.Application{
     return;
    }
    RepositoryTaglists.ClearCache();
-   /*
-   Prepare the cache ahead of time;
-   These tasks will execute in paralell,
-   which means that LoadAll will be called all the times it is to be called
-   before it can complete and cache the result
-   */
-   await RepositoryTaglists.LoadAll();
+   try{
+    /*
+    Prepare the cache ahead of time;
+    These tasks will execute in paralell,
+    which means that LoadAll will be called all the times it is to be called
+    before it can complete and cache the result
+    */
+    await RepositoryTaglists.LoadAll();
+   }catch(DataAccessException Error){
+    Log.Application_.LogError("Error loading Taglists while pulling Imgur Comments: "+Error.Message);
+    return;
+   }
    List<Task> Tasks=new List<Task>();
    DateTimeOffset LatestCommentAt=DateTimeOffset.MinValue;
    foreach( IList<IComment> NewUserComments in NewComments.Values ){

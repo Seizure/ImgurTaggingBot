@@ -11,22 +11,27 @@ namespace Tagaroo.Logging{
   }
 
   public void LogCritical(string Message, params object[] MessageParameters){
+   Message = AddTimestamp(Message);
    Implementation.TraceEvent(TraceEventType.Critical, 0, Message, MessageParameters);
   }
 
   public void LogError(string Message, params object[] MessageParameters){
+   Message = AddTimestamp(Message);
    Implementation.TraceEvent(TraceEventType.Error, 0, Message, MessageParameters);
   }
 
   public void LogWarning(string Message, params object[] MessageParameters){
+   Message = AddTimestamp(Message);
    Implementation.TraceEvent(TraceEventType.Warning, 0, Message, MessageParameters);
   }
 
   public void LogInfo(string Message, params object[] MessageParameters){
+   Message = AddTimestamp(Message);
    Implementation.TraceEvent(TraceEventType.Information, 0, Message, MessageParameters);
   }
 
   public void LogVerbose(string Message, params object[] MessageParameters){
+   Message = AddTimestamp(Message);
    Implementation.TraceEvent(TraceEventType.Verbose, 0, Message, MessageParameters);
   }
 
@@ -36,5 +41,14 @@ namespace Tagaroo.Logging{
   internal void RemoveListener(string Name){
    Implementation.Listeners.Remove(Name);
   }
+
+  protected string AddTimestamp(string Message){
+   return
+    string.Format("[{0}] ",DateTimeOffset.Now.ToString(TimestampFormat))
+    + Message
+   ;
+  }
+
+  protected const string TimestampFormat="HH:mm:ss.fff";
  }
 }

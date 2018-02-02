@@ -67,6 +67,61 @@ Tags the item with the Taglist with the name “TheTaglist”, with the default 
 
 
 
+Discord Commands
+
+Note — This section assumes the Discord command prefix is the string “/”; however, this can be changed by the administrator, via the “DiscordCommandPrefix” Setting.
+To execute any of these commands, you must have permission to post in the application's dedicated command Discord Channel, which the administrator will have set up. Commands begin with the command prefix, such as “/”, followed by the command name, followed by any whitespace separated parameters of the command. If a particular parameter value contains whitespace, it should be surrounded by double quotes. Command names are case-insensitive.
+Bear in mind that some commands call the Imgur API, and so consume API bandwidth, albeit usually in very small amounts.
+
+Check Remaining Imgur API Bandwidth:
+/APIUsage
+This will display the remaining “bandwidth” that the application has for accessing the Imgur API. See the “Imgur API Bandwidth” section.
+
+Display All Taglists:
+/Taglists
+Displays a list of the names of all the Taglists that the application manages.
+
+Display all Users Registered to a Taglist:
+/Taglist <taglist-name>
+Displays a list of all the Users that are Registered to the Taglist with the name specified in <taglist-name>.
+
+Simulate a @Tagaroo Tag command:
+/Taglist <taglist-name> <rating> [<category> <category> …]
+This displays a list of all the Registered Users that would be notified if a @Tagaroo Tag command were issued to the Taglist with the name <taglist-name>, the Rating <rating>, and the Categories specified by each <category>. <rating> is case insensitive and must be one of 'S' for Safe, 'Q' for Questionable, and 'E' for Explicit. <category> can appear zero or more times, each one separated by whitespace.
+
+Register a User to a Taglist:
+/Register <username> <taglist-name> <ratings> [<category> <category> …]
+/Register <user-ID> <taglist-name> <ratings> [<category> <category> …]
+This either adds the specified Imgur user to the specified Taglist, or updates an existing Registered User, with the supplied preferences. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>. <taglist-name> is the name of the Taglist to which to add them. <ratings> is a string of 'S' for Safe, 'Q' for Questionable, and 'E' for Explicit, characters, that specifies which Ratings the User is interested in. For example, if a User is interested in all Ratings, specify “SQE” for this parameter. Each <category> parameter is the name of a Category to put in the User's Category Blacklist.
+
+Edit a Registered User in a Taglist:
+As for Registering a User; see above.
+
+Un-Register a User from a Taglist:
+/Register <username> <taglist-name>
+/Register <user-ID> <taglist-name>
+This removes the specified User from the specified Taglist. Upon successful execution, the user's preferences will be permanently lost, notwithstanding any backups made of the Taglist.
+
+Display details of a particular Registered User in a Taglist:
+/TaglistUser <taglist-name> <username>
+/TaglistUser <taglist-name> <user-ID>
+Displays the details of a particular Registered User of a particular Taglist, including the Ratings they are interested in, and their blacklisted Categories. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>. <taglist-name> is the name of the Taglist they are Registered in.
+
+Find All the Taglists a User is in:
+/UserTaglists <username>
+/UserTaglists <user-ID>
+Displays a list of the names of all the Taglists that a User with the specified username or numeric user ID is Registered in. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>.
+
+Convert To and From Imgur User Account IDs:
+/ToImgurUserID <username>
+/FromImgurUserID <account-ID>
+Use these commands to convert to and from Imgur user account IDs.
+<username> is the username of an Imgur account, the ID of which will be retrieved and displayed. <account-ID> is the unique numeric ID of an Imgur account, which must be an integer, the username of which will be retrieved and displayed.
+Users on Imgur are uniquely identified by two properties — their username, which can be changed, and their numeric ID, which is fixed. The application stores both the username and the ID of Imgur users registered to a Taglist. Unfortunately there is no easy way on Imgur to translate to and from a particular user's numeric ID, which is where these commands come in.
+This command calls the Imgur API.
+
+
+
 Important Imgur Maintenance Issues
 
 Imgur API Bandwidth
@@ -95,48 +150,6 @@ An administrator will need to be notified to do this. If the new OAuth Token is 
 
 
 
-Discord Commands
-
-Note — This section assumes the Discord command prefix is the string “/”; however, this can be changed by the administrator, via the “DiscordCommandPrefix” Setting.
-To execute any of these commands, you must have permission to post in the application's dedicated command Discord Channel, which the administrator will have set up. Commands begin with the command prefix, such as “/”, followed by the command name, followed by any whitespace separated parameters of the command. If a particular parameter value contains whitespace, it should be surrounded by double quotes. Command names are case-insensitive.
-Bear in mind that some commands call the Imgur API, and so consume API bandwidth, albeit usually in very small amounts.
-
-Check Remaining Imgur API Bandwidth:
-/APIUsage
-This will display the remaining “bandwidth” that the application has for accessing the Imgur API. See the “Imgur API Bandwidth” section.
-
-Display All Taglists:
-/Taglists
-Displays a list of the names of all the Taglists that the application manages.
-
-Display all Users Registered to a Taglist:
-/Taglist <taglist-name>
-Displays a list of all the Users that are Registered to the Taglist with the name specified in <taglist-name>.
-
-Simulate a @Tagaroo Tag command:
-/Taglist <taglist-name> <rating> [<category> <category> …]
-This displays a list of all the Registered Users that would be notified if a @Tagaroo Tag command were issued to the Taglist with the name <taglist-name>, the Rating <rating>, and the Categories specified by each <category>. <rating> is case insensitive and must be one of 'S' for Safe, 'Q' for Questionable, and 'E' for Explicit. <category> can appear zero or more times, each one separated by whitespace.
-
-Display details of a particular Registered User in a Taglist:
-/TaglistUser <taglist-name> <username>
-/TaglistUser <taglist-name> <user-ID>
-Displays the details of a particular Registered User of a particular Taglist, including the Ratings they are interested in, and their blacklisted Categories. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>. <taglist-name> is the name of the Taglist they are Registered in.
-
-Find All the Taglists a User is in:
-/UserTaglists <username>
-/UserTaglists <user-ID>
-Displays a list of the names of all the Taglists that a User with the specified username or numeric user ID is Registered in. The user can be specified either by their Imgur username, for <username>, or their numeric Imgur user account ID, for <user-ID>.
-
-Convert To and From Imgur User Account IDs:
-/ToImgurUserID <username>
-/FromImgurUserID <account-ID>
-Use these commands to convert to and from Imgur user account IDs.
-<username> is the username of an Imgur account, the ID of which will be retrieved and displayed. <account-ID> is the unique numeric ID of an Imgur account, which must be an integer, the username of which will be retrieved and displayed.
-Users on Imgur are uniquely identified by two properties — their username, which can be changed, and their numeric ID, which is fixed. The application stores both the username and the ID of Imgur users registered to a Taglist. Unfortunately there is no easy way on Imgur to translate to and from a particular user's numeric ID, which is where these commands come in.
-This command calls the Imgur API.
-
-
-
 The Main Process of the Application
 
 The main activity that the application performs is to pull Comments made by particular users from images on Imgur, scan those Comments for Tag commands, and then Mention the users associated with the Taglist specified in the command in a reply to the Comment. It will also archive the tagged image to a particular Channel in the Discord Guild (also formerly known as a Discord Server), by posting its details. This section goes through the process in more depth.
@@ -155,7 +168,7 @@ Upon identifying any “new” Comments, the application will scan the contents 
 
 Identifying Interested Users from a Tag Command
 Upon encountering a Tag command, the application will extract the command's Taglist name, Rating, and collection of Categories from the command. It will then get the details of the Tagged image from Imgur, and also load the details of the Taglist with the specified name. Each Taglist managed by the application has a unique identifying name. The Taglist details include a collection of Imgur users who have registered an interest in the Taglist, and their preferences.
-The application then calculates which users interested in the Taglist would be interested in the Tagged item. It does this using the item's Rating, and the item's Categories, both specified in the Tag command. Only users who have indicated they are interested in the Rating equal to the item's Rating will be notified. On top of this, only users who have not blacklisted any of the item's Categories will be notified.
+The application then calculates which users interested in the Taglist would be interested in the Tagged item. It does this using the item's Rating, and the item's Categories, both specified in the Tag command. Only users who have indicated they are interested in the Rating equal to the item's Rating will be notified. On top of this, only users who do not have any of the item's Categories in their Category Blacklist will be notified.
 
 Mentioning Users
 Once interested Imgur users have been identified, the application proceeds to Mention them, by Replying to the Comment containing the Tag command. Imgur Comments are limited in length, so the application will split out all the Mentions it has to make into multiple Replies.
@@ -173,6 +186,7 @@ Logging
 
 The application produces logging output through several loggers. Each logger can have its verbosity level configured by an administrator in <Settings.xml>, at “Configuration / Logging”. The recommended logging level for most loggers is “Information”; only messages deserving some notable level of attention are logged at this level by the application.
 If the Setting “Logging @ LogToDiscord” is true, the application will attempt to send logging output to Discord, falling back to the application process' STDOUT if it fails. During application startup, this will obviously always fail until the application establishes a connection to Discord. The process' STDOUT is typically the command window from which the application was started.
+The timestamp on log messages is from the local timezone of the machine on which the application is running.
 The various loggers logged to are listed below. Each logger has an associated LoggerLogLevel attribute in the Logging element, specifying its logging verbosity level.
 
 Bootstrap:

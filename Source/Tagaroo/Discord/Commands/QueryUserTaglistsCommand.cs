@@ -15,7 +15,7 @@ namespace Tagaroo.Discord.Commands{
   [Command("UserTaglists")]
   [Summary("Searches through all Taglists and displays those that contain a Registered User with the specified username.")]
   public async Task Execute(
-   [Summary("The Imgur username of the Registered User to search for.")]
+   [Remainder] [Summary("The Imgur username of the Registered User to search for.")]
    string Username
   ){
    IReadOnlyCollection<Taglist> AllTaglists = await ReadAllTaglistsAndUsers();

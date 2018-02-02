@@ -92,19 +92,19 @@ namespace Tagaroo.Model{
    return Added;
   }
 
-  public bool UnRegisterUser(int UserID){
+  public TaglistRegisteredUser UnRegisterUser(int UserID){
    if(RegisteredUsersByID.TryGetValue(UserID,out TaglistRegisteredUser ToRemove)){
     Remove(ToRemove);
-    return true;
+    return ToRemove;
    }
-   return false;
+   return null;
   }
-  public bool UnRegisterUser(string Username){
+  public TaglistRegisteredUser UnRegisterUser(string Username){
    if(RegisteredUsersByName.TryGetValue(Username,out TaglistRegisteredUser ToRemove)){
     Remove(ToRemove);
-    return true;
+    return ToRemove;
    }
-   return false;
+   return null;
   }
   private void Remove(TaglistRegisteredUser ToRemove){
    RegisteredUsersByID.Remove(ToRemove.ID);
