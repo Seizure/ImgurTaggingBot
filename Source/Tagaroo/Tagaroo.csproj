@@ -4,6 +4,14 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Tagaroo</AssemblyName>
+    <StartupObject>Tagaroo.EntryPoint</StartupObject>
+    <Authors />
+    <Company />
+    <Copyright>Copyright &#x00A9; furaffinity.net user "Eleven-lyc"</Copyright>
+    <PackageLicenseUrl>Copyright.txt</PackageLicenseUrl>
+    <PackageProjectUrl>//github.com/Seizure/ImgurTaggingBot</PackageProjectUrl>
+    <RepositoryUrl>//github.com/Seizure/ImgurTaggingBot</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -12,6 +20,9 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE</DefineConstants>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,6 +44,21 @@
     <Content Include="DataAccess\Taglists.xsd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>Taglists.xsd</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\..\Copyright.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Copyright.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\..\Documentation\Documentation.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Documentation.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\..\Documentation\Documentation - Setup &amp; Maintenance.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Documentation - Setup &amp; Maintenance.txt</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>

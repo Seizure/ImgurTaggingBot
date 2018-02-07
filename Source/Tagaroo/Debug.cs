@@ -470,7 +470,6 @@ namespace Tagaroo{
    Core.Run();
   }
 
-  /*
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
    new Debug().RunDebug().Wait();
@@ -479,7 +478,6 @@ namespace Tagaroo{
    //new Program().Main();
    Console.ReadKey(true);
   }
-  */
 
   /*
   private static Assembly ResolveAssembly(object Origin,ResolveEventArgs Event){
