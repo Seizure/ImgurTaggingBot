@@ -13,36 +13,81 @@ using Tagaroo.Model;
 
 namespace Tagaroo.DataAccess{
  
+ /// <summary>
+ /// Repository/DAO for Model-layer <see cref="Taglist"/> objects.
+ /// A <see cref="DataAccessException"/> exception is thrown by many of the methods if there is some problem accessing the underlying data store.
+ /// </summary>
  public interface TaglistRepository{
+  /// <summary>
+  /// Should ideally be called once at some appropriate point after the Repository has been constructed,
+  /// allowing realizations to perform nontrivial initialization.
+  /// However, realizations should not rely on this method being called before any other methods.
+  /// </summary>
   void Initialize();
 
-  /*
+  /// <summary>
+  /// Retrieves a collection of all Taglists, keyed by the identifying <see cref="Taglist.Name"/>.
+  /// This method does not explicitly populate the <see cref="Taglist.RegisteredUsers"/> property,
+  /// retrieving only the <see cref="Taglist"/> objects themselves and none of their component objects.
+  /// As such, calling code should not access the <see cref="Taglist.RegisteredUsers"/> property in any of the results.
+  /// The returned collection is immutable, to allow efficient implementation of cacheing Decorators.
+  /// To retrieve the full details of a particular <see cref="Taglist"/>, use <see cref="Load"/>.
+  /// </summary>
   /// <exception cref="DataAccessException"/>
-  Task Verify();
-  */
+  Task<IReadOnlyDictionary<string,Taglist>> ReadAllHeaders();
 
-  /// <exception cref="DataAccessException"/>
-  Task<IReadOnlyCollection<Taglist>> ReadAllHeaders();
-
+  /// <summary>
+  /// Retrieves a collection of all Taglists, keyed by the identifying <see cref="Taglist.Name"/>;
+  /// the <see cref="ReadAllHeaders"/> and <see cref="Load"/> methods should be used in preference to this method.
+  /// The returned collection is immutable, to allow efficient implementation of cacheing Decorators.
+  /// </summary>
   /// <exception cref="DataAccessException"/>
   Task<IReadOnlyDictionary<string,Taglist>> LoadAll();
 
-  /// <exception cref="EntityNotFoundException"/>
+  /// <summary>
+  /// Read method for Model-layer <see cref="Taglist"/> objects, retrieving one by its identifying <see cref="Taglist.Name"/>.
+  /// </summary>
+  /// <exception cref="EntityNotFoundException">No Taglist with the specified Name exists in the data store</exception>
   /// <exception cref="DataAccessException"/>
   Task<Taglist> Load(string TaglistName);
 
-  /// <exception cref="EntityNotFoundException"/>
+  /// <summary>
+  /// As for <see cref="Load"/>, but also returns a <see cref="Lock"/> for the returned <see cref="Taglist"/>
+  /// that prevents changes to it from elsewhere from being saved.
+  /// Calling code should release the <see cref="Lock"/> as soon as possible,
+  /// either by calling <see cref="Save"/> or <see cref="Lock.Release"/> directly.
+  /// </summary>
+  /// <exception cref="EntityNotFoundException">No Taglist with the specified Name exists in the data store</exception>
   /// <exception cref="DataAccessException"/>
   Task<Tuple<Taglist,Lock>> LoadAndLock(string TaglistName);
 
-  /// <exception cref="DataAccessException"/>
+  /// <summary>
+  /// <para>
+  /// Preconditions: <paramref name="Lock"/> must have been returned by a call to <see cref="LoadAndLock"/>,
+  /// be associated with <paramref name="ToSave"/>,
+  /// and <see cref="Lock.Release"/> must not have been called on it
+  /// </para>
+  /// Update method for Model-layer <see cref="Taglist"/> objects.
+  /// The <see cref="Taglist"/> to update must have been retrieved by a call to <see cref="LoadAndLock"/>,
+  /// and it's associated <see cref="Lock"/> must be supplied.
+  /// <paramref name="Lock"/> is released after this call, regardless of the call's success or failure.
+  /// </summary>
+  /// <exception cref="DataAccessException"><paramref name="Lock"/> will still be released even if this is thrown</exception>
   Task Save(Taglist ToSave,Lock Lock);
  }
  
+ /// <summary>
+ /// Main Realization of <see cref="TaglistRepository"/>,
+ /// implementing a Repository that uses an XML file as the persistent data store.
+ /// XML instance documents must be valid with respect to the XML Schema in the file Taglists.xsd.
+ /// The <see cref="Lock"/> objects returned by <see cref="LoadAndLock"/> actually lock all Taglists,
+ /// as they are implemented as file locks on the data store file.
+ /// </summary>
  public class TaglistRepositoryMain : TaglistRepository{
   private readonly XMLFileRepository XMLDataFileHandler;
   private readonly string DataFilePath;
   
+  /// <param name="DataFilePath">The file path to the XML instance document serving as the data store</param>
   public TaglistRepositoryMain(string DataFilePath){
    this.XMLDataFileHandler = new XMLFileRepository(DataFilePath,xmlns,"Tagaroo.DataAccess.Taglists.xsd");
    this.DataFilePath=DataFilePath;
@@ -51,16 +96,6 @@ namespace Tagaroo.DataAccess{
   public void Initialize(){
    XMLDataFileHandler.Initialize();
   }
-  
-  /*
-  public async Task Verify(){
-   try{
-    await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read);
-   }catch(DataAccessException){
-    throw;
-   }
-  }
-  */
 
   /*
   The following types can be converted to XML SimpleTypes,
@@ -95,7 +130,7 @@ namespace Tagaroo.DataAccess{
   - GUID
   */
 
-  public async Task<IReadOnlyCollection<Taglist>> ReadAllHeaders(){
+  public async Task<IReadOnlyDictionary<string,Taglist>> ReadAllHeaders(){
    XDocument DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read, true);
    IEnumerable<Taglist> Results=
     from TL in DataDocument.Root.Elements(xmlns+"Taglist")
@@ -107,17 +142,20 @@ namespace Tagaroo.DataAccess{
      ImmutableHashSet<TaglistRegisteredUser>.Empty
     )
    ;
-   return Results.ToList();
+   return TaglistsDictionary(Results);
   }
 
   public async Task<IReadOnlyDictionary<string,Taglist>> LoadAll(){
-   Dictionary<string,Taglist> Results;
    XDocument DataDocument = await XMLDataFileHandler.LoadFile(FileAccess.Read, FileShare.Read, true);
    IEnumerable<Taglist> ResultsSource=
     from TL in DataDocument.Root.Elements(xmlns+"Taglist")
     select FromTaglistXML(TL)
    ;
-   Results=new Dictionary<string,Taglist>();
+   return TaglistsDictionary(ResultsSource);
+  }
+
+  private IReadOnlyDictionary<string,Taglist> TaglistsDictionary(IEnumerable<Taglist> ResultsSource){
+   Dictionary<string,Taglist> Results=new Dictionary<string,Taglist>();
    foreach(Taglist Result in ResultsSource){
     try{
      Results.Add( Result.Name, Result );
@@ -173,21 +211,26 @@ namespace Tagaroo.DataAccess{
    Initialize();
    TaglistRepositoryLock DataFileLock=Lock as TaglistRepositoryLock;
    if(DataFileLock is null){throw new ArgumentException("The supplied Lock was not returned by this class");}
-   XDocument DataDocument = DataFileLock.LoadedDataDocument;
-   XElement OldTaglistElement = (
-    from TL in DataDocument.Root.Elements(xmlns+"Taglist")
-    where ToSave.Name.Equals(
-     ((string)TL.Attribute("Name")).Normalize(NormalizationForm.FormKD),
-     StringComparison.Ordinal
-    )
-    select TL
-   ).FirstOrDefault();
-   if(!(OldTaglistElement is null)){
-    OldTaglistElement.Remove();
+   if(DataFileLock.Released){throw new ArgumentException("The supplied Lock has been released");}
+   try{
+    XDocument DataDocument = DataFileLock.LoadedDataDocument;
+    XElement OldTaglistElement = (
+     from TL in DataDocument.Root.Elements(xmlns+"Taglist")
+     where ToSave.Name.Equals(
+      ((string)TL.Attribute("Name")).Normalize(NormalizationForm.FormKD),
+      StringComparison.Ordinal
+     )
+     select TL
+    ).FirstOrDefault();
+    if(!(OldTaglistElement is null)){
+     OldTaglistElement.Remove();
+    }
+    XElement NewTaglistElement = ToTaglistXML(ToSave);
+    DataDocument.Root.Add(NewTaglistElement);
+    return XMLDataFileHandler.Save(DataDocument,SavingOptions,DataFileLock.Decorated);
+   }finally{
+    DataFileLock.Release();
    }
-   XElement NewTaglistElement = ToTaglistXML(ToSave);
-   DataDocument.Root.Add(NewTaglistElement);
-   return XMLDataFileHandler.Save(DataDocument,SavingOptions,DataFileLock.Decorated);
   }
 
   protected Taglist FromTaglistXML(XElement TL){
@@ -239,21 +282,27 @@ namespace Tagaroo.DataAccess{
   }
 
   protected const SaveOptions SavingOptions=SaveOptions.OmitDuplicateNamespaces;
+  /// <summary>
+  /// The expected XML namespace of the root element of instance documents, as defined in Taglists.xsd.
+  /// </summary>
   static protected readonly XNamespace xmlns="urn:xmlns:tagaroo:Taglists:v1.0";
  }
 
  internal class TaglistRepositoryLock : Lock{
   public readonly Lock Decorated;
   public readonly XDocument LoadedDataDocument;
+  public bool Released{get;private set;}
   public TaglistRepositoryLock(Lock Decorated,XDocument LoadedDataDocument){
    this.Decorated=Decorated;
    this.LoadedDataDocument=LoadedDataDocument;
+   this.Released=false;
   }
   public void Release(){
+   this.Released=true;
    Decorated.Release();
   }
   void IDisposable.Dispose(){
-   Decorated.Dispose();
+   Release();
   }
  }
 }

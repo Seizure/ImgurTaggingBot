@@ -10,15 +10,16 @@ using Discord.WebSocket;
 using Discord.Net.Providers.WS4Net;
 using Imgur.API;
 using Imgur.API.Authentication;
-using AuthenticationImpl=Imgur.API.Authentication.Impl;
+using AuthenticationImpl = Imgur.API.Authentication.Impl;
 using Imgur.API.Models;
-using ModelsImpl=Imgur.API.Models.Impl;
+using ModelsImpl = Imgur.API.Models.Impl;
 using Imgur.API.Enums;
-using ImgurEndpoints=Imgur.API.Endpoints.Impl;
+using ImgurEndpoints = Imgur.API.Endpoints.Impl;
 using Tagaroo.Application;
 using Tagaroo.Model;
 using Tagaroo.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 
 /*
 Dumping ground for testing out stuff
@@ -464,8 +465,7 @@ namespace Tagaroo{
     _Imgur,
     _Discord,
     new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml"),
-    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
-    TimeSpan.FromMinutes(5)
+    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml")
    );
    Core.Run();
   }
@@ -503,7 +503,7 @@ namespace Tagaroo{
    return new List<IComment>(0);
   }
   public async Task<GalleryItem> ReadGalleryImage(string ID){
-   return new GalleryItem(ID,"Title","Image Page URL","Image Resource URL","Author","Description",false,DateTimeOffset.UtcNow,"Categories",800,600);
+   return new GalleryItemDebug(ID,"Title","Image Page URL","Image Resource URL","Author","Description",false,DateTimeOffset.UtcNow,"Categories",800,600);
   }
   public async Task<GalleryItem> ReadGalleryAlbum(string ID){
    return await ReadGalleryImage(ID);
@@ -518,6 +518,9 @@ namespace Tagaroo{
    };
   }
   public async Task LogRemainingBandwidth(){
+   return;
+  }
+  public async Task LogRemainingBandwidth(TraceEventType Level){
    return;
   }
   public async Task<IAccount> ReadUserDetails(string Username){
@@ -543,5 +546,10 @@ namespace Tagaroo{
   }}
  }
  #pragma warning restore CS1998
+
+ public class GalleryItemDebug:GalleryItem{
+  public GalleryItemDebug(string ID,string Title,string LinkPage,string LinkImage,string AuthorUsername,string Description,bool NSFW,DateTimeOffset Created,string Categories,int? Width,int? Height)
+  :base(ID,Title,LinkPage,LinkImage,AuthorUsername,Description,NSFW,Created,Categories,Width,Height){}
+ }
 }
 #endif

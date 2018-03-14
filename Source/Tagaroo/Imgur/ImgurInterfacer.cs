@@ -4,6 +4,7 @@ using System.Text;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Diagnostics;
 using Imgur.API.Models;
 using Imgur.API.Enums;
 using Imgur.API.Authentication;
@@ -21,19 +22,62 @@ using HttpRequestException=System.Net.Http.HttpRequestException;
 
 namespace Tagaroo.Imgur{
  
+ /// <summary>
+ /// The application's interface to the services provided by Imgur.
+ /// An <see cref="ImgurException"/> is thrown if there is some problem interacting with the Imgur API;
+ /// one may also be thrown in other situations, depending on the method.
+ /// </summary>
  public interface ImgurInterfacer{
+  /// <summary>
+  /// The point in time at which the OAuth Token,
+  /// used for accessing the application's associated Imgur account, expires.
+  /// Upon relevant method calls, a check will be made to see if the expiry is close,
+  /// and if so, an attempt will be made to automatically refresh the OAuth Token.
+  /// </summary>
   DateTimeOffset OAuthTokenExpiry{get;}
 
+  /// <summary>
+  /// Returns true if the supplied Comment was made by this application;
+  /// that is, if its Author matches the Imgur account that the application is associated with.
+  /// </summary>
   bool isCommentByThisApplication(IComment operand);
   
+  /// <summary>
+  /// Refreshes the OAuth Token used to access the application's associated Imgur account.
+  /// If successful, the new OAuth Token is saved to the associated <see cref="SettingsRepository"/>.
+  /// The new OAuth Token replaces the old one in subsequent method calls.
+  /// This method will be called automatically upon relevant method calls
+  /// if the expiry date–time is near or passed.
+  /// </summary>
   /// <exception cref="ImgurException"/>
   Task<IOAuth2Token> RefreshUserAuthenticationToken();
   
-  /// <exception cref="ImgurException"/>
+  /// <summary>
+  /// Retrieves details of an Imgur user account, by its identifying username.
+  /// </summary>
+  /// <exception cref="ImgurException">Also thrown if no account with the specified username exists</exception>
   Task<IAccount> ReadUserDetails(string Username);
-  /// <exception cref="ImgurException"/>
+  /// <summary>
+  /// Retrieves details of an Imgur user account, by its identifying numeric account ID.
+  /// </summary>
+  /// <exception cref="ImgurException">Also thrown if no account with the specified ID exists</exception>
   Task<IAccount> ReadUserDetails(int UserID);
 
+  /// <summary>
+  /// Retrieves all Comments, in latest-first order, made by all the Imgur users specified in <paramref name="ByUsernames"/>
+  /// since the date–time specified by <paramref name="SinceExclusive"/>.
+  /// </summary>
+  /// <param name="ByUsernames">The identifying usernames of the Imgur users for which to retrieve Comments for</param>
+  /// <param name="SinceExclusive">The furthest point in time to go back to when retrieving Comments for each user; no Comments at or before this point will be returned</param>
+  /// <param name="RequestsPerUserLimit">
+  /// Safety feature for limiting the Imgur API bandwidth consumed by this call.
+  /// If, when retrieving Comments for an individual user, the number of API calls made while retrieving Comments for that user exceeds this limit,
+  /// a warning is logged, and no further Comments are retrieved.
+  /// If the limit is exceeded, the Comments returned for that user may not be all the Comments they have made since <paramref name="SinceExclusive"/>;
+  /// the missing Comments will all be older than the oldest Comment retrieved.
+  /// Specifying a non-positive value will disable this feature.
+  /// </param>
+  /// <returns>A dictionary with one entry for each entry in <paramref name="ByUsernames"/>, the value of each entry being an ordered list of Comments made by that user</returns>
   /// <exception cref="ImgurException"/>
   Task<IDictionary<string,IList<IComment>>> ReadCommentsSince(
    DateTimeOffset SinceExclusive,
@@ -41,26 +85,57 @@ namespace Tagaroo.Imgur{
    short RequestsPerUserLimit
   );
   
+  /// <summary>
+  /// Retrieves a collection of Replies made to the supplied Comment.
+  /// The supplied Comment is not altered.
+  /// </summary>
   /// <exception cref="ImgurException"/>
   Task<IEnumerable<IComment>> ReadCommentReplies(IComment RepliesTo);
 
+  /// <summary>
+  /// Retrieves the details of a Gallery Item on Imgur,
+  /// specifically an Image with the supplied ID.
+  /// </summary>
   /// <exception cref="ImgurException"/>
   Task<GalleryItem> ReadGalleryImage(string ID);
-  
+  /// <summary>
+  /// Retrieves the details of a Gallery Item on Imgur,
+  /// specifically an Album with the supplied ID.
+  /// </summary>
   /// <exception cref="ImgurException"/>
   Task<GalleryItem> ReadGalleryAlbum(string ID);
   
-  /// <exception cref="ImgurException"/>
+  /// <summary>
+  /// "Mentions" all the Imgur users in <paramref name="UsernamesToMention"/>
+  /// in a Reply to the Comment with ID <paramref name="ItemParentCommentID"/>
+  /// which must be on the Gellery Item with ID <paramref name="OnItemID"/>.
+  /// Since the length of Comments is limited,
+  /// the Mentions to make are split across many Comment Replies if needed.
+  /// </summary>
+  /// <exception cref="ImgurException">Also thrown if the Gallery Item specified by <paramref name="OnItemID"/> or the Comment on it specified by <paramref name="ItemParentCommentID"/> could not be found</exception>
   Task MentionUsers(
    string OnItemID,
    int ItemParentCommentID,
    ISet<string> UsernamesToMention
   );
 
+  /// <summary>
+  /// Retrieves details of the remaining Imgur API bandwidth available to the application.
+  /// </summary>
   /// <exception cref="ImgurException"/>
   Task<IRateLimit> ReadRemainingBandwidth();
 
+  /// <summary>
+  /// <see cref="LogRemainingBandwidth(TraceEventType)"/>, with a logging level of <see cref="TraceEventType.Information"/>.
+  /// </summary>
   Task LogRemainingBandwidth();
+  /// <summary>
+  /// Logs a message to <see cref="Log.Imgur"/> detailing the remaining Imgur API bandwidth available to the application,
+  /// which is retrieved via <see cref="ReadRemainingBandwidth"/>,
+  /// with the specified logging level.
+  /// Any errors in acquiring the information are logged.
+  /// </summary>
+  Task LogRemainingBandwidth(TraceEventType Level);
  }
 
  public class ImgurInterfacerMain : ImgurInterfacer{
@@ -75,26 +150,28 @@ namespace Tagaroo.Imgur{
   private readonly int UserID;
   private readonly ushort MaximumCommentLength;
   
-  /// <summary></summary>
+  /// <summary>
+  /// <para>Preconditions: <paramref name="MaximumCommentLength"/> &gt; 0</para>
+  /// </summary>
   /// <param name="ApplicationAuthenticationID">
   /// The "Client ID" portion of the Imgur API Key
-  /// with which to connect to Imgur's API with
+  /// with which to connect to the Imgur API with
   /// </param>
   /// <param name="ApplicationAuthenticationSecret">
   /// The "Client Secret" portion of the Imgur API Key
-  /// with which to connect to Imgur's API with
+  /// with which to connect to the Imgur API with
   /// </param>
   /// <param name="UserName">
-  /// The Username of the Imgur account
+  /// The identifying username of the Imgur account
   /// with which the application is to perform actions as
   /// </param>
   /// <param name="UserID">
-  /// The User ID of the Imgur account
+  /// The identifying numeric ID of the Imgur account
   /// with which the application is to perform actions as
   /// </param>
   /// <param name="UserAuthenticationToken">
   /// The "Access Token" portion of the OAuth Token
-  /// that grants access to the Imgur user account to perform actions as
+  /// that grants access to the Imgur account to perform actions as
   /// </param>
   /// <param name="UserAuthenticationRefreshToken">
   /// The "Refresh Token" portion of the OAuth Token,
@@ -107,7 +184,7 @@ namespace Tagaroo.Imgur{
   /// <param name="TokenExpiresAt">
   /// The date–time at which the "Access Token" of the OAuth Token expires;
   /// if not known this can simply be set to a date–time in the past
-  /// to acquire a new "Access Token" and expiry upon the first connect
+  /// to acquire a new "Access Token" and expiry upon the first call requiring an OAuth Token
   /// </param>
   /// <param name="MaximumCommentLength">
   /// The maximum permitted length of an Imgur Comment,
@@ -115,8 +192,8 @@ namespace Tagaroo.Imgur{
   /// </param>
   /// <param name="RepositorySettings">
   /// A data access repository for the application's settings,
-  /// which will be called to save any changes made to the OAuth key,
-  /// which may be updated automatically when expired, or manually
+  /// which will be called to save any changes made to the OAuth Token,
+  /// which may be updated automatically when close to or passed expiry, or manually
   /// </param>
   public ImgurInterfacerMain(
    SettingsRepository RepositorySettings,
@@ -136,7 +213,7 @@ namespace Tagaroo.Imgur{
    DateTimeOffset Now=DateTimeOffset.UtcNow;
    int ExpiryTime;
    try{
-    ExpiryTime=(int)Math.Floor( (TokenExpiresAt-Now).TotalSeconds );
+    ExpiryTime = checked((int)Math.Floor( (TokenExpiresAt-Now).TotalSeconds ));
    }catch(OverflowException){
     ExpiryTime = TokenExpiresAt>Now ? int.MaxValue : int.MinValue;
    }
@@ -176,7 +253,12 @@ namespace Tagaroo.Imgur{
 
   /// <exception cref="ImgurException"/>
   protected Task EnsureUserAuthenticationTokenCurrent(){
-   if( (ClientAuthenticated.OAuth2Token.ExpiresAt - ExpiryPrecision) <= DateTimeOffset.UtcNow ){
+   DateTimeOffset Now=DateTimeOffset.UtcNow;
+   if( (ClientAuthenticated.OAuth2Token.ExpiresAt - ExpiryPrecision) <= Now ){
+    Log.Imgur_.LogInfo(
+     "The current date-time, {1:u}, is close to the expiry date-time of the OAuth Token, {0:u}; attempting a refresh",
+     ClientAuthenticated.OAuth2Token.ExpiresAt, Now
+    );
     return RefreshUserAuthenticationToken();
    }
    return Task.CompletedTask;
@@ -222,7 +304,13 @@ namespace Tagaroo.Imgur{
    }
   }
 
-  public async Task LogRemainingBandwidth(){
+  public Task LogRemainingBandwidth(){
+   return LogRemainingBandwidth(TraceEventType.Information);
+  }
+  public async Task LogRemainingBandwidth(TraceEventType Level){
+   if(!Log.ImgurBandwidth_.ShouldLog(Level)){
+    return;
+   }
    IRateLimit RemainingBandwidth;
    try{
     RemainingBandwidth = await ReadRemainingBandwidth();
@@ -230,7 +318,8 @@ namespace Tagaroo.Imgur{
     Log.ImgurBandwidth_.LogError("Error acquiring API Bandwidth details: "+Error.Message);
     return;
    }
-   Log.ImgurBandwidth_.LogInfo(
+   Log.ImgurBandwidth_.Log(
+    Level,
     "Remaining Imgur API Bandwidth - {0:D} / {1:D}",
     RemainingBandwidth.ClientRemaining,RemainingBandwidth.ClientLimit
    );
@@ -380,6 +469,7 @@ namespace Tagaroo.Imgur{
     " ",
     MaximumCommentLength
    );
+   Log.Imgur_.LogVerbose("Mentioning {0} total users across {1} total Comment Replies",UsernamesToMention.Count,CommentsToMake.Count);
    foreach(string Comment in CommentsToMake){
     try{
      await APIComments.CreateCommentAsync(

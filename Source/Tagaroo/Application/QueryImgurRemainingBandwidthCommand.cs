@@ -5,11 +5,17 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Imgur.API.Models;
 using Tagaroo.Imgur;
+using Tagaroo.Logging;
 
+using DiscordCommandBase=Tagaroo.Discord.DiscordCommandBase;
 using ImgurException=Imgur.API.ImgurException;
 
-namespace Tagaroo.Discord.Commands{
- public class QueryImgurRemainingBandwidthCommand : CommandBase{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements a command for displaying the remaining Imgur API bandwidth available to the application.
+ /// </summary>
+ public class QueryImgurRemainingBandwidthCommand : DiscordCommandBase{
   private readonly ImgurInterfacer Imgur;
   public QueryImgurRemainingBandwidthCommand(ImgurInterfacer Imgur):base(){
    this.Imgur=Imgur;
@@ -19,6 +25,7 @@ namespace Tagaroo.Discord.Commands{
   [Summary("Displays the remaining number of API calls that the application may make to the Imgur API. This figure is reset periodically, typically every 24 hours.")]
   public async Task Execute(
   ){
+   Log.Application_.LogVerbose("Executing APIUsage");
    IRateLimit Result;
    try{
     Result = await Imgur.ReadRemainingBandwidth();

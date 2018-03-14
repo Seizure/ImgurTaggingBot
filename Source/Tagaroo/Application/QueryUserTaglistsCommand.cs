@@ -6,8 +6,14 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
+using Tagaroo.Logging;
 
-namespace Tagaroo.Discord.Commands{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements commands for displaying the identifying names of all the Taglists that a particular Imgur user appears within.
+ /// The Imgur user to search for can be specified either by their username or account ID.
+ /// </summary>
  public class QueryUserTaglistsCommand : TaglistCommandsBase{
   public QueryUserTaglistsCommand(TaglistRepository Repository)
   :base(Repository){}
@@ -18,6 +24,7 @@ namespace Tagaroo.Discord.Commands{
    [Remainder] [Summary("The Imgur username of the Registered User to search for.")]
    string Username
   ){
+   Log.Application_.LogVerbose("Executing UserTaglists for username '{0}'",Username);
    IReadOnlyCollection<Taglist> AllTaglists = await ReadAllTaglistsAndUsers();
    if(AllTaglists is null){return;}
    ICollection<Taglist> Result = (
@@ -37,6 +44,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("The Imgur account ID of the Registered User to search for.")]
    int UserID
   ){
+   Log.Application_.LogVerbose("Executing UserTaglists for user ID '{0:D}'",UserID);
    IReadOnlyCollection<Taglist> AllTaglists = await ReadAllTaglistsAndUsers();
    if(AllTaglists is null){return;}
    ICollection<Taglist> Result = (

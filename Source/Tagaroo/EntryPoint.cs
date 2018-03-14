@@ -10,12 +10,26 @@ using Tagaroo.Discord;
 using Tagaroo.Logging;
 
 namespace Tagaroo{
+ /// <summary>
+ /// The "Main" class of the application.
+ /// Responsible for constructing an instance of <see cref="Program"/>
+ /// along with all of its dependencies, and running it.
+ /// Reads and applies <see cref="ApplicationConfiguration"/>, from the Configuration element of Settings.xml.
+ /// </summary>
  static internal class EntryPoint{
 
+  /// <returns>
+  /// Non-zero <see cref="Return_ConfigurationLoadError"/> if there is a problem reading Configuration data from Settings.xml;
+  /// non-zero <see cref="Return_ApplicationStartError"/> if there is some other problem during startup,
+  /// 0 otherwise
+  /// </returns>
   public static int _Main(){
+   //Log to STDOUT by default
    Log.Instance.AddTraceListener(new TextWriterTraceListener(Console.Out,"StdOutListener"));
+   //Log all messages sent to the Bootstrap logger until the application's Configuration can be read and applied (other loggers are not used until after the Configuration is applied)
    Log.Instance.BootstrapLevel.Level = SourceLevels.Verbose;
    Log.Bootstrap_.LogInfo("Application starting");
+   //Robustness — Use locale-invariant comparison/formatting/e.t.c. rules by default, to mitigate aginst bugs caused by varying host system locales
    CultureInfo.CurrentCulture = CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
    SettingsRepository RepositorySettings=new SettingsRepositoryMain(SettingsFilePath);
    Log.Bootstrap_.LogVerbose("Initializing Settings repository");
@@ -70,9 +84,9 @@ namespace Tagaroo{
       )
      )
     ),
-    Imgur, Discord, RepositoryTaglists, RepositorySettings, 
-    Configuration.PullCommentsFrequency
+    Imgur, Discord, RepositoryTaglists, RepositorySettings
    );
+   //Create Discord logging output if configured to do so
    Log.Bootstrap_.LogVerbose("Applying Configuration: Logging output");
    if(Configuration.LogToDiscord){
     Log.Instance.AddTraceListener(
@@ -81,6 +95,7 @@ namespace Tagaroo{
     Log.Instance.RemoveTraceListener("StdOutListener");
    }
    Log.Bootstrap_.LogInfo("Configuration applied; starting application");
+   //Execution will be within this method while the application is running
    bool startupsuccess=Application.Run();
    Log.Bootstrap_.LogInfo("Application ended");
    if(!startupsuccess){
@@ -89,12 +104,20 @@ namespace Tagaroo{
    return 0;
   }
 
+  /// <summary>
+  /// See <see cref="_Main"/>.
+  /// The application does not take any parameters from the command line.
+  /// </summary>
   static int Main(string[] Parameters){
    return _Main();
   }
 
-  const string SettingsFilePath=@"Settings.xml";
-  public const int Return_ApplicationStartError=-1;
+  /// <summary>
+  /// The location where the Settings file Settings.xml resides,
+  /// relative to the current working directory.
+  /// </summary>
+  public const string SettingsFilePath=@"Settings.xml";
   public const int Return_ConfigurationLoadError=-2;
+  public const int Return_ApplicationStartError=-1;
  }
 }

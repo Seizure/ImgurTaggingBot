@@ -12,6 +12,13 @@ using Imgur.API.Models.Impl;
 using IApiClient = Imgur.API.Authentication.IApiClient;
 using ImgurException=Imgur.API.ImgurException;
 
+/*
+The Imgur.Net library does not provide a means to query accounts by numeric ID.
+As such, code in this namespace extends the API to facilitate this feature.
+The code is based heavily on the code in the Imgur.Net library,
+with appropriate tweaks as needed.
+*/
+
 namespace Tagaroo.Imgur.LibraryEnhancements{
  internal class AccountEndpointEnhanced : AccountEndpoint{
   

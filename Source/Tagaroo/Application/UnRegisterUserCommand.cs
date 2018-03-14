@@ -5,9 +5,19 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
+using Tagaroo.Logging;
 
-namespace Tagaroo.Discord.Commands{
- public class UnRegisterUserCommand : CommandBase{
+using DiscordCommandBase=Tagaroo.Discord.DiscordCommandBase;
+
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements commands for UnRegistering a Registered User from a Taglist, using the <see cref="Taglist.UnRegisterUser"/> method.
+ /// The Registered User to UnRegister can be specified by either the username or ID of their Imgur user account.
+ /// The <see cref="Taglist"/> to UnRegister them from will be briefly locked during execution of this activity via <see cref="TaglistRepository.LoadAndLock"/>,
+ /// and then persisted using <see cref="TaglistRepository.Save"/>.
+ /// </summary>
+ public class UnRegisterUserCommand : DiscordCommandBase{
   private readonly TaglistRepository Repository;
   public UnRegisterUserCommand(TaglistRepository Repository){
    this.Repository=Repository;
@@ -21,6 +31,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("The name of the Taglist to Unregister the User from.")]
    string TaglistName
   ){
+   Log.Application_.LogVerbose("Executing 'UnRegister' command for username '{0}' from Taglist '{1}'",Username,TaglistName);
    string Response = await ExecuteUnregistration(Username,null,TaglistName);
    await base.ReplyAsync(Response);
   }
@@ -31,6 +42,7 @@ namespace Tagaroo.Discord.Commands{
    int UserID,
    string TaglistName
   ){
+   Log.Application_.LogVerbose("Executing 'UnRegister' command for user ID '{0}' from Taglist '{1}'",UserID,TaglistName);
    string Response = await ExecuteUnregistration(null,UserID,TaglistName);
    await base.ReplyAsync(Response);
   }

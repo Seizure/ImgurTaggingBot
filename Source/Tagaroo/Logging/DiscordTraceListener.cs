@@ -5,6 +5,12 @@ using System.Diagnostics;
 using Tagaroo.Discord;
 
 namespace Tagaroo.Logging{
+ /// <summary>
+ /// <see cref="TraceListener"/> Realization for a logging output
+ /// that writes its output to Discord.
+ /// Will output log messages to the supplied fallback <see cref="TraceListener"/>
+ /// if messages cannot be sent to Discord at the time they are given.
+ /// </summary>
  internal class DiscordTraceListener : TraceListener{
   private readonly DiscordInterfacer Discord;
   private readonly TraceListener BackupTraceListener;

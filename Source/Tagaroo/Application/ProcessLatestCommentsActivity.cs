@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Diagnostics;
 using Imgur.API.Models;
 using Tagaroo.Imgur;
 using Tagaroo.DataAccess;
@@ -12,6 +13,22 @@ using Tagaroo.Logging;
 using ImgurException=Imgur.API.ImgurException;
 
 namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class.
+ /// Retrieves any new Imgur Comments from all of the Commenters specified in <see cref="Settings.CommenterUsernames"/>,
+ /// using the associated <see cref="ImgurInterfacer"/> Service.
+ /// Then, for each new Comment, the associated <see cref="ProcessCommentActivity"/> activity is executed.
+ /// After this, <see cref="Settings.CommentsProcessedUpToInclusive"/> is updated and saved via <see cref="SettingsRepository"/>
+ /// with the date–time of the most recent Comment from all the Commenters.
+ /// Specific behavior is controlled by the <see cref="Settings"/> object returned by the associated <see cref="SettingsRepository"/>,
+ /// an instance of <see cref="Settings"/> read per-execution of the activity.
+ /// As a performance enhancement, this activity initializes a <see cref="CacheingTaglistRepository"/> Decorator of <see cref="TaglistRepository"/>,
+ /// which should also be passed to the downstream <see cref="ProcessTagCommandActivity"/>;
+ /// the downstream <see cref="ProcessTagCommandActivity"/> will be executed potentially multiple times,
+ /// each time executing a read from its associated <see cref="TaglistRepository"/>;
+ /// the <see cref="CacheingTaglistRepository"/> Decorator caches reads from the Taglists data store,
+ /// eliminating multiple reads of the data store from potential sequential executions of the downstream activity.
+ /// </summary>
  public class ProcessLatestCommentsActivity{
   protected readonly ImgurInterfacer Imgur;
   protected readonly SettingsRepository RepositorySettings;
@@ -29,35 +46,56 @@ namespace Tagaroo.Application{
    this.RepositoryTaglists=RepositoryTaglists;
   }
 
-  public async Task Execute(Settings CurrentSettings){
+  //Some exceptions may go unobserved in this method, as not all created Tasks are awaited if problems occur
+  /// <summary>
+  /// <para>Preconditions: The associated <see cref="DiscordInterfacer"/> of the indirectly-associated <see cref="ProcessTagCommandActivity"/> is in a Connected state</para>
+  /// </summary>
+  public async Task Execute(){
+   Log.Application_.LogVerbose("Starting processing of latest Comments");
+   Settings CurrentSettings;
+   Task<Settings> CurrentSettingsTask = RepositorySettings.LoadSettings();
+   //Robustness — clear the cache in case it hasn't been cleared for some reason
+   RepositoryTaglists.ClearCache();
+   /*
+   Prepare the cache ahead of time;
+   The ProcessCommentActivity tasks will execute in paralell,
+   which means that LoadAll will be called all the times it is to be called
+   before it can complete, and cache the result if not already cached;
+   hence it should be cached here, before paralell SubActivity execution begins
+   */
+   Task InitializeCacheTask = RepositoryTaglists.LoadAll();
+   try{
+    CurrentSettings = await CurrentSettingsTask;
+   }catch(DataAccessException Error){
+    Log.Application_.LogError("Error loading Settings while pulling latest Comments from Imgur: "+Error.Message);
+    return;
+   }
+   Task<IDictionary<string,IList<IComment>>> NewCommentsTask = Imgur.ReadCommentsSince(
+    CurrentSettings.CommentsProcessedUpToInclusive,
+    CurrentSettings.CommenterUsernames,
+    CurrentSettings.RequestThreshholdPullCommentsPerUser
+   );
    IDictionary<string,IList<IComment>> NewComments;
    try{
-    NewComments = await Imgur.ReadCommentsSince(
-     CurrentSettings.CommentsProcessedUpToInclusive,
-     CurrentSettings.CommenterUsernames,
-     CurrentSettings.RequestThreshholdPullCommentsPerUser
-    );
+    NewComments = await NewCommentsTask;
    }catch(ImgurException Error){
     Log.Application_.LogError("Error pulling latest Comments from Imgur: "+Error.Message);
     return;
    }
-   RepositoryTaglists.ClearCache();
    try{
-    /*
-    Prepare the cache ahead of time;
-    These tasks will execute in paralell,
-    which means that LoadAll will be called all the times it is to be called
-    before it can complete and cache the result
-    */
-    await RepositoryTaglists.LoadAll();
+    await InitializeCacheTask;
    }catch(DataAccessException Error){
     Log.Application_.LogError("Error loading Taglists while pulling Imgur Comments: "+Error.Message);
     return;
    }
+   //Execute the sub-activity for each new Comment, keeping track of the latest date–time from all the Comments
+   Log.Application_.LogVerbose("Processing latest Comments from {0} total Commenters",NewComments.Count);
    List<Task> Tasks=new List<Task>();
    DateTimeOffset LatestCommentAt=DateTimeOffset.MinValue;
-   foreach( IList<IComment> NewUserComments in NewComments.Values ){
+   foreach( KeyValuePair<string,IList<IComment>> _NewUserComments in NewComments ){
+    IList<IComment> NewUserComments=_NewUserComments.Value;
     //Process Comments from a particular user, oldest Comment first
+    Log.Application_.LogVerbose("Processing latest Comments from Commenter '{0}', total — {1}",_NewUserComments.Key,NewUserComments.Count);
     foreach( IComment NewUserComment in NewUserComments.Reverse() ){
      Tasks.Add(SubActivity.ExecuteIfNew(NewUserComment));
      if( NewUserComment.DateTime > LatestCommentAt ){
@@ -65,10 +103,13 @@ namespace Tagaroo.Application{
      }
     }
    }
-   //Wait until all Comments have been processed before then updating the latest comment date–time, in case of any unhandled exceptions during processing
+   //Wait until all Comments have been processed before then updating the latest Comment date–time, in case of any unhandled exceptions during processing
    await Task.WhenAll(Tasks);
    RepositoryTaglists.ClearCache();
+   //Update and save the latest Comment date–time if it has progressed
+   Log.Application_.LogVerbose("Latest date–time of all Comments read — {0:u}; current saved value is {1:u}",LatestCommentAt,CurrentSettings.CommentsProcessedUpToInclusive);
    if(LatestCommentAt > CurrentSettings.CommentsProcessedUpToInclusive){
+    Log.Application_.LogVerbose("Updating and saving latest processed Comment date–time");
     CurrentSettings.CommentsProcessedUpToInclusive = LatestCommentAt;
     try{
      await RepositorySettings.SaveWritableSettings(CurrentSettings);
@@ -79,10 +120,18 @@ namespace Tagaroo.Application{
      );
     }
    }
-   //await Imgur.LogRemainingBandwidth();
+   await Imgur.LogRemainingBandwidth(TraceEventType.Verbose);
   }
  }
 
+ /// <summary>
+ /// A <see cref="TaglistRepository"/> Decorator that adds cacheing functionality.
+ /// Specifically, a call to <see cref="LoadAll"/> will store the result in the cache.
+ /// The cached result or a relevant part thereof is then returned immediately by
+ /// subsequent calls to <see cref="LoadAll"/>, <see cref="Load"/>, and <see cref="ReadAllHeaders"/>,
+ /// but not <see cref="LoadAndLock"/>.
+ /// The cache is cleared by <see cref="ClearCache"/>, and also upon a call to <see cref="Save"/>.
+ /// </summary>
  public class CacheingTaglistRepository : TaglistRepository{
   private readonly TaglistRepository Decorate;
   private IReadOnlyDictionary<string,Taglist> Cache=null;
@@ -98,9 +147,9 @@ namespace Tagaroo.Application{
    Decorate.Initialize();
   }
 
-  public Task<IReadOnlyCollection<Taglist>> ReadAllHeaders(){
+  public Task<IReadOnlyDictionary<string,Taglist>> ReadAllHeaders(){
    if(!(Cache is null)){
-    return Task.FromResult<IReadOnlyCollection<Taglist>>(Cache.Values.ToList());
+    return Task.FromResult(Cache);
    }
    return Decorate.ReadAllHeaders();
   }

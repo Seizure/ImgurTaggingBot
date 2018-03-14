@@ -6,15 +6,24 @@ using System.Linq;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
 
-namespace Tagaroo.Discord.Commands{
- abstract public class TaglistCommandsBase : CommandBase{
+using DiscordCommandBase=Tagaroo.Discord.DiscordCommandBase;
+
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Base class for application-layer Discord command classes that deal with Taglists,
+ /// containing some common code.
+ /// </summary>
+ abstract public class TaglistCommandsBase : DiscordCommandBase{
   protected readonly TaglistRepository Repository;
   protected TaglistCommandsBase(TaglistRepository Repository):base(){
    this.Repository=Repository;
   }
 
+  /// <summary>
+  /// Convenience method that calls <see cref="TaglistRepository.Load"/>,
+  /// sending an error message and returning null upon any problem.
+  /// </summary>
   protected async Task<Taglist> ReadTaglist(string TaglistName){
-   TaglistName = TaglistName.Normalize(NormalizationForm.FormKD);
    try{
     return await Repository.Load(TaglistName);
    }catch(EntityNotFoundException){
@@ -31,9 +40,13 @@ namespace Tagaroo.Discord.Commands{
    }
   }
 
+  /// <summary>
+  /// Convenience method that calls <see cref="TaglistRepository.ReadAllHeaders"/>,
+  /// sending an error message and returning null upon any problem.
+  /// </summary>
   protected async Task<IReadOnlyCollection<Taglist>> ReadAllTaglists(){
    try{
-    return await Repository.ReadAllHeaders();
+    return (await Repository.ReadAllHeaders()).Values.ToList();
    }catch(DataAccessException Error){
     await base.ReplyAsync(
      "Error retrieving Taglists: "+Error.Message
@@ -42,6 +55,10 @@ namespace Tagaroo.Discord.Commands{
    }
   }
 
+  /// <summary>
+  /// Convenience method that calls <see cref="TaglistRepository.LoadAll"/>,
+  /// sending an error message and returning null upon any problem.
+  /// </summary>
   protected async Task<IReadOnlyCollection<Taglist>> ReadAllTaglistsAndUsers(){
    try{
     return (await Repository.LoadAll()).Values.ToList();
@@ -53,6 +70,13 @@ namespace Tagaroo.Discord.Commands{
    }
   }
 
+  /// <summary>
+  /// Returns <see cref="Ratings.Safe"/> if <paramref name="RatingCharacter"/> is 'S',
+  /// <see cref="Ratings.Questionable"/> if <paramref name="RatingCharacter"/> is 'Q',
+  /// or <see cref="Ratings.Explicit"/> if <paramref name="RatingCharacter"/> is 'E',
+  /// treating <paramref name="RatingCharacter"/> as case-insensitive.
+  /// Sends an error message and returns null upon any problem.
+  /// </summary>
   protected async Task<Ratings?> ParseRating(char RatingCharacter){
    RatingCharacter = char.ToUpperInvariant(RatingCharacter);
    switch(RatingCharacter){

@@ -6,8 +6,14 @@ using System.Linq;
 using Discord.Commands;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
+using Tagaroo.Logging;
 
-namespace Tagaroo.Discord.Commands{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements a command for displaying a list of all the Taglists the application manages,
+ /// not including all the Registered Users of those Taglists.
+ /// </summary>
  public class QueryTaglistsCommand : TaglistCommandsBase{
   public QueryTaglistsCommand(TaglistRepository Repository)
   :base(Repository){}
@@ -16,6 +22,7 @@ namespace Tagaroo.Discord.Commands{
   [Summary("Displays a list of all Taglists.")]
   public async Task Execute(
   ){
+   Log.Application_.LogVerbose("Executing 'Taglists' command");
    IReadOnlyCollection<Taglist> Model = await ReadAllTaglists();
    if(Model is null){return;}
    string Response = RenderTaglists(Model);

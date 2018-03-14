@@ -5,11 +5,18 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Imgur.API.Models;
 using Tagaroo.Imgur;
+using Tagaroo.Logging;
 
+using DiscordCommandBase=Tagaroo.Discord.DiscordCommandBase;
 using ImgurException=Imgur.API.ImgurException;
 
-namespace Tagaroo.Discord.Commands{
- public class ImgurUserIDCommand : CommandBase{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements two commands for translating between the ID and username of an Imgur user account.
+ /// Both commands make calls to the Imgur API.
+ /// </summary>
+ public class ImgurUserIDCommand : DiscordCommandBase{
   private readonly ImgurInterfacer Imgur;
   public ImgurUserIDCommand(ImgurInterfacer Imgur):base(){
    this.Imgur=Imgur;
@@ -21,6 +28,7 @@ namespace Tagaroo.Discord.Commands{
    [Remainder] [Summary("The Imgur account username for which to retrieve the ID for.")]
    string Username
   ){
+   Log.Application_.LogVerbose("Executing ToImgurUserID for username '{0}'",Username);
    IAccount Result;
    try{
     Result = await Imgur.ReadUserDetails(Username);
@@ -40,6 +48,7 @@ namespace Tagaroo.Discord.Commands{
    [Remainder] [Summary("The numeric Imgur account ID for which to retrieve the username for.")]
    int UserID
   ){
+   Log.Application_.LogVerbose("Executing ToImgurUserID for user ID '{0:D}'",UserID);
    IAccount Result;
    try{
     Result = await Imgur.ReadUserDetails(UserID);

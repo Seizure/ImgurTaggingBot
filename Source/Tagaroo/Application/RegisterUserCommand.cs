@@ -7,11 +7,24 @@ using Imgur.API.Models;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
 using Tagaroo.Imgur;
+using Tagaroo.Logging;
 
+using DiscordCommandBase=Tagaroo.Discord.DiscordCommandBase;
 using ImgurException=Imgur.API.ImgurException;
 
-namespace Tagaroo.Discord.Commands{
- public class RegisterUserCommand : CommandBase{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements commands for Registering an Imgur user to a Taglist, using the <see cref="Taglist.RegisterUser"/> method.
+ /// If the user already exists in the Taglist, their details are updated.
+ /// The Imgur user to Register can be specified by either their username or account ID;
+ /// the command will attempt to retrieve their account ID from Imgur if their username is specified,
+ /// or their username if their account ID is specified,
+ /// which involves calling the Imgur API.
+ /// The <see cref="Taglist"/> to Register them to will be briefly locked during execution of this activity via <see cref="TaglistRepository.LoadAndLock"/>,
+ /// and then persisted using <see cref="TaglistRepository.Save"/>.
+ /// </summary>
+ public class RegisterUserCommand : DiscordCommandBase{
   private readonly TaglistRepository Repository;
   private readonly ImgurInterfacer Imgur;
   public RegisterUserCommand(TaglistRepository Repository,ImgurInterfacer Imgur){
@@ -31,6 +44,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("A whitespace separated list of Categories that will form the User's Category Blacklist.")]
    params string[] CategoryBlacklist
   ){
+   Log.Application_.LogVerbose("Executing 'Register' command for username '{0}', to Taglist '{1}' with Ratings {2}",Username,TaglistName,RatingsInterestedInSpecifier);
    return Execute(Username,null,TaglistName,RatingsInterestedInSpecifier,CategoryBlacklist);
   }
 
@@ -42,6 +56,7 @@ namespace Tagaroo.Discord.Commands{
    string RatingsInterestedInSpecifier,
    params string[] CategoryBlacklist
   ){
+   Log.Application_.LogVerbose("Executing 'Register' command for user ID '{0:D}', to Taglist '{1}' with Ratings {2}",UserID,TaglistName,RatingsInterestedInSpecifier);
    return Execute(null,UserID,TaglistName,RatingsInterestedInSpecifier,CategoryBlacklist);
   }
 
@@ -63,8 +78,10 @@ namespace Tagaroo.Discord.Commands{
     await base.ReplyAsync(RatingsParseError);
     return;
    }
+   Log.Application_.LogVerbose("Registering user; parsed Ratings - {0}",ToRegisterRatings);
    Tuple<int,string> ToRegisterUserDetails = await RetrieveUserIdentity(UserID,Username);
    if(ToRegisterUserDetails is null){return;}
+   Log.Application_.LogVerbose("Registering user; username '{1}', ID {0:D}",ToRegisterUserDetails.Item1,ToRegisterUserDetails.Item2);
    TaglistRegisteredUser ToRegister = new TaglistRegisteredUser(
     ToRegisterUserDetails.Item2,
     ToRegisterUserDetails.Item1,
@@ -131,6 +148,7 @@ namespace Tagaroo.Discord.Commands{
   }
 
   private async Task<string> ExecuteRegistration(string TaglistName,TaglistRegisteredUser ToRegister){
+   Log.Application_.LogVerbose("Registering user; performing Registration");
    Taglist Model;
    Lock Lock;
    try{

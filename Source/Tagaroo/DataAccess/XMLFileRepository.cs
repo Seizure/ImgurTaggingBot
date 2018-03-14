@@ -11,6 +11,13 @@ using System.IO;
 using System.Reflection;
 
 namespace Tagaroo.DataAccess{
+ /// <summary>
+ /// Common supporting code for Repositories that use XML files as their persistent data store.
+ /// Each instance manages a particular XML file,
+ /// which must be an instance document of an XML Schema
+ /// that is available as an assembly resource in the assembly of this class,
+ /// which it will be validated against during reads and writes.
+ /// </summary>
  internal class XMLFileRepository{
   private readonly string DataFilePath;
   private readonly string NewFilePath, OldFilePath;
@@ -18,6 +25,9 @@ namespace Tagaroo.DataAccess{
   private readonly XNamespace xmlns;
   private readonly string ResourceStreamName;
   
+  /// <param name="DataFilePath">The path to the XML data file that persists the data</param>
+  /// <param name="xmlns">The XML namespace of the XML Schema that the data file is an instance of, as well as the namespace of the root element of the instance document</param>
+  /// <param name="ResourceStreamName">The identifying name of the assembly resource in this class' assembly that is the XML Schema associated with the instance document that this object will manage</param>
   public XMLFileRepository(string DataFilePath,XNamespace xmlns,string ResourceStreamName){
    this.DataFilePath=DataFilePath;
    this.xmlns=xmlns;
@@ -26,6 +36,10 @@ namespace Tagaroo.DataAccess{
    this.OldFilePath = DataFilePath + SuffixOldFile;
   }
 
+  /// <summary>
+  /// Should ideally be called once at some appropriate point after construction to perform some initialization,
+  /// but will automatically be called at relevant points if not already called.
+  /// </summary>
   public void Initialize(){
    if(Schema.Count>0){return;}
    this.Schema.Add(xmlns.NamespaceName,XmlReader.Create(
@@ -33,7 +47,12 @@ namespace Tagaroo.DataAccess{
    ));
   }
 
-  /// <exception cref="DataAccessException"/>
+  /// <summary>
+  /// Opens the data file associated with this instance
+  /// with the supplied <see cref="FileMode"/>, <see cref="FileAccess"/>, and <see cref="FileShare"/> values,
+  /// returning a stream handle to the opened file.
+  /// </summary>
+  /// <exception cref="DataAccessException">Upon any problems opening the file</exception>
   public FileStream OpenFile(FileMode Mode,FileAccess Access,FileShare SharedAccess){
    //Initialize();
    return OpenFile(DataFilePath,Mode,Access,SharedAccess);
@@ -60,7 +79,22 @@ namespace Tagaroo.DataAccess{
    }
   }
 
-  /// <exception cref="DataAccessException"/>
+  /// <summary>
+  /// Loads the data contained in <paramref name="DataFile"/> into an XML document,
+  /// returning the loaded document as an <see cref="XDocument"/>.
+  /// The data loaded will be validated according to the associated XML schema.
+  /// </summary>
+  /// <param name="DataFile">
+  /// The stream containing the XML data to load, typically from <see cref="OpenFile"/>;
+  /// the stream should be positioned at the start of the data to load
+  /// </param>
+  /// <param name="IgnoreWhitespace">If true, insignificant whitespace will be ignored and not included in the returned representation of the XML document</param>
+  /// <exception cref="DataAccessException">
+  /// If there is any problem loading data,
+  /// such as the parsed XML document not being valid according to the associated schema,
+  /// an error while parsing data read from the stream as XML,
+  /// or an error reading data from the stream
+  /// </exception>
   public async Task<XDocument> Load(Stream DataFile,bool IgnoreWhitespace=false){
    Initialize();
    XmlReaderSettings FileReaderSettings=new XmlReaderSettings(){
@@ -89,6 +123,10 @@ namespace Tagaroo.DataAccess{
    return Result;
   }
 
+  /// <summary>
+  /// <see cref="OpenFile"/> with <see cref="FileMode.Open"/>, followed by <see cref="Load"/> if successful.
+  /// Any stream returned by <see cref="OpenFile"/> will always be closed before the method finishes.
+  /// </summary>
   /// <exception cref="DataAccessException"/>
   public async Task<XDocument> LoadFile(FileAccess Access,FileShare SharedAccess,bool IgnoreWhitespace=false){
    Stream DataFile = OpenFile(FileMode.Open, Access, SharedAccess);
@@ -99,6 +137,11 @@ namespace Tagaroo.DataAccess{
    }
   }
 
+  /// <summary>
+  /// As for <see cref="LoadFile"/>, but the file is kept open,
+  /// and a <see cref="Lock"/> holding onto the opened file is also returned.
+  /// The nature of the lock will depend on the value of <paramref name="SharedAccess"/>.
+  /// </summary>
   /// <exception cref="DataAccessException"/>
   public async Task<Tuple<XDocument,Lock>> LoadFileAndLock(FileAccess Access,FileShare SharedAccess,bool IgnoreWhitespace=false){
    Stream DataFile = OpenFile(FileMode.Open, Access, SharedAccess);
@@ -116,12 +159,35 @@ namespace Tagaroo.DataAccess{
    );
   }
 
-  /// <exception cref="DataAccessException"/>
+  /// <summary>
+  /// Saves the XML document represented by <paramref name="ToSave"/> to the data file associated with this instance,
+  /// overwriting the data file.
+  /// The XML document is first validated according to the associated schema.
+  /// The data file is overwritten in a safe manner, to protect against data loss.
+  /// The XML document is initially written to a file of the same name as the data file but with the suffix <see cref="SuffixNewFile"/>.
+  /// Any existing file with this name is overwritten.
+  /// If this is successful, the existing data file is renamed to have a suffix of <see cref="SuffixOldFile"/>,
+  /// overwriting any existing file with this name,
+  /// and the newly written file has its <see cref="SuffixNewFile"/> stripped to become the new data file.
+  /// </summary>
+  /// <exception cref="DataAccessException">
+  /// If there is any problem saving data,
+  /// such as the XML document to save not being valid according to the associated schema,
+  /// an error writing data to the new data file,
+  /// or an error renaming any files
+  /// </exception>
   public Task Save(XDocument ToSave, SaveOptions SavingOptions){
    return Save(ToSave,SavingOptions,null);
   }
 
-  /// <exception cref="DataAccessException"/>
+  /// <summary>
+  /// <para>
+  /// Preconditions: <paramref name="Lock"/> must have been returned by a call to <see cref="LoadFileAndLock"/>
+  /// </para>
+  /// As for <see cref="Save(XDocument,SaveOptions)"/>;
+  /// <paramref name="Lock"/> is released after this call, regardless of the call's success or failure.
+  /// </summary>
+  /// <exception cref="DataAccessException"><paramref name="Lock"/> will still be released even if this is thrown</exception>
   public async Task Save(XDocument ToSave, SaveOptions SavingOptions, Lock Lock){
    FileLock DataFileLock=null;
    if(!(Lock is null)){
@@ -168,7 +234,7 @@ namespace Tagaroo.DataAccess{
    }
   }
 
-  private const string SuffixNewFile=".new";
-  private const string SuffixOldFile=".old";
+  public const string SuffixNewFile=".new";
+  public const string SuffixOldFile=".old";
  }
 }

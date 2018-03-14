@@ -6,8 +6,16 @@ using System.Linq;
 using Discord.Commands;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
+using Tagaroo.Logging;
 
-namespace Tagaroo.Discord.Commands{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements commands for displaying the details of a particular Registered User in a particular Taglist,
+ /// namely their preferences for that Taglist.
+ /// Users can be specified by their Imgur username or Imgur account ID;
+ /// this command does not access the Imgur API.
+ /// </summary>
  public class QueryTaglistUserCommand : TaglistCommandsBase{
   public QueryTaglistUserCommand(TaglistRepository Repository)
   :base(Repository){}
@@ -20,6 +28,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("The Imgur username of the User Registered in the Taglist, for which to retrieve information on.")]
    string Username
   ){
+   Log.Application_.LogVerbose("Executing TaglistUser for username '{0}'",Username);
    Taglist ModelTaglist = await ReadTaglist(TaglistName);
    if(ModelTaglist is null){return;}
    TaglistRegisteredUser Model;
@@ -42,6 +51,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("The numeric Imgur account ID of the User Registered in the Taglist, for which to retrieve information on.")]
    int UserID
   ){
+   Log.Application_.LogVerbose("Executing TaglistUser for user ID '{0:D}'",UserID);
    Taglist ModelTaglist = await ReadTaglist(TaglistName);
    if(ModelTaglist is null){return;}
    TaglistRegisteredUser Model;

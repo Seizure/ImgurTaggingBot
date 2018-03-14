@@ -5,11 +5,18 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Imgur.API.Models;
 using Tagaroo.Imgur;
+using Tagaroo.Logging;
 
+using DiscordCommandBase=Tagaroo.Discord.DiscordCommandBase;
 using ImgurException=Imgur.API.ImgurException;
 
-namespace Tagaroo.Discord.Commands{
- public class RefreshImgurOAuthTokenCommand : CommandBase{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements commands for managing the OAuth Token used to access the Imgur user account associated with the application.
+ /// The relevant command will call <see cref="ImgurInterfacer.RefreshUserAuthenticationToken"/>.
+ /// </summary>
+ public class RefreshImgurOAuthTokenCommand : DiscordCommandBase{
   private readonly ImgurInterfacer Imgur;
   public RefreshImgurOAuthTokenCommand(ImgurInterfacer Imgur):base(){
    this.Imgur=Imgur;
@@ -26,6 +33,7 @@ namespace Tagaroo.Discord.Commands{
    [Remainder] [Summary("Specify the string '"+ConfirmString+"' to confirm execution of this command")]
    string Confirm
   ){
+   Log.Application_.LogVerbose("Executing RefreshImgurOAuth with confirm string '{0}'",Confirm);
    if( ! ConfirmString.Equals( Confirm, StringComparison.CurrentCultureIgnoreCase )){
     await Usage();
     return;

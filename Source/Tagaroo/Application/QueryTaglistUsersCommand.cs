@@ -6,8 +6,13 @@ using System.Linq;
 using Discord.Commands;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
+using Tagaroo.Logging;
 
-namespace Tagaroo.Discord.Commands{
+namespace Tagaroo.Application{
+ /// <summary>
+ /// Application-layer activity class, executed by the Discord.Commands API; see <see cref="DiscordCommandBase"/>.
+ /// Implements commands for displaying a list of Registered Users in a particular Taglist.
+ /// </summary>
  public class QueryTaglistUsersCommand : TaglistCommandsBase{
   public QueryTaglistUsersCommand(TaglistRepository Repository)
   :base(Repository){}
@@ -18,6 +23,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("The identifying name of the Taglist for which to retrieve information on.")]
    string TaglistName
   ){
+   Log.Application_.LogVerbose("Executing 'Taglist' command for Taglist '{0}'",TaglistName);
    Taglist Model = await ReadTaglist(TaglistName);
    if(Model is null){return;}
    string Response = RenderUsers(Model.RegisteredUsers);
@@ -34,6 +40,7 @@ namespace Tagaroo.Discord.Commands{
    [Summary("The Categories to filter users by, whitespace separated, if any.")]
    params string[] Categories
   ){
+   Log.Application_.LogVerbose("Executing 'Taglist' command for Taglist '{0}', Rating '{1}', and {2} total Categories",TaglistName,RatingSpecifier,Categories.Length);
    Ratings? FilterByRating = await ParseRating(RatingSpecifier);
    if(FilterByRating is null){return;}
    Taglist Model = await ReadTaglist(TaglistName);

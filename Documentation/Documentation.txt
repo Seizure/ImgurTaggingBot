@@ -98,8 +98,8 @@ Edit a Registered User in a Taglist:
 As for Registering a User; see above.
 
 Un-Register a User from a Taglist:
-/Register <username> <taglist-name>
-/Register <user-ID> <taglist-name>
+/UnRegister <username> <taglist-name>
+/UnRegister <user-ID> <taglist-name>
 This removes the specified User from the specified Taglist. Upon successful execution, the user's preferences will be permanently lost, notwithstanding any backups made of the Taglist.
 
 Display details of a particular Registered User in a Taglist:
@@ -147,6 +147,16 @@ OAuth Token Expiry
 The application uses what is known as an OAuth Token as the password to access its user account on Imgur. This OAuth Token expires after some period of time. The application will attempt to automatically renew this token when close to its expiry. If successful, it will log a message notifying that the OAuth Token has been updated. The new token will be visible in the application's <Settings.xml> file.
 -It is strongly recommended that the new OAuth Token be backed up.-
 An administrator will need to be notified to do this. If the new OAuth Token is lost, which is unlikely but possible, a fresh OAuth Token will have to be created manually, which is not a simple process.
+
+
+
+Handling Errors
+
+Concurrency
+Like many applications, although rare, it is possible for concurrency errors to manifest to users.
+The application stores Taglists and settings/configuration data in files, which are opened and written to when changes are made. When the application updates a Taglist or setting, it is possible for an error message along the lines of “the file is in use by another process” to occur. This may happen when, for example, a Discord command is issued, such as Registering someone to a Taglist, or when the application routinely pulls Comments from Imgur.
+This error message is indicative of a concurrency problem — two things are trying to update the same file at the same time, or one thing is trying to update the file while another is still reading it. This can happen, for example, if a Register Discord command happens to be issued at the same time that the application is processing new Comments from Imgur, which requires reading Taglist data briefly. It may also be the case that an administrator has opened one of the data files outside of the application, and is currently editing it. In these cases, one of those two things will fail, with the error message described above.
+The remedy for this kind of situation is simple — simply wait a few seconds and try again, by which time the other activity should have finished.
 
 
 

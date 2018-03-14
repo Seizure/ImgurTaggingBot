@@ -4,6 +4,10 @@ using System.Text;
 using System.Diagnostics;
 
 namespace Tagaroo.Logging{
+ /// <summary>
+ /// <see cref="TraceSource"/> wrapper, adding convenience methods for easy logging.
+ /// Also prepends timestamps to log messages, expressed in the host machine's local timezone.
+ /// </summary>
  internal class Logger{
   private readonly TraceSource Implementation;
   public Logger(TraceSource Implementation){
@@ -35,6 +39,16 @@ namespace Tagaroo.Logging{
    Implementation.TraceEvent(TraceEventType.Verbose, 0, Message, MessageParameters);
   }
 
+  public void Log(TraceEventType Level,string Message, params object[] MessageParameters){
+   Message = AddTimestamp(Message);
+   Implementation.TraceEvent(Level, 0, Message, MessageParameters);
+  }
+
+  public bool ShouldLog(TraceEventType Level){
+   if(Implementation.Switch is null){return true;}
+   return Implementation.Switch.ShouldTrace(Level);
+  }
+
   internal void AddListener(TraceListener Add){
    Implementation.Listeners.Add(Add);
   }
@@ -45,7 +59,7 @@ namespace Tagaroo.Logging{
   protected string AddTimestamp(string Message){
    return
     string.Format("[{0}] ",DateTimeOffset.Now.ToString(TimestampFormat))
-    + Message
+    + Message ?? string.Empty
    ;
   }
 
