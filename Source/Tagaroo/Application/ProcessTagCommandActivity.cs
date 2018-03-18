@@ -13,14 +13,14 @@ using ImgurException=Imgur.API.ImgurException;
 
 namespace Tagaroo.Application{
  /// <summary>
- /// Processes a Tag command, represented by a <see cref="Tag"/> object,
+ /// Processes a Tag command, represented by a <see cref="TagCommandParameters"/> object,
  /// which indicates to alert all Imgur users in the Taglist specified in the command
  /// to the item that was Tagged,
  /// if they would be interested in the item according to other additional information about it
  /// also supplied in the Tag command.
- /// Specifically, this activity retrieves the <see cref="Taglist"/> identified in the <see cref="Tag"/> command via the associated <see cref="TaglistRepository"/>
+ /// Specifically, this activity retrieves the <see cref="Taglist"/> identified in the Tag command via the associated <see cref="TaglistRepository"/>
  /// and calculates all the Imgur users that would be interested in the Tagged item with <see cref="Taglist.FilterByUsersInterestedIn"/>,
- /// using the additional details specified in the <see cref="Tag"/> command.
+ /// using the additional details specified in the Tag command.
  /// It then alerts those users with <see cref="ImgurInterfacer.MentionUsers"/>.
  /// As well as this, details of the Tagged item,
  /// retrieved as a <see cref="GalleryItem"/> from the associated <see cref="ImgurInterfacer"/>,
@@ -40,7 +40,7 @@ namespace Tagaroo.Application{
   /// <summary>
   /// <para>Preconditions: The associated <see cref="DiscordInterfacer"/> is in a Connected state</para>
   /// </summary>
-  public async Task Execute(Tag Command){
+  public async Task Execute(TagCommandParameters Command){
    Log.Application_.LogVerbose(
     "Processing Tag command for {2} '{0}', Tagged to Taglist '{1}'",
     Command.ItemID,Command.TaglistName,
@@ -82,7 +82,7 @@ namespace Tagaroo.Application{
    );
   }
 
-  protected async Task MentionInterestedUsers(Tag Command,Taglist SpecifiedTaglist){
+  protected async Task MentionInterestedUsers(TagCommandParameters Command,Taglist SpecifiedTaglist){
    ISet<TaglistRegisteredUser> InterestedUsers = SpecifiedTaglist.FilterByUsersInterestedIn( Command.Rating, Command.Categories );
    Log.Application_.LogVerbose("Mentioning {0} total users in response to Tag command for item '{1}'",InterestedUsers.Count,Command.ItemID);
    ISet<string> InterestedUsernames=(
@@ -100,7 +100,7 @@ namespace Tagaroo.Application{
    }
   }
 
-  protected async Task ArchiveTaggedItem(Tag Command,GalleryItem ToArchive,Taglist SpecifiedTaglist){
+  protected async Task ArchiveTaggedItem(TagCommandParameters Command,GalleryItem ToArchive,Taglist SpecifiedTaglist){
    Log.Application_.LogVerbose("Archiving item '{0}' to relevant Archive Channel for Taglist '{1}'",ToArchive.ID,SpecifiedTaglist.Name);
    try{
     await Discord.PostGalleryItemDetails(

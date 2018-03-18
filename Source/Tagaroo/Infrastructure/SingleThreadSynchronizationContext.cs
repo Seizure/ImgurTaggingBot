@@ -14,7 +14,8 @@ namespace Tagaroo.Infrastructure{
   private readonly BlockingCollection<Tuple<SendOrPostCallback,object>> MessageQueue
    = new BlockingCollection<Tuple<SendOrPostCallback, object>>( new ConcurrentQueue<Tuple<SendOrPostCallback, object>>() );
   private bool running=false;
-  private int? RunningOnThreadID;
+  private int? RunningOnThreadID=null;
+  private SynchronizationContext OriginalContext=null;
   
   public SingleThreadSynchronizationContext(){}
 
@@ -31,16 +32,25 @@ namespace Tagaroo.Infrastructure{
   }
   
   protected void Post(SendOrPostCallback d,object state,bool ForceAsync){
-   if(MessageQueue.IsAddingCompleted){
-    //TODO Better way of handling callbacks during shutdown
-    return;
-   }
-   if(d is null){throw new ArgumentNullException(nameof(d));}
-   if( Thread.CurrentThread.ManagedThreadId != RunningOnThreadID || ForceAsync ){
-    MessageQueue.Add(new Tuple<SendOrPostCallback, object>(d,state));
-   }else{
-    //If we're already on the right thread, we can immediately execute the callback
-    d(state);
+   lock(MessageQueue){
+    if(MessageQueue.IsAddingCompleted){
+     //TODO Strategy for handling callbacks during shutdown
+     return;
+     /*
+     if(OriginalContext is null){
+      SynchronizationContext.Current.Post(d,state);
+     }else{
+      OriginalContext.Post(d,state);
+     }
+     */
+    }
+    if(d is null){throw new ArgumentNullException(nameof(d));}
+    if( Thread.CurrentThread.ManagedThreadId != RunningOnThreadID || ForceAsync ){
+     MessageQueue.Add(new Tuple<SendOrPostCallback, object>(d,state));
+    }else{
+     //If we're already on the right thread, we can immediately execute the callback
+     d(state);
+    }
    }
   }
 
@@ -49,9 +59,11 @@ namespace Tagaroo.Infrastructure{
   }
 
   public void Finish(){
-   if(!running){return;}
-   if(MessageQueue.IsAddingCompleted){return;}
-   MessageQueue.CompleteAdding();
+   lock(MessageQueue){
+    if(!running){return;}
+    if(MessageQueue.IsAddingCompleted){return;}
+    MessageQueue.CompleteAdding();
+   }
   }
 
   /// <summary>
@@ -62,7 +74,7 @@ namespace Tagaroo.Infrastructure{
   /// </summary>
   public void RunOnCurrentThread(){
    if(running){throw new InvalidOperationException("Already running");}
-   SynchronizationContext OriginalContext = SynchronizationContext.Current;
+   this.OriginalContext = SynchronizationContext.Current;
    this.RunningOnThreadID = Thread.CurrentThread.ManagedThreadId;
    this.running = true;
    try{
@@ -74,9 +86,13 @@ namespace Tagaroo.Infrastructure{
      Message.Item1(Message.Item2);
     }
    }finally{
-    SynchronizationContext.SetSynchronizationContext(OriginalContext);
-    this.RunningOnThreadID=null;
-    this.running=false;
+    lock(MessageQueue){
+     //TODO Strategy for handling callbacks after shutdown
+     SynchronizationContext.SetSynchronizationContext(OriginalContext);
+     this.OriginalContext=null;
+     this.RunningOnThreadID=null;
+     this.running=false;
+    }
    }
   }
 

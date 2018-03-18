@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
@@ -160,7 +161,7 @@ namespace Tagaroo.Imgur{
       //The ImageId property will also be set if the Comment is on an Album, in which case it will be the Album ID
       HostComment.ImageId,
       HostComment.OnAlbum,
-      out Tag CommandParameter
+      out TagCommandParameters CommandParameter
      )){
       Log.Imgur_.LogVerbose(
        "'tag' command in Comment #{0:D} parsed successfully: Taglist - '{1}', Rating - {2}, Total Categoties - {3}",
@@ -214,7 +215,7 @@ namespace Tagaroo.Imgur{
 
   /// <summary>
   /// Parses a "tag" command from somewhere within an input string,
-  /// constructing a <see cref="Tag"/> object as a result to represent the parsed command.
+  /// constructing a <see cref="TagCommandParameters"/> object as a result to represent the parsed command.
   /// </summary>
   /// <param name="Input">The input string that contains the "tag" command</param>
   /// <param name="StartsAt">The position at which the "tag" command begins, which should be the offset at which the command prefix begins</param>
@@ -223,13 +224,13 @@ namespace Tagaroo.Imgur{
   /// <param name="ItemAlbum">Whether or not <paramref name="OnItemID"/> is an Album rather than an Image</param>
   /// <param name="Result">The parsed result, if the parse was successful</param>
   /// <returns>true if the parse suceeded and so <paramref name="Result"/> was set, otherwise false</returns>
-  public bool ParseTagCommand(string Input,int StartsAt,int HostCommentID,string OnItemID,bool ItemAlbum,out Tag Result){
+  public bool ParseTagCommand(string Input,int StartsAt,int HostCommentID,string OnItemID,bool ItemAlbum,out TagCommandParameters Result){
    Result=null;
    Match ParsedTagCommand = Pattern_Tag.Match(Input,StartsAt);
    if(!ParsedTagCommand.Success){
     return false;
    }
-   Result = new Tag(
+   Result = new TagCommandParameters(
     HostCommentID,
     OnItemID,
     ItemAlbum,
@@ -275,6 +276,67 @@ namespace Tagaroo.Imgur{
  /// the relevant method will be called for each successfully parsed command.
  /// </summary>
  public interface ImgurCommandHandler{
-  Task ProcessTagCommand(Tag CommandParameter);
+  Task ProcessTagCommand(TagCommandParameters CommandParameter);
+ }
+
+ /// <summary>
+ /// Represents an Imgur Tag command on a particular Imgur Gallery Item,
+ /// including details of the parameters of the command.
+ /// </summary>
+ public class TagCommandParameters{
+  /// <summary>
+  /// The ID of the Imgur Comment that the command is in, as provided by the Imgur API.
+  /// </summary>
+  public int HostCommentID {get;}
+  /// <summary>
+  /// The ID of the Imgur Gallery Item that has been Tagged,
+  /// in other words the ID of the Gallery Item that the Comment containing the command is for,
+  /// as provided by the Imgur API.
+  /// Non-null.
+  /// </summary>
+  public string ItemID {get;}
+  /// <summary>
+  /// true if the Gallery Item identified by <see cref="ItemID"/> is an Album,
+  /// otherwise false, in which case it is an Image.
+  /// </summary>
+  public bool isItemAlbum {get;}
+  /// <summary>
+  /// The name of the Taglist with which to Tag the Gallery Item with,
+  /// as provided in the Tag command.
+  /// Normalized, non-null.
+  /// </summary>
+  public string TaglistName {get;}
+  /// <summary>
+  /// The Rating that the Gallery Item has been Tagged with,
+  /// as provided in the Tag command.
+  /// </summary>
+  public Ratings Rating {get;}
+  /// <summary>
+  /// The set of Categories that the Gallery Item has been Tagged with,
+  /// as provided in the Tag command.
+  /// Normalized.
+  /// </summary>
+  public ISet<string> Categories {get;}
+
+  public TagCommandParameters(
+   int HostCommentID,
+   string ItemID,
+   bool ItemAlbum,
+   string TaglistName,
+   Ratings Rating,
+   ICollection<string> Categories
+  ){
+   if(ItemID is null){throw new ArgumentNullException(nameof(ItemID));}
+   if(TaglistName is null){throw new ArgumentNullException(nameof(TaglistName));}
+   this.HostCommentID=HostCommentID;
+   this.ItemID=ItemID;
+   this.isItemAlbum=ItemAlbum;
+   this.TaglistName = TaglistName.Normalize(NormalizationForm.FormKD);
+   this.Rating=Rating;
+   this.Categories = (
+    from C in Categories
+    select C.Normalize(NormalizationForm.FormKD)
+   ).ToImmutableHashSet();
+  }
  }
 }

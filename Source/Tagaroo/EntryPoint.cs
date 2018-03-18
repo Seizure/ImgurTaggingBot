@@ -23,7 +23,7 @@ namespace Tagaroo{
   /// non-zero <see cref="Return_ApplicationStartError"/> if there is some other problem during startup,
   /// 0 otherwise
   /// </returns>
-  public static int _Main(){
+  public static int _Main(string SettingsFilePath=null){
    //Log to STDOUT by default
    Log.Instance.AddTraceListener(new TextWriterTraceListener(Console.Out,"StdOutListener"));
    //Log all messages sent to the Bootstrap logger until the application's Configuration can be read and applied (other loggers are not used until after the Configuration is applied)
@@ -31,7 +31,9 @@ namespace Tagaroo{
    Log.Bootstrap_.LogInfo("Application starting");
    //Robustness — Use locale-invariant comparison/formatting/e.t.c. rules by default, to mitigate aginst bugs caused by varying host system locales
    CultureInfo.CurrentCulture = CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-   SettingsRepository RepositorySettings=new SettingsRepositoryMain(SettingsFilePath);
+   SettingsRepository RepositorySettings=new SettingsRepositoryMain(
+    SettingsFilePath ?? DefaultSettingsFilePath
+   );
    Log.Bootstrap_.LogVerbose("Initializing Settings repository");
    RepositorySettings.Initialize();
    Log.Bootstrap_.LogInfo("Loading Configuration");
@@ -106,17 +108,22 @@ namespace Tagaroo{
 
   /// <summary>
   /// See <see cref="_Main"/>.
-  /// The application does not take any parameters from the command line.
+  /// The application optionally takes a single parameter from the command line,
+  /// which is the path to Settings.xml,
+  /// or more generally, a path to an XML instance document file of the Settings.xsd XML schema.
+  /// If not specified, the path <see cref="DefaultSettingsFilePath"/> will be used.
   /// </summary>
   static int Main(string[] Parameters){
-   return _Main();
+   return _Main(
+    Parameters.Length>0 ? Parameters[0] : null
+   );
   }
 
   /// <summary>
   /// The location where the Settings file Settings.xml resides,
   /// relative to the current working directory.
   /// </summary>
-  public const string SettingsFilePath=@"Settings.xml";
+  public const string DefaultSettingsFilePath=@"Settings.xml";
   public const int Return_ConfigurationLoadError=-2;
   public const int Return_ApplicationStartError=-1;
  }

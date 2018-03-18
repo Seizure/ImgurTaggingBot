@@ -274,4 +274,14 @@ namespace Tagaroo.Model{
    Explicit=0x04
   }
  }
+
+ /// <summary>
+ /// The Ratings that Gallery Items can be Tagged with.
+ /// A Gallery Item can only be Tagged with one Rating (per Tag command).
+ /// </summary>
+ public enum Ratings{
+  Explicit,
+  Questionable,
+  Safe
+ }
 }

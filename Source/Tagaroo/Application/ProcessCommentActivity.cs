@@ -44,7 +44,7 @@ namespace Tagaroo.Application{
    return CommandParser.ProcessCommandsUnconditionally(Process,this);
   }
 
-  Task ImgurCommandHandler.ProcessTagCommand(Tag CommandParameter){
+  Task ImgurCommandHandler.ProcessTagCommand(TagCommandParameters CommandParameter){
    return CommandHandler_Tag.Execute(CommandParameter);
   }
  }

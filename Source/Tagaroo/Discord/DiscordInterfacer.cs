@@ -219,8 +219,6 @@ namespace Tagaroo.Discord{
     }
    }
    Client.Ready -= OnReady;
-   this.Self=Client.CurrentUser.Id;
-   this.State = States.Connected;
    try{
     Log.Bootstrap_.LogVerbose("Connecting; Identifying Guild Channels and performing checks");
     IdentifyChannels(this.GuildID, this.LogChannelID, this.CommandChannelSources.Keys, out this.Guild, out this.LogChannel);
@@ -228,6 +226,8 @@ namespace Tagaroo.Discord{
     await Shutdown();
     throw;
    }
+   this.Self=Client.CurrentUser.Id;
+   this.State = States.Connected;
   }
 
   /// <exception cref="DiscordException"/>

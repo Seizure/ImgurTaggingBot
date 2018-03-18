@@ -407,7 +407,7 @@ namespace Tagaroo{
    });
   }
 
-  Task Imgur.ImgurCommandHandler.ProcessTagCommand(Tag Parsed){
+  Task Imgur.ImgurCommandHandler.ProcessTagCommand(Imgur.TagCommandParameters Parsed){
    Console.WriteLine("Taglist - {0}",Parsed.TaglistName);
    Console.WriteLine("Rating - {0}",Parsed.Rating);
    Console.Write("Categories -");

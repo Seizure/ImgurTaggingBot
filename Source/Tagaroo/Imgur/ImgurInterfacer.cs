@@ -253,6 +253,7 @@ namespace Tagaroo.Imgur{
 
   /// <exception cref="ImgurException"/>
   protected Task EnsureUserAuthenticationTokenCurrent(){
+   //TODO Log message on imminent OAuth Token expiry
    DateTimeOffset Now=DateTimeOffset.UtcNow;
    if( (ClientAuthenticated.OAuth2Token.ExpiresAt - ExpiryPrecision) <= Now ){
     Log.Imgur_.LogInfo(
@@ -265,8 +266,7 @@ namespace Tagaroo.Imgur{
   }
 
   public async Task<IOAuth2Token> RefreshUserAuthenticationToken(){
-   //TODO Log message on imminent OAuth Token expiry
-   //TODO API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
+   //? API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
    IOAuth2Token NewToken;
    try{
     NewToken = await APIOAuth.GetTokenByRefreshTokenAsync(ClientAuthenticated.OAuth2Token.RefreshToken);

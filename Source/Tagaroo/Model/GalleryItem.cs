@@ -118,11 +118,16 @@ namespace Tagaroo.Model{
   }}
 
   static public GalleryItem FromImgurImage(string ID,IImage ImgurGalleryItem){
+   string EscapedID;
+   try{
+    EscapedID = Uri.EscapeDataString(ID);
+   }catch(FormatException){
+    EscapedID = ID;
+   }
    return new GalleryItem(
     ImgurGalleryItem.Id ?? ID,
     ImgurGalleryItem.Title,
-    //TODO Check for URL metacharacters in the ID which should not normally be present
-    string.Format(ImagePageURLFormat, ID),
+    string.Format(ImagePageURLFormat, EscapedID),
     ImgurGalleryItem.Link,
     null,
     ImgurGalleryItem.Description,

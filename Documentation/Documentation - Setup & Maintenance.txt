@@ -1,12 +1,12 @@
 ﻿This document describes how to set up and start running the application, and details some maintenance issues. It is intended for administrative users who are to be in charge of the application's executable, rather than those who interact with the running application through its various interfaces, such as Discord and Imgur; see the regular Documentation file for those cases, which administrators should also read.
-This document assumes familiarity with XML.
+This document assumes familiarity with XML. A very basic familiarity with XPath syntax for identifying nodes is also beneficial.
 
 
 
 Prerequisites
 
 The application runs on the .NET Core 2.0 platform. .NET Core 2.0 is supported by Windows 7 and later, as well as some non-Microsoft operating systems; full details of operating systems supporting the .NET Core 2.0 platform can be found at <//github.com./dotnet/core/blob/master/release-notes/2.0/2.0-supported-os.md>.
-By default, the build process will output “Tagaroo.dll” as the built application. To run it, the .NET Core 2.0 runtime will need to be installed on the target machine if it is not already present. Note that the .NET Core runtime must be version 2 or later, and not version 1.1. .NET Core applications are typically run with the command “dotnet”, which should be on the system path if installed; use “dotnet --version” to check that the version is 2 or later.
+By default, the project's build process will output “Tagaroo.dll” as the built application. To run it, the .NET Core 2.0 runtime will need to be installed on the target machine if it is not already present. Note that the .NET Core runtime must be version 2 or later, and not version 1.1. .NET Core applications are typically run with the command “dotnet”, which should be on the system path if installed; use “dotnet --version” to check that the version is 2 or later.
 
 
 
@@ -18,7 +18,10 @@ Tagaroo.dll:
 The application executable, runnable with the command “dotnet”.
 
 Settings.xml:
-XML application configuration and settings file. This file will be read at startup and also at relevant points while the application is running. See the Settings section for further details. Be careful when editing this file while the application is running, as the application will write updated Settings to this file periodically; while the application is running it is recommended that Settings be updated through the application rather than by modifying the file directly for this reason. Depending on how the file is opened, keeping the file open in an editor may cause errors when the application tries to update the Settings, or the editor may overwrite changes that the application has made since the file was opened in it, or the changes made in the editor may be lost without warning when saved, all of which may lead to problems.
+XML application configuration and settings file. This file will be read at startup and also at relevant points while the application is running. See the Settings section for further details. Be careful when editing this file while the application is running, as the application will write updated Settings to this file periodically; while the application is running it is recommended that Settings be updated through the application where possible rather than by modifying the file directly for this reason. Depending on how the file is opened, keeping the file open in an editor may cause errors when the application tries to update the Settings, or the editor may overwrite changes that the application has made since the file was opened in it, or the changes made in the editor may be lost without warning when saved, all of which may lead to problems.
+
+*.dll:
+The application uses a number of libraries, present as DLL files. These must be kept in the same directory as the application.
 
 Other important files that do not need to be in the same directory as the application's executable are as follows…
 
@@ -27,18 +30,15 @@ XML file where details of all of the application's Taglists are stored, includin
 It is recommended that the administrator take periodic backups of this file in case it is lost, such as either through a fault with the application, or a fault with the host system.
 
 Settings.xsd:
-XML Schema for the Settings XML file, including documentation. This is provided to aid users in construction and editing of the Settings XML file. The Settings XML file must be valid with respect to this schema.
+XML Schema for the Settings XML file, including documentation. This is provided to aid users in construction and editing of the Settings XML file, and can otherwise be deleted. The Settings XML file must be valid with respect to this schema.
 
 Taglists.xsd:
-XML Schema for the Taglists XML file, including documentation. This is provided to aid users in construction and editing of the Taglists XML file. The Taglists XML file must be valid with respect to this schema.
-
-*.dll:
-The application uses a number of libraries, present as DLL files. These must be kept in the same directory as the application.
+XML Schema for the Taglists XML file, including documentation. This is provided to aid users in construction and editing of the Taglists XML file, and can otherwise be deleted. The Taglists XML file must be valid with respect to this schema.
 
 The following file names are reserved, and should not be used to store information…
 
 Settings.xml.old & Settings.xml.new:
-These files are created alongside the Settings.xml file when the application updates the Settings.xml file. Any Settings.xml.old file will contain the previous copy of Settings.xml after an update, and any Settings.xml.new file will contain the new copy of Settings.xml just before an update. The latter file will not normally be present, unless there has been a problem updating Settings.xml.
+These files are created alongside the Settings.xml file when the application updates the Settings.xml file. Any Settings.xml.old file will contain the previous copy of Settings.xml after an update, and any Settings.xml.new file will contain the new copy of Settings.xml just before an update. The latter file will not normally be present, unless there has been a problem updating Settings.xml. If a different file name for the Settings XML file has been specified, from the command line when starting the application, the files will instead have that name, suffixed with ".old" and ".new".
 
 Taglists.xml.old & Taglists.xml.new:
 As above, but for the Taglists.xml file. Note that if the Taglists XML file has been given a different name, such as Taglists2.xml, the reserved file names will also match — Taglists2.xml.old & Taglists2.xml.new. These files will be created in the same directory as the Taglists XML file.
@@ -123,7 +123,7 @@ The application can be run from the command line. Navigate to the directory cont
 
 dotnet Tagaroo.dll
 
-The application does not take any parameters from the command line.
+The application optionally takes a single parameter from the command line, which is the path to the Settings XML file. This parameter does not have to be specified, and if absent, the application will look for a file called "Settings.xml" in the current working directory.
 
 Startup Process
 To begin with, the application will output log messages to the process' STDOUT, which is typically the command window from which the application was invoked. Specifically, they will be logged to the “Bootstrap” logger; if there are problems during startup, the verbosity level of this logger can be increased for additional logging output.
@@ -131,6 +131,9 @@ One of the first things the application will do is attempt to load <Settings.xml
 Once the configuration has been applied, the application will attempt setup. Setup primarily involves establishing a connection to Discord, and locating the Guild and relevant Guild Channels. It is at this point that the application will first attempt a network connection. For the application to have a Discord Guild (formerly known as a Discord Server) available to it, the application's associated Discord bot user must have been invited to that Guild, which will be the responsibility of the Guild administrators.
 If all this is successful, the application will begin.
 Note that, unlike Discord, the application does not maintain a persistent connection to Imgur; it will only connect to Imgur briefly in order to make API calls.
+
+Shutdown
+There is not currently a mechanism for shutting down the application. To end it, it must be terminated in some way from its host environment, such as with Ctrl+C, closing the command window in which it is running, ending the process with Task Manager / Ctrl+Alt+Del, or otherwise instructing the operating system to terminate the process.
 
 
 
@@ -160,7 +163,7 @@ There are a few other Settings in the Settings XML file worth mentioning.
 
 StaticSettings @ ImgurMaximumCommentLengthUTF16CodeUnits:
 Comments on Imgur are limited in length. As such, if the application needs to make a Comment longer than this length, it must split the Comment. At present, this maximum is 140; if Imgur changes this value, it can be changed here.
-The units of the value seem to be UTF-16 Code Units, which in most cases is equivalent to a Unicode Character.
+The units of the value seem to be UTF-16 Code Units, which in most cases is equivalent to a single Unicode Character.
 
 
 
