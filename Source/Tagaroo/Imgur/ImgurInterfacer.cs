@@ -277,7 +277,8 @@ namespace Tagaroo.Imgur{
    }
    //TODO Security–Convenience issues regarding logging this information to Discord
    Log.Imgur_.LogCritical(
-    "A new Imgur OAuth Token has been acquired, which expires at {2:u}. It is highly recommended that this Token be backed up from the settings file, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated."
+    "A new Imgur OAuth Token has been acquired, which expires at {0:u}. It is highly recommended that this Token be backed up from the settings file, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
+    NewToken.ExpiresAt
     //"A new Imgur OAuth Token has been acquired - '{0}' (Refresh '{1}'), which expires at {2:u}. It is highly recommended that this Token be backed up, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
     //NewToken.AccessToken,NewToken.RefreshToken,NewToken.ExpiresAt
    );
