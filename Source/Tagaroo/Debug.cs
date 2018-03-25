@@ -470,12 +470,31 @@ namespace Tagaroo{
    Core.Run();
   }
 
+  static void JSONDebug(){
+   Newtonsoft.Json.JsonConvert.DefaultSettings = ()=>new Newtonsoft.Json.JsonSerializerSettings(){
+    ContractResolver=new Imgur.LibraryEnhancements.ImgurErrorJSONContractResolver(),
+    //Converters=new List<Newtonsoft.Json.JsonConverter>(){new Newtonsoft.Json.JsonConverter()},
+    //SerializationBinder=null,
+    Error = (object Origin,Newtonsoft.Json.Serialization.ErrorEventArgs Event)=>{
+    }
+   };
+   var Result=Newtonsoft.Json.JsonConvert.DeserializeObject
+   <ModelsImpl.Basic<Imgur.LibraryEnhancements.ImgurError>>
+   (
+    @"{""data"":{""error"":{""code"":2008,""message"":""You're commenting too fast! Try again in 27 seconds"",""type"":""Exception_CaptioningTooFast"",""exception"":{""wait"":27}},""request"":""\/3\/comment"",""method"":""POST""},""success"":false,""status"":429}"
+   );
+   Console.WriteLine("Method - {0}",Result.Data.Method);
+   Console.WriteLine("Request - {0}",Result.Data.Request);
+   Console.WriteLine("Error - {0}",Result.Data.Error);
+  }
+
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
-   new Debug().RunDebug().Wait();
+   //new Debug().RunDebug().Wait();
    //new Debug().RunDebugDiscord();
    //new Debug().RunCore();
-   //new Program().Main();
+   //EntryPoint._Main();
+   JSONDebug();
    Console.ReadKey(true);
   }
 

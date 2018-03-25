@@ -67,7 +67,7 @@ namespace Tagaroo.Application{
    try{
     CurrentSettings = await CurrentSettingsTask;
    }catch(DataAccessException Error){
-    Log.Application_.LogError("Error loading Settings while pulling latest Comments from Imgur: "+Error.Message);
+    Log.Application_.LogError("Error loading Settings while pulling latest Comments from Imgur; pull aborted: "+Error.Message);
     return;
    }
    Task<IDictionary<string,IList<IComment>>> NewCommentsTask = Imgur.ReadCommentsSince(
@@ -85,7 +85,7 @@ namespace Tagaroo.Application{
    try{
     await InitializeCacheTask;
    }catch(DataAccessException Error){
-    Log.Application_.LogError("Error loading Taglists while pulling Imgur Comments: "+Error.Message);
+    Log.Application_.LogError("Error loading Taglists while pulling Imgur Comments; Comment processing aborted: "+Error.Message);
     return;
    }
    //Execute the sub-activity for each new Comment, keeping track of the latest date–time from all the Comments

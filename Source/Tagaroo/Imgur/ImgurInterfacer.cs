@@ -13,6 +13,7 @@ using Tagaroo.Imgur.LibraryEnhancements;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
 using Tagaroo.Logging;
+using Newtonsoft.Json;
 
 using AuthenticationImpl=Imgur.API.Authentication.Impl;
 using ModelsImpl=Imgur.API.Models.Impl;
@@ -241,6 +242,10 @@ namespace Tagaroo.Imgur{
    this.UserID=UserID;
    this.MaximumCommentLength=(ushort)MaximumCommentLength;
    this.RepositorySettings=RepositorySettings;
+   //See ImgurErrorJSONContractResolver for why this is needed
+   JsonConvert.DefaultSettings = ()=> new JsonSerializerSettings(){
+    ContractResolver = new ImgurErrorJSONContractResolver()
+   };
   }
 
   public DateTimeOffset OAuthTokenExpiry{get{

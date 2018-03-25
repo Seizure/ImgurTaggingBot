@@ -64,7 +64,10 @@ namespace Tagaroo.Application{
     );
     return;
    }catch(DataAccessException Error){
-    Log.Application_.LogError("Error loading Taglist while processing Tag command: "+Error.Message);
+    Log.Application_.LogError(
+     "Error loading Taglist '{1}' while processing Tag command on the Imgur Gallery Item with ID '{0}'; processing of command aborted: {2}",
+     Command.ItemID,Command.TaglistName,Error.Message
+    );
     return;
    }
    Task MentionUsersTask = MentionInterestedUsers(Command,SpecifiedTaglist);
@@ -73,7 +76,7 @@ namespace Tagaroo.Application{
     TaggedItem = await TaggedItemTask;
     //Any exceptions from MentionUsersTask will go unobserved if an exception is thrown in this try block
    }catch(ImgurException Error){
-    Log.Application_.LogError("Error acquiring details for Tagged Imgur Gallery Item with ID '{0}': {1}",Command.ItemID,Error.Message);
+    Log.Application_.LogError("Error acquiring details for Tagged Imgur Gallery Item with ID '{0}'; unable to process Tag command for that item: {1}",Command.ItemID,Error.Message);
     return;
    }
    await Task.WhenAll(
@@ -93,7 +96,7 @@ namespace Tagaroo.Application{
     await Imgur.MentionUsers(Command.ItemID, Command.HostCommentID, InterestedUsernames);
    }catch(ImgurException Error){
     Log.Application_.LogError(
-     "Error Mentioning users in Taglist '{1}' in response to the Tag command on the Imgur Gallery Item with ID '{0}': {2}",
+     "Error Mentioning users in Taglist '{1}' in response to the Tag command on the Imgur Gallery Item with ID '{0}'; users may have been partially Mentioned, consider re-Tagging the Gallery Item: {2}",
      Command.ItemID,Command.TaglistName,Error.Message
     );
     return;
