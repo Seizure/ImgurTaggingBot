@@ -259,7 +259,7 @@ namespace Tagaroo{
    */
    Imgur.ImgurInterfacer ClientImgur=new Imgur.ImgurInterfacerMain(
     new DataAccess.SettingsRepositoryMain(string.Empty),
-    ImgurAuthenticationID,ImgurAuthenticationSecret,"Q",3,OAuthAccessToken,"Q","bearer",DateTimeOffset.MaxValue,140
+    ImgurAuthenticationID,ImgurAuthenticationSecret,"Q",3,OAuthAccessToken,"Q","bearer",DateTimeOffset.MaxValue,140,"#"
    );
    IDictionary<string,IList<IComment>> Results=await ClientImgur.ReadCommentsSince(DateTimeOffset.UtcNow.AddMonths(-1),new HashSet<string>(){"TruFox"},10);
    foreach(IComment Result in Results.Values.First()){
@@ -445,7 +445,7 @@ namespace Tagaroo{
       "wereleven",77530931,
       OAuthAccessToken,OAuthRefreshToken,"bearer",
       DateTimeOffset.UtcNow+TimeSpan.FromDays(11),
-      140
+      140,"#"
      ),
      new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
      RepositoryTaglists=new CacheingTaglistRepository(new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml")),

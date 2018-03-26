@@ -112,7 +112,8 @@ namespace Tagaroo.DataAccess{
     (ulong)ConfigurationDiscordElement.Attribute("CommandChannelID"),
     (string)StaticSettingsElement.Attribute("DiscordCommandPrefix"),
     (string)StaticSettingsElement.Attribute("TaglistDatafilePath"),
-    (string)StaticSettingsElement.Attribute("ImgurCommandPrefix")
+    (string)StaticSettingsElement.Attribute("ImgurCommandPrefix"),
+    (string)StaticSettingsElement.Attribute("ImgurMentionPrefix")
    );
   }
 

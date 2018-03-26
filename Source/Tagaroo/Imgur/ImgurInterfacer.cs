@@ -150,6 +150,7 @@ namespace Tagaroo.Imgur{
   private readonly SettingsRepository RepositorySettings;
   private readonly int UserID;
   private readonly ushort MaximumCommentLength;
+  private readonly string MentionPrefix;
   
   /// <summary>
   /// <para>Preconditions: <paramref name="MaximumCommentLength"/> &gt; 0</para>
@@ -191,6 +192,10 @@ namespace Tagaroo.Imgur{
   /// The maximum permitted length of an Imgur Comment,
   /// which seems to be measured in UTF-16 Code Units
   /// </param>
+  /// <param name="MentionPrefix">
+  /// The prefix prepended to Imgur usernames in order to mention them;
+  /// should normally be "@", but can be changed for testing purposes.
+  /// </param>
   /// <param name="RepositorySettings">
   /// A data access repository for the application's settings,
   /// which will be called to save any changes made to the OAuth Token,
@@ -206,7 +211,8 @@ namespace Tagaroo.Imgur{
    string UserAuthenticationRefreshToken,
    string UserAuthenticationTokenType,
    DateTimeOffset TokenExpiresAt,
-   short MaximumCommentLength
+   short MaximumCommentLength,
+   string MentionPrefix
   ){
    if(MaximumCommentLength<=0){
     throw new ArgumentOutOfRangeException(nameof(MaximumCommentLength));
@@ -242,6 +248,7 @@ namespace Tagaroo.Imgur{
    this.UserID=UserID;
    this.MaximumCommentLength=(ushort)MaximumCommentLength;
    this.RepositorySettings=RepositorySettings;
+   this.MentionPrefix=MentionPrefix??string.Empty;
    //See ImgurErrorJSONContractResolver for why this is needed
    JsonConvert.DefaultSettings = ()=> new JsonSerializerSettings(){
     ContractResolver = new ImgurErrorJSONContractResolver()
@@ -527,11 +534,6 @@ namespace Tagaroo.Imgur{
    return new ImgurException("Network Error: "+From.Message,From);
   }
 
-  #if RELEASE
-  protected const string MentionPrefix = "@";
-  #else
-  protected const string MentionPrefix = "$";
-  #endif
   protected readonly TimeSpan ExpiryPrecision = TimeSpan.FromDays(1);
   protected const int CommentsPerPage = 50;
  }

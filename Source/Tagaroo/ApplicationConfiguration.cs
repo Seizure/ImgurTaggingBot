@@ -84,6 +84,12 @@ namespace Tagaroo{
   /// </summary>
   public short ImgurMaximumCommentLengthUTF16CodeUnits { get; }
   /// <summary>
+  /// The string to prefix to Imgur usernames in order to Mention them in Comments and such.
+  /// Should be "@", but a different value can be specified for testing purposes,
+  /// so that real users don't get Mentioned during any tests.
+  /// </summary>
+  public string ImgurMentionPrefix{ get; }
+  /// <summary>
   /// The "Token" part of the Discord API key
   /// (different from the Client ID and Client Secret).
   /// </summary>
@@ -144,7 +150,8 @@ namespace Tagaroo{
    ulong DiscordChannelIDCommands,
    string DiscordCommandPrefix,
    string taglistDataFilePath,
-   string ImgurCommandPrefix
+   string ImgurCommandPrefix,
+   string ImgurMentionPrefix
   ){
    if(imgurMaximumCommentLengthUTF16CodeUnits<=0){throw new ArgumentOutOfRangeException();}
    this.LogLevelBootstrap=logLevelBootstrap;
@@ -170,6 +177,7 @@ namespace Tagaroo{
    this.DiscordCommandPrefix=DiscordCommandPrefix;
    this.TaglistDataFilePath=taglistDataFilePath;
    this.ImgurCommandPrefix=ImgurCommandPrefix;
+   this.ImgurMentionPrefix=ImgurMentionPrefix;
   }
  }
 }

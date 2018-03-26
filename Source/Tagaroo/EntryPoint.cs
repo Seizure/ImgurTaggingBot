@@ -67,7 +67,8 @@ namespace Tagaroo{
     Configuration.ImgurOAuthRefreshToken,
     Configuration.ImgurOAuthTokenType,
     Configuration.ImgurOAuthTokenExpiry,
-    Configuration.ImgurMaximumCommentLengthUTF16CodeUnits
+    Configuration.ImgurMaximumCommentLengthUTF16CodeUnits,
+    Configuration.ImgurMentionPrefix
    );
    DiscordInterfacer Discord=new DiscordInterfacerMain(
     Configuration.DiscordAuthenticationToken,

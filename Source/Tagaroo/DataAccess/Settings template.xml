@@ -39,6 +39,7 @@ Make sure the edits made are valid with respect to the schema, in "Settings.xsd"
   ImgurMaximumCommentLengthUTF16CodeUnits="140"
   TaglistDatafilePath="Taglists.xml"
   ImgurCommandPrefix="@Tagaroo"
+  ImgurMentionPrefix="@"
   DiscordCommandPrefix="/"
  />
  

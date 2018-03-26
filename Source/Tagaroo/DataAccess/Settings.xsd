@@ -209,6 +209,15 @@
     (Characters outside the BMP are unusual).
    </xs:documentation></xs:annotation>
   </xs:attribute>
+  <xs:attribute name="ImgurMentionPrefix" type="xs:string" use="required">
+   <xs:annotation><xs:documentation>
+    The prefix that is prepended to an Imgur username in order to Mention it.
+    In a production deployment, this should be "@".
+    For non-production deployments, such as when testing the application,
+    this value can be changed, so that real Imgur users aren't Mentioned
+    when testing the application.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
   <xs:attribute name="TaglistDatafilePath" type="nonEmptyString" use="required">
    <xs:annotation><xs:documentation>
     File path to the XML data file containing the Taglists.

@@ -161,6 +161,9 @@ Other Settings
 
 There are a few other Settings in the Settings XML file worth mentioning.
 
+StaticSettings @ ImgurMentionPrefix:
+When users are Mentioned on Imgur, in Comments and such, their usernames are prefixed with "@", which is what this attribute specifies. However, there may be situations where it is undesirable to Mention real users when running the application, such as when testing it out. For these scenarios, this value can be changed to something else, such as "#", or left blank, so that real users don't get Mentioned.
+
 StaticSettings @ ImgurMaximumCommentLengthUTF16CodeUnits:
 Comments on Imgur are limited in length. As such, if the application needs to make a Comment longer than this length, it must split the Comment. At present, this maximum is 140; if Imgur changes this value, it can be changed here.
 The units of the value seem to be UTF-16 Code Units, which in most cases is equivalent to a single Unicode Character.
