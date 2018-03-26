@@ -78,6 +78,13 @@ namespace Tagaroo{
   /// </summary>
   public DateTimeOffset ImgurOAuthTokenExpiry { get; }
   /// <summary>
+  /// A percentage value between 0 and 1 inclusive.
+  /// The percentage level of remaining Imgur API bandwidth
+  /// at which Informational level log messages regarding remaining bandwidth
+  /// should be promoted to Warnings.
+  /// </summary>
+  public float ImgurAPIBandwidthWarningThreshhold { get; }
+  /// <summary>
   /// Always positive.
   /// The maximum permissible length of a single Imgur Comment,
   /// measured in UTF-16 Code Units.
@@ -125,7 +132,10 @@ namespace Tagaroo{
   public string TaglistDataFilePath { get; }
 
   /// <summary>
-  /// <para>Preconditions: <paramref name="imgurMaximumCommentLengthUTF16CodeUnits"/> is positive</para>
+  /// <para>
+  /// Preconditions: <paramref name="imgurMaximumCommentLengthUTF16CodeUnits"/> is positive;
+  /// 0 ≤ <paramref name="ImgurAPIBandwidthWarningThreshhold"/> ≤ 1
+  /// </para>
   /// </summary>
   public ApplicationConfiguration(
    SourceLevels logLevelBootstrap,
@@ -143,6 +153,7 @@ namespace Tagaroo{
    string imgurOAuthRefreshToken,
    string imgurOAuthTokenType,
    DateTimeOffset imgurOAuthTokenExpiry,
+   float ImgurAPIBandwidthWarningThreshhold,
    short imgurMaximumCommentLengthUTF16CodeUnits,
    string discordAuthenticationToken,
    ulong discordGuildID,
@@ -169,6 +180,7 @@ namespace Tagaroo{
    this.ImgurOAuthRefreshToken=imgurOAuthRefreshToken;
    this.ImgurOAuthTokenType=imgurOAuthTokenType;
    this.ImgurOAuthTokenExpiry=imgurOAuthTokenExpiry;
+   this.ImgurAPIBandwidthWarningThreshhold=ImgurAPIBandwidthWarningThreshhold;
    this.ImgurMaximumCommentLengthUTF16CodeUnits=imgurMaximumCommentLengthUTF16CodeUnits;
    this.DiscordAuthenticationToken=discordAuthenticationToken;
    this.DiscordGuildID=discordGuildID;

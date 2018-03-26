@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Diagnostics;
 using Tagaroo.Model;
 using Tagaroo.Imgur;
 using Tagaroo.Discord;
@@ -83,6 +84,7 @@ namespace Tagaroo.Application{
     MentionUsersTask,
     ArchiveTaggedItem(Command,TaggedItem,SpecifiedTaglist)
    );
+   await Imgur.LogRemainingBandwidth(TraceEventType.Verbose);
   }
 
   protected async Task MentionInterestedUsers(TagCommandParameters Command,Taglist SpecifiedTaglist){

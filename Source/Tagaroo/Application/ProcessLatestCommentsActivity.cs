@@ -90,7 +90,7 @@ namespace Tagaroo.Application{
    }
    //Execute the sub-activity for each new Comment, keeping track of the latest date–time from all the Comments
    Log.Application_.LogVerbose("Processing latest Comments from {0} total Commenters",NewComments.Count);
-   List<Task> Tasks=new List<Task>();
+   List<Task<bool>> Tasks=new List<Task<bool>>();
    DateTimeOffset LatestCommentAt=DateTimeOffset.MinValue;
    foreach( KeyValuePair<string,IList<IComment>> _NewUserComments in NewComments ){
     IList<IComment> NewUserComments=_NewUserComments.Value;
@@ -104,7 +104,7 @@ namespace Tagaroo.Application{
     }
    }
    //Wait until all Comments have been processed before then updating the latest Comment date–time, in case of any unhandled exceptions during processing
-   await Task.WhenAll(Tasks);
+   bool[] CommentsProcessed = await Task<bool[]>.WhenAll(Tasks);
    RepositoryTaglists.ClearCache();
    //Update and save the latest Comment date–time if it has progressed
    Log.Application_.LogVerbose("Latest date–time of all Comments read — {0:u}; current saved value is {1:u}",LatestCommentAt,CurrentSettings.CommentsProcessedUpToInclusive);
@@ -120,7 +120,11 @@ namespace Tagaroo.Application{
      );
     }
    }
-   await Imgur.LogRemainingBandwidth(TraceEventType.Verbose);
+   if(CommentsProcessed.Any( value=>value )){
+    await Imgur.LogRemainingBandwidth(TraceEventType.Information);
+   }else{
+    await Imgur.LogRemainingBandwidth(TraceEventType.Verbose);
+   }
   }
  }
 

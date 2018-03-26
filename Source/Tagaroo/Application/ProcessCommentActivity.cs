@@ -30,7 +30,7 @@ namespace Tagaroo.Application{
   /// <para>Preconditions: The associated <see cref="DiscordInterfacer"/> of the associated <see cref="ProcessTagCommandActivity"/> is in a Connected state</para>
   /// Executes <see cref="ImgurCommandParser.ProcessCommands"/>.
   /// </summary>
-  public Task ExecuteIfNew(IComment Process){
+  public Task<bool> ExecuteIfNew(IComment Process){
    Log.Application_.LogVerbose("Processing commands in Comment made by '{1}' at {2:u} on Gallery Item '{3}' [#{0:D}]",Process.Id,Process.Author,Process.DateTime,Process.ImageId);
    return CommandParser.ProcessCommands(Process,this);
   }

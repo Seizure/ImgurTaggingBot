@@ -114,8 +114,9 @@ namespace Tagaroo.Imgur{
   /// As for <see cref="ProcessCommandsUnconditionally"/>, except <see cref="ShouldProcess"/> is called for the Comment,
   /// to determine if it has already been processed.
   /// For efficiency, it is called only if needed, to preserve Imgur API bandwidth.
+  /// Returns true if at least one command in the Comment was identified and submitted for processing, false otherwise.
   /// </summary>
-  public Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback){
+  public Task<bool> ProcessCommands(IComment HostComment,ImgurCommandHandler Callback){
    return ProcessCommands(HostComment,Callback,true);
   }
   
@@ -130,7 +131,7 @@ namespace Tagaroo.Imgur{
    return ProcessCommands(HostComment,Callback,false);
   }
 
-  protected async Task ProcessCommands(IComment HostComment,ImgurCommandHandler Callback,bool CheckForReplies){
+  protected async Task<bool> ProcessCommands(IComment HostComment,ImgurCommandHandler Callback,bool CheckForReplies){
    ICollection<Match> ParsedCommands = Pattern_Command.Matches(HostComment.CommentText);
    Log.Imgur_.LogVerbose("Parsing Comment made by '{1}' at {2:u} on Gallery Item '{3}' [#{0:D}] for commands; total commands found - {4}",HostComment.Id,HostComment.Author,HostComment.DateTime,HostComment.ImageId,ParsedCommands.Count);
    List<Task> Tasks=new List<Task>(ParsedCommands.Count);
@@ -179,6 +180,7 @@ namespace Tagaroo.Imgur{
     }
    }
    await Task.WhenAll(Tasks);
+   return Tasks.Count>0;
   }
 
   /// <summary>

@@ -201,6 +201,12 @@
     How often the application polls Imgur for new Comments.
    </xs:documentation></xs:annotation>
   </xs:attribute>
+  <xs:attribute name="ImgurAPIBandwidthWarningThreshholdPercentage" type="percentage" use="required">
+   <xs:annotation><xs:documentation>
+    When the remaining daily-allotted Imgur API bandwidth falls below this percentage,
+    Informational-level log messages logged to the ImgurBandwidth logger will be promoted to Warnings.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
   <xs:attribute name="ImgurMaximumCommentLengthUTF16CodeUnits" type="positiveShort" use="required">
    <xs:annotation><xs:documentation>
     The maximum length of a single Imgur Comment.
@@ -300,6 +306,11 @@
  
  <xs:simpleType name="nonEmptyString"><xs:restriction base="xs:string">
   <xs:minLength value="1"/>
+ </xs:restriction></xs:simpleType>
+ 
+ <xs:simpleType name="percentage"><xs:restriction base="xs:byte">
+  <xs:minInclusive value="0"/>
+  <xs:maxInclusive value="100"/>
  </xs:restriction></xs:simpleType>
  
 </xs:schema>

@@ -28,7 +28,7 @@ Make sure the edits made are valid with respect to the schema, in "Settings.xsd"
    BootstrapLogLevel="Information"
    ApplicationLogLevel="Information"
    ImgurLogLevel="Information"
-   ImgurBandwidthLogLevel="Information"
+   ImgurBandwidthLogLevel="Warning"
    DiscordLogLevel="Information"
    DiscordLibraryLogLevel="Error"
   />
@@ -36,6 +36,7 @@ Make sure the edits made are valid with respect to the schema, in "Settings.xsd"
  
  <StaticSettings
   PullCommentsFrequency="PT1H"
+  ImgurAPIBandwidthWarningThreshholdPercentage="10"
   ImgurMaximumCommentLengthUTF16CodeUnits="140"
   TaglistDatafilePath="Taglists.xml"
   ImgurCommandPrefix="@Tagaroo"

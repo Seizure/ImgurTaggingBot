@@ -127,13 +127,11 @@ namespace Tagaroo.Imgur{
   Task<IRateLimit> ReadRemainingBandwidth();
 
   /// <summary>
-  /// <see cref="LogRemainingBandwidth(TraceEventType)"/>, with a logging level of <see cref="TraceEventType.Information"/>.
-  /// </summary>
-  Task LogRemainingBandwidth();
-  /// <summary>
-  /// Logs a message to <see cref="Log.Imgur"/> detailing the remaining Imgur API bandwidth available to the application,
+  /// Logs a message to <see cref="Log.ImgurBandwidth"/> detailing the remaining Imgur API bandwidth available to the application,
   /// which is retrieved via <see cref="ReadRemainingBandwidth"/>,
   /// with the specified logging level.
+  /// If the logging level is <see cref="TraceEventType.Information"/>, the message is promoted to <see cref="TraceEventType.Warning"/>
+  /// if the remaining bandwidth is below a certain threshhold.
   /// Any errors in acquiring the information are logged.
   /// </summary>
   Task LogRemainingBandwidth(TraceEventType Level);
@@ -149,11 +147,15 @@ namespace Tagaroo.Imgur{
   private readonly IAlbumEndpoint APIAlbum;
   private readonly SettingsRepository RepositorySettings;
   private readonly int UserID;
+  private readonly float PercentageRemainingAPIBandwidthWarningThreshhold;
   private readonly ushort MaximumCommentLength;
   private readonly string MentionPrefix;
   
   /// <summary>
-  /// <para>Preconditions: <paramref name="MaximumCommentLength"/> &gt; 0</para>
+  /// <para>
+  /// Preconditions: <paramref name="MaximumCommentLength"/> &gt; 0;
+  /// 0 ≤ <paramref name="PercentageRemainingAPIBandwidthWarningThreshhold"/> ≤ 1
+  /// </para>
   /// </summary>
   /// <param name="ApplicationAuthenticationID">
   /// The "Client ID" portion of the Imgur API Key
@@ -188,6 +190,11 @@ namespace Tagaroo.Imgur{
   /// if not known this can simply be set to a date–time in the past
   /// to acquire a new "Access Token" and expiry upon the first call requiring an OAuth Token
   /// </param>
+  /// <param name="PercentageRemainingAPIBandwidthWarningThreshhold">
+  /// A percentage value between 0 and 1 inclusive that marks the threshhold
+  /// at which <see cref="LogRemainingBandwidth"/> will promote Informational messages to Warnings,
+  /// measured as the remaining amount of daily-alloted API bandwidth.
+  /// </param>
   /// <param name="MaximumCommentLength">
   /// The maximum permitted length of an Imgur Comment,
   /// which seems to be measured in UTF-16 Code Units
@@ -211,11 +218,15 @@ namespace Tagaroo.Imgur{
    string UserAuthenticationRefreshToken,
    string UserAuthenticationTokenType,
    DateTimeOffset TokenExpiresAt,
+   float PercentageRemainingAPIBandwidthWarningThreshhold,
    short MaximumCommentLength,
    string MentionPrefix
   ){
    if(MaximumCommentLength<=0){
     throw new ArgumentOutOfRangeException(nameof(MaximumCommentLength));
+   }
+   if(PercentageRemainingAPIBandwidthWarningThreshhold<0||PercentageRemainingAPIBandwidthWarningThreshhold>1){
+    throw new ArgumentOutOfRangeException(nameof(PercentageRemainingAPIBandwidthWarningThreshhold));
    }
    DateTimeOffset Now=DateTimeOffset.UtcNow;
    int ExpiryTime;
@@ -246,6 +257,7 @@ namespace Tagaroo.Imgur{
    this.APIImage=new EndpointsImpl.ImageEndpoint(Client);
    this.APIAlbum=new EndpointsImpl.AlbumEndpoint(Client);
    this.UserID=UserID;
+   this.PercentageRemainingAPIBandwidthWarningThreshhold=PercentageRemainingAPIBandwidthWarningThreshhold;
    this.MaximumCommentLength=(ushort)MaximumCommentLength;
    this.RepositorySettings=RepositorySettings;
    this.MentionPrefix=MentionPrefix??string.Empty;
@@ -317,11 +329,12 @@ namespace Tagaroo.Imgur{
    }
   }
 
-  public Task LogRemainingBandwidth(){
-   return LogRemainingBandwidth(TraceEventType.Information);
-  }
   public async Task LogRemainingBandwidth(TraceEventType Level){
-   if(!Log.ImgurBandwidth_.ShouldLog(Level)){
+   TraceEventType MaximumLevel=Level;
+   if(Level==TraceEventType.Information){
+    MaximumLevel=TraceEventType.Warning;
+   }
+   if(!Log.ImgurBandwidth_.ShouldLog(MaximumLevel)){
     return;
    }
    IRateLimit RemainingBandwidth;
@@ -330,6 +343,12 @@ namespace Tagaroo.Imgur{
    }catch(ImgurException Error){
     Log.ImgurBandwidth_.LogError("Error acquiring API Bandwidth details: "+Error.Message);
     return;
+   }
+   if(Level==TraceEventType.Information){
+    float PercentageRemaining = RemainingBandwidth.ClientRemaining / (float)RemainingBandwidth.ClientLimit;
+    if(PercentageRemaining <= PercentageRemainingAPIBandwidthWarningThreshhold) {
+     Level = TraceEventType.Warning;
+    }
    }
    Log.ImgurBandwidth_.Log(
     Level,

@@ -67,6 +67,7 @@ namespace Tagaroo{
     Configuration.ImgurOAuthRefreshToken,
     Configuration.ImgurOAuthTokenType,
     Configuration.ImgurOAuthTokenExpiry,
+    Configuration.ImgurAPIBandwidthWarningThreshhold,
     Configuration.ImgurMaximumCommentLengthUTF16CodeUnits,
     Configuration.ImgurMentionPrefix
    );

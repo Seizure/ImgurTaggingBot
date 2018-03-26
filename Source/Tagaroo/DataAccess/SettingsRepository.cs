@@ -104,6 +104,8 @@ namespace Tagaroo.DataAccess{
     (string)ConfigurationImgurOAuthElement.Attribute("RefreshToken"),
     (string)ConfigurationImgurOAuthElement.Attribute("TokenType"),
     (DateTimeOffset)ConfigurationImgurOAuthElement.Attribute("ExpiresAt"),
+    //Will always be within the inclusive range 0–100 due to the schema
+    (short)StaticSettingsElement.Attribute("ImgurAPIBandwidthWarningThreshholdPercentage")/100F,
     //Will always be positive and no greater than 2^31-1 milliseconds due to the schema
     (short)StaticSettingsElement.Attribute("ImgurMaximumCommentLengthUTF16CodeUnits"),
     (string)ConfigurationDiscordElement.Attribute("Token"),

@@ -200,13 +200,16 @@ The timestamp on log messages is from the local timezone of the machine on which
 The various loggers logged to are listed below. Each logger has an associated LoggerLogLevel attribute in the Logging element, specifying its logging verbosity level.
 
 Bootstrap:
-Messages concerning application startup and shutdown are sent to this logger.
+Messages concerning application startup and shutdown are sent to this logger. The verbosity level of this logger can be safely set to “Warning” to reduce log clutter when starting the application.
 
 Application:
 Messages concerning the general running of the application.
 
 Imgur:
 Messages concerning the application's interaction with Imgur. This includes Imgur Comment command parse errors, and notifications of the OAuth Token being updated.
+
+ImgurBandwidth:
+Messages concerning the remaining Imgur API bandwidth available to the application. The recommended verbosity level for this logger is “Warning”, but it can be set to “Information” or higher to keep a closer watch on API bandwidth consumption.
 
 Discord:
 Messages concerning the application's interaction with Discord.
