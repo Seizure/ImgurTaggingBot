@@ -36,6 +36,7 @@ Make sure the edits made are valid with respect to the schema, in "Settings.xsd"
  
  <StaticSettings
   PullCommentsFrequency="PT1H"
+  ImgurCommentPostingDelay="PT11S"
   ImgurAPIBandwidthWarningThreshholdPercentage="10"
   ImgurMaximumCommentLengthUTF16CodeUnits="140"
   TaglistDatafilePath="Taglists.xml"

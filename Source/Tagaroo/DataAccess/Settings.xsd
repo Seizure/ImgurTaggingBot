@@ -8,7 +8,9 @@
  <xs:element name="Settings"><xs:complexType><xs:sequence>
   <xs:element name="Configuration" type="Configuration">
    <xs:annotation><xs:documentation>
-    Key deployment settings of the application, that don't change at runtime.
+    Key deployment settings of the application, that don't change at runtime,
+    notwithstanding the Imgur OAuth Token details
+    which will be automatically updated when near expiry.
    </xs:documentation></xs:annotation>
   </xs:element>
   <xs:element name="StaticSettings" type="StaticSettings">
@@ -22,9 +24,7 @@
     Settings that may be changed while the application is running,
     either by the application itself or by the user.
     These settings can be changed by the user either by issuing commands to the running application,
-    in which case they will take immediate effect,
-    or my manually modifying the settings XML file,
-    in which case the application must be instructed to re-load and apply the new settings.
+    or my manually modifying the settings XML file.
     Be careful if doing the latter,
     as the application may attempt to concurrently access and write to the settings file.
    </xs:documentation></xs:annotation>
@@ -144,11 +144,11 @@
   </xs:attribute>
   <xs:attribute name="LogChannelID" type="xs:unsignedLong" use="required">
    <xs:annotation><xs:documentation>
-    -Keep this Channel secure, and only allow access to it by administrative users-;
-    sensitive information will be logged to this Channel,
-    including OAuth Token details, which must be kept safe.
     The numerical ID of the Discord Channel in the Guild
     where the application will log messages to.
+    It is advised that this Channel not be publicly visible,
+    but should probably be visible to Commenters
+    and anyone else interacting with the application.
    </xs:documentation></xs:annotation>
   </xs:attribute>
  </xs:complexType>
@@ -199,6 +199,20 @@
   <xs:attribute name="PullCommentsFrequency" type="positiveDuration32BitMilliseconds" use="required">
    <xs:annotation><xs:documentation>
     How often the application polls Imgur for new Comments.
+    Note this delay is effective from the end of the previous pull and subsequent processing of Comments;
+    after the application has finished processing Comments from the current pull,
+    which may take several minutes depending on what has to be processed,
+    it will then wait this length of time before initiating the next pull.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="ImgurCommentPostingDelay" type="positiveDuration32BitMilliseconds" use="required">
+   <xs:annotation><xs:documentation>
+    Imgur enforces a limit on how frequently Comments can be posted;
+    if Comments are posted faster than this limit, subsequent Comment posts will fail.
+    In order to honor this limit, after each Comment posted to Imgur,
+    the application will delay for this length of time
+    before allowing any additional Comments to be posted.
+    At time of writing, the limit seems to be a maximum of 6 Comments in 1 minute.
    </xs:documentation></xs:annotation>
   </xs:attribute>
   <xs:attribute name="ImgurAPIBandwidthWarningThreshholdPercentage" type="percentage" use="required">
@@ -212,7 +226,7 @@
     The maximum length of a single Imgur Comment.
     This seems to be specified in units of UTF-16 Code Units,
     which is equivalent to a Unicode Character for Characters within the Basic Multilingual Plane
-    (Characters outside the BMP are unusual).
+    (Characters outside the BMP are not often used).
    </xs:documentation></xs:annotation>
   </xs:attribute>
   <xs:attribute name="ImgurMentionPrefix" type="xs:string" use="required">
@@ -262,7 +276,8 @@
     The maximum amount of "get Comments" requests to send per user when retrieving a Commenter's Comments.
     This is a safety feature to stop the application
     issuing huge amounts of requests if the Commenter has a large number of Comments
-    since the last time Comments were pulled.
+    since the last time Comments were pulled,
+    and thus consuming huge amounts of Imgur API bandwidth.
     If this threshhold is reached, a warning is logged,
     and no further Comments from that user are retrieved;
     the most recent Comments are retrieved first.

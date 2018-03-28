@@ -4,6 +4,7 @@ using System.Text;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 using System.Diagnostics;
 using Imgur.API.Models;
 using Imgur.API.Enums;
@@ -109,9 +110,12 @@ namespace Tagaroo.Imgur{
   /// <summary>
   /// "Mentions" all the Imgur users in <paramref name="UsernamesToMention"/>
   /// in a Reply to the Comment with ID <paramref name="ItemParentCommentID"/>
-  /// which must be on the Gellery Item with ID <paramref name="OnItemID"/>.
+  /// which must be on the Gallery Item with ID <paramref name="OnItemID"/>.
   /// Since the length of Comments is limited,
   /// the Mentions to make are split across many Comment Replies if needed.
+  /// This is a long-running task;
+  /// Imgur enforces a limit on the amount of Comments that can be made in a certain interval,
+  /// therefore a delay is needed between Comments made.
   /// </summary>
   /// <exception cref="ImgurException">Also thrown if the Gallery Item specified by <paramref name="OnItemID"/> or the Comment on it specified by <paramref name="ItemParentCommentID"/> could not be found</exception>
   Task MentionUsers(
@@ -146,6 +150,8 @@ namespace Tagaroo.Imgur{
   private readonly IImageEndpoint APIImage;
   private readonly IAlbumEndpoint APIAlbum;
   private readonly SettingsRepository RepositorySettings;
+  private readonly SemaphoreSlim PostCommentSemaphore = new SemaphoreSlim(1,1);
+  private readonly TimeSpan PostCommentDelay;
   private readonly int UserID;
   private readonly float PercentageRemainingAPIBandwidthWarningThreshhold;
   private readonly ushort MaximumCommentLength;
@@ -153,8 +159,10 @@ namespace Tagaroo.Imgur{
   
   /// <summary>
   /// <para>
-  /// Preconditions: <paramref name="MaximumCommentLength"/> &gt; 0;
-  /// 0 ≤ <paramref name="PercentageRemainingAPIBandwidthWarningThreshhold"/> ≤ 1
+  /// Preconditions:
+  /// <paramref name="PostCommentDelay"/> is non-negative and not greater than <see cref="Int32.MaxValue"/> milliseconds;
+  /// 0 ≤ <paramref name="PercentageRemainingAPIBandwidthWarningThreshhold"/> ≤ 1;
+  /// <paramref name="MaximumCommentLength"/> &gt; 0
   /// </para>
   /// </summary>
   /// <param name="ApplicationAuthenticationID">
@@ -190,6 +198,9 @@ namespace Tagaroo.Imgur{
   /// if not known this can simply be set to a date–time in the past
   /// to acquire a new "Access Token" and expiry upon the first call requiring an OAuth Token
   /// </param>
+  /// <param name="PostCommentDelay">
+  /// The time to wait after posting a Comment before allowing another Comment to be posted
+  /// </param>
   /// <param name="PercentageRemainingAPIBandwidthWarningThreshhold">
   /// A percentage value between 0 and 1 inclusive that marks the threshhold
   /// at which <see cref="LogRemainingBandwidth"/> will promote Informational messages to Warnings,
@@ -218,15 +229,19 @@ namespace Tagaroo.Imgur{
    string UserAuthenticationRefreshToken,
    string UserAuthenticationTokenType,
    DateTimeOffset TokenExpiresAt,
+   TimeSpan PostCommentDelay,
    float PercentageRemainingAPIBandwidthWarningThreshhold,
    short MaximumCommentLength,
    string MentionPrefix
   ){
-   if(MaximumCommentLength<=0){
-    throw new ArgumentOutOfRangeException(nameof(MaximumCommentLength));
+   if(PostCommentDelay<TimeSpan.Zero){
+    throw new ArgumentOutOfRangeException(nameof(PostCommentDelay));
    }
    if(PercentageRemainingAPIBandwidthWarningThreshhold<0||PercentageRemainingAPIBandwidthWarningThreshhold>1){
     throw new ArgumentOutOfRangeException(nameof(PercentageRemainingAPIBandwidthWarningThreshhold));
+   }
+   if(MaximumCommentLength<=0){
+    throw new ArgumentOutOfRangeException(nameof(MaximumCommentLength));
    }
    DateTimeOffset Now=DateTimeOffset.UtcNow;
    int ExpiryTime;
@@ -257,6 +272,7 @@ namespace Tagaroo.Imgur{
    this.APIImage=new EndpointsImpl.ImageEndpoint(Client);
    this.APIAlbum=new EndpointsImpl.AlbumEndpoint(Client);
    this.UserID=UserID;
+   this.PostCommentDelay=PostCommentDelay;
    this.PercentageRemainingAPIBandwidthWarningThreshhold=PercentageRemainingAPIBandwidthWarningThreshhold;
    this.MaximumCommentLength=(ushort)MaximumCommentLength;
    this.RepositorySettings=RepositorySettings;
@@ -501,8 +517,28 @@ namespace Tagaroo.Imgur{
     " ",
     MaximumCommentLength
    );
-   Log.Imgur_.LogVerbose("Mentioning {0} total users across {1} total Comment Replies",UsernamesToMention.Count,CommentsToMake.Count);
+   Log.Imgur_.LogVerbose("Mentioning {0} total users across {1} total Comment Replies on Gallery Item '{2}'",UsernamesToMention.Count,CommentsToMake.Count,OnItemID);
+   int CommentNumber=0;
    foreach(string Comment in CommentsToMake){
+    ++CommentNumber;
+    try{
+     await PostComment(
+      Comment,OnItemID,ItemParentCommentID,
+      string.Format("Mention Comment {0} of {1} on Gallery Item '{2}' (parent Comment ID {3:D})",CommentNumber,CommentsToMake.Count,OnItemID,ItemParentCommentID)
+     );
+    }catch(ImgurException){
+     throw;
+    }
+   }
+  }
+
+  /// <exception cref="ImgurException"/>
+  protected async Task PostComment(string Comment,string OnItemID,int ItemParentCommentID,string LoggedCommentDescription){
+   Log.Imgur_.LogVerbose("Waiting to post {0}",LoggedCommentDescription);
+   //Allow only a single call to PostComment at a time, in order to properly enforce the delay between posted Comments
+   await PostCommentSemaphore.WaitAsync();
+   try{
+    Log.Imgur_.LogVerbose("Posting {0}",LoggedCommentDescription);
     try{
      await APIComments.CreateCommentAsync(
       Comment, OnItemID, ItemParentCommentID.ToString("D",CultureInfo.InvariantCulture)
@@ -512,6 +548,11 @@ namespace Tagaroo.Imgur{
     }catch(HttpRequestException Error){
      throw ToImgurException(Error);
     }
+    Log.Imgur_.LogVerbose("Posted {0}; delaying for {1} before allowing further Comments",LoggedCommentDescription,PostCommentDelay);
+    await Task.Delay(PostCommentDelay);
+    Log.Imgur_.LogVerbose("Delay complete after {0}; allowing further Comments",LoggedCommentDescription);
+   }finally{
+    PostCommentSemaphore.Release();
    }
   }
 

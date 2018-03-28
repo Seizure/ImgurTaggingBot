@@ -81,8 +81,14 @@ namespace Tagaroo.Application{
     return;
    }
    await Task.WhenAll(
+    //Long-running operation, due to delay needed between Imgur Comments
     MentionUsersTask,
     ArchiveTaggedItem(Command,TaggedItem,SpecifiedTaglist)
+   );
+   Log.Application_.LogVerbose(
+    "Completed processing of Tag command for {2} '{0}' to Taglist '{1}'",
+    Command.ItemID,Command.TaglistName,
+    Command.isItemAlbum ? "Album" : "Image"
    );
    await Imgur.LogRemainingBandwidth(TraceEventType.Verbose);
   }

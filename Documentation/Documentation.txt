@@ -182,6 +182,7 @@ The application then calculates which users interested in the Taglist would be i
 
 Mentioning Users
 Once interested Imgur users have been identified, the application proceeds to Mention them, by Replying to the Comment containing the Tag command. Imgur Comments are limited in length, so the application will split out all the Mentions it has to make into multiple Replies.
+Imgur also places a limit on the amount of Comments that can be made in a given interval; as such, the process of Mentioning a large number of Imgur users may take a minute or more, during which all the Comments will be gradually posted.
 
 Archiving Tagged Items
 The application will also archive the Tagged item to the relevant Discord Channel, by posting an Embed of the image there, with details. For Imgur Albums, the embedded image will be the Album's Cover Image.
@@ -194,10 +195,10 @@ Once all Comments from the poll have been looked at, the application saves the d
 
 Logging
 
-The application produces logging output through several loggers. Each logger can have its verbosity level configured by an administrator in <Settings.xml>, at “Configuration / Logging”. The recommended logging level for most loggers is “Information”; only messages deserving some notable level of attention are logged at this level by the application.
+The application produces logging output through several loggers. Each logger can have its verbosity level configured by an administrator in <Settings.xml>, at “Configuration / Logging”. The recommended logging level for most loggers is “Information”; only messages deserving some notable level of attention are logged at or above this level by the application.
 If the Setting “Logging @ LogToDiscord” is true, the application will attempt to send logging output to Discord, falling back to the application process' STDOUT if it fails. During application startup, this will obviously always fail until the application establishes a connection to Discord. The process' STDOUT is typically the command window from which the application was started.
 The timestamp on log messages is from the local timezone of the machine on which the application is running.
-The various loggers logged to are listed below. Each logger has an associated LoggerLogLevel attribute in the Logging element, specifying its logging verbosity level.
+The various loggers logged to are listed below. Each logger has an associated LoggerLogLevel attribute in the Logging element in <Settings.xml>, specifying its logging verbosity level.
 
 Bootstrap:
 Messages concerning application startup and shutdown are sent to this logger. The verbosity level of this logger can be safely set to “Warning” to reduce log clutter when starting the application.

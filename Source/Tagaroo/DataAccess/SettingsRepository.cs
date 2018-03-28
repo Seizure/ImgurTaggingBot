@@ -104,6 +104,8 @@ namespace Tagaroo.DataAccess{
     (string)ConfigurationImgurOAuthElement.Attribute("RefreshToken"),
     (string)ConfigurationImgurOAuthElement.Attribute("TokenType"),
     (DateTimeOffset)ConfigurationImgurOAuthElement.Attribute("ExpiresAt"),
+    //Will always be positive and within range due to the schema
+    (TimeSpan)StaticSettingsElement.Attribute("ImgurCommentPostingDelay"),
     //Will always be within the inclusive range 0–100 due to the schema
     (short)StaticSettingsElement.Attribute("ImgurAPIBandwidthWarningThreshholdPercentage")/100F,
     //Will always be positive and no greater than 2^31-1 milliseconds due to the schema
@@ -125,7 +127,7 @@ namespace Tagaroo.DataAccess{
    XElement DynamicSettingsElement = DataDocument.Root.Elements(xmlns+"DynamicSettings").First();
    XElement StaticSettingsElement = DataDocument.Root.Elements(xmlns+"StaticSettings").First();
    return new Settings(){
-    //Will always be positive due to the schema
+    //Will always be positive and within range due to the schema
     PullCommentsFrequency = (TimeSpan)StaticSettingsElement.Attribute("PullCommentsFrequency"),
     CommentsProcessedUpToInclusive = (DateTimeOffset)DynamicSettingsElement.Attribute("CommentsProcessedUpToInclusive"),
     RequestThreshholdPullCommentsPerUser = (byte)(short)DynamicSettingsElement.Attribute("PullCommentsPerUserRequestThreshhold"),

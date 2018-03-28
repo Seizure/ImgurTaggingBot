@@ -78,6 +78,12 @@ namespace Tagaroo{
   /// </summary>
   public DateTimeOffset ImgurOAuthTokenExpiry { get; }
   /// <summary>
+  /// A non-negative duration no greater than <see cref="Int32.MaxValue"/> milliseconds
+  /// that specifies the minimum duration after posting a Comment to Imgur
+  /// to wait before posting another Comment.
+  /// </summary>
+  public TimeSpan ImgurPostCommentDelay { get; }
+  /// <summary>
   /// A percentage value between 0 and 1 inclusive.
   /// The percentage level of remaining Imgur API bandwidth
   /// at which Informational level log messages regarding remaining bandwidth
@@ -133,8 +139,9 @@ namespace Tagaroo{
 
   /// <summary>
   /// <para>
-  /// Preconditions: <paramref name="imgurMaximumCommentLengthUTF16CodeUnits"/> is positive;
-  /// 0 ≤ <paramref name="ImgurAPIBandwidthWarningThreshhold"/> ≤ 1
+  /// Preconditions: 0 ≤ <paramref name="ImgurPostCommentDelay"/> ≤ <see cref="Int32.MaxValue"/> milliseconds;
+  /// 0 ≤ <paramref name="ImgurAPIBandwidthWarningThreshhold"/> ≤ 1;
+  /// <paramref name="imgurMaximumCommentLengthUTF16CodeUnits"/> is positive
   /// </para>
   /// </summary>
   public ApplicationConfiguration(
@@ -153,6 +160,7 @@ namespace Tagaroo{
    string imgurOAuthRefreshToken,
    string imgurOAuthTokenType,
    DateTimeOffset imgurOAuthTokenExpiry,
+   TimeSpan ImgurPostCommentDelay,
    float ImgurAPIBandwidthWarningThreshhold,
    short imgurMaximumCommentLengthUTF16CodeUnits,
    string discordAuthenticationToken,
@@ -164,6 +172,8 @@ namespace Tagaroo{
    string ImgurCommandPrefix,
    string ImgurMentionPrefix
   ){
+   if(ImgurPostCommentDelay<TimeSpan.Zero||ImgurPostCommentDelay.TotalMilliseconds>Int32.MaxValue){throw new ArgumentOutOfRangeException();}
+   if(ImgurAPIBandwidthWarningThreshhold>1||ImgurAPIBandwidthWarningThreshhold<0){throw new ArgumentOutOfRangeException();}
    if(imgurMaximumCommentLengthUTF16CodeUnits<=0){throw new ArgumentOutOfRangeException();}
    this.LogLevelBootstrap=logLevelBootstrap;
    this.LogLevelApplication=logLevelApplication;
@@ -180,6 +190,7 @@ namespace Tagaroo{
    this.ImgurOAuthRefreshToken=imgurOAuthRefreshToken;
    this.ImgurOAuthTokenType=imgurOAuthTokenType;
    this.ImgurOAuthTokenExpiry=imgurOAuthTokenExpiry;
+   this.ImgurPostCommentDelay=ImgurPostCommentDelay;
    this.ImgurAPIBandwidthWarningThreshhold=ImgurAPIBandwidthWarningThreshhold;
    this.ImgurMaximumCommentLengthUTF16CodeUnits=imgurMaximumCommentLengthUTF16CodeUnits;
    this.DiscordAuthenticationToken=discordAuthenticationToken;

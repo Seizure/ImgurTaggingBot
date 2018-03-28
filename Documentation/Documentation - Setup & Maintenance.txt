@@ -78,7 +78,7 @@ Imgur / OAuthToken @ Username:
 The “account_username” component of the OAuth Token. This should be the username of the Imgur user account that the OAuth Token grants access to.
 
 Imgur / OAuthToken @ UserID:
-The “account_id” component of the OAuth Token.
+The “account_id” component of the OAuth Token. This should be the unique numeric account ID of the Imgur user account that the OAuth Token grants access to.
 
 Imgur / OAuthToken @ AccessToken:
 The “access_token” component of the OAuth Token. This information is security sensitive — it essentially functions as the password to the account. Anyone with this information can effectively log in to the Imgur account.
@@ -128,7 +128,7 @@ The application optionally takes a single parameter from the command line, which
 Startup Process
 To begin with, the application will output log messages to the process' STDOUT, which is typically the command window from which the application was invoked. Specifically, they will be logged to the “Bootstrap” logger; if there are problems during startup, the verbosity level of this logger can be increased for additional logging output.
 One of the first things the application will do is attempt to load <Settings.xml>, and apply the values in the Configuration and StaticSettings elements. This includes logging settings, which is why there will always be logging output when the application starts, before it reaches this point.
-Once the configuration has been applied, the application will attempt setup. Setup primarily involves establishing a connection to Discord, and locating the Guild and relevant Guild Channels. It is at this point that the application will first attempt a network connection. For the application to have a Discord Guild (formerly known as a Discord Server) available to it, the application's associated Discord bot user must have been invited to that Guild, which will be the responsibility of the Guild administrators.
+Once the configuration has been applied, the application will attempt setup. Setup primarily involves establishing a connection to Discord, and locating the Guild and relevant Guild Channels, as well as making various checks. It is at this point that the application will first attempt a network connection. For the application to have a Discord Guild (formerly known as a Discord Server) available to it, the application's associated Discord bot user must have been invited to that Guild, which will be the responsibility of the Guild administrators.
 If all this is successful, the application will begin.
 Note that, unlike Discord, the application does not maintain a persistent connection to Imgur; it will only connect to Imgur briefly in order to make API calls.
 
@@ -144,7 +144,7 @@ It is recommended that this file be backed up whenever it is materially changed.
 
 Creating a New Taglist
 To make a new Taglist for the application to manage, simply add a new Taglist element. The Name attribute is the unique identifying name for the Taglist, which must be specified in Tag commands for the Taglist.
-Each Taglist must also be associated with three Discord Channels in the application's Guild; it is in these Channels that the application will archive the details of Tagged items. One Channel is required for each of the three Ratings; Tagged items will be archived to one of the three Channels depending on their Tagged Rating. The Channels are specified by their unique numeric ID; the application will log a list of Channels available to it during startup. The specified Channels do not have to be different.
+Each Taglist must also be associated with three Discord Channels in the application's Guild; it is in these Channels that the application will archive the details of Tagged items. A Channel is required for each of the three Ratings; Tagged items will be archived to one of the three Channels depending on their Tagged Rating. The Channels are specified by their unique numeric ID; the application will log a list of Channels available to it during startup. The specified Channels do not have to be different; the same Channel can be specified for Questionable and Explicit Rated items, for example, and different Taglists can even share Channels.
 No sub-elements need to be added to the new Taglist element.
 
 
@@ -164,10 +164,6 @@ There are a few other Settings in the Settings XML file worth mentioning.
 StaticSettings @ ImgurMentionPrefix:
 When users are Mentioned on Imgur, in Comments and such, their usernames are prefixed with "@", which is what this attribute specifies. However, there may be situations where it is undesirable to Mention real users when running the application, such as when testing it out. For these scenarios, this value can be changed to something else, such as "#", or left blank, so that real users don't get Mentioned.
 
-StaticSettings @ ImgurMaximumCommentLengthUTF16CodeUnits:
-Comments on Imgur are limited in length. As such, if the application needs to make a Comment longer than this length, it must split the Comment. At present, this maximum is 140; if Imgur changes this value, it can be changed here.
-The units of the value seem to be UTF-16 Code Units, which in most cases is equivalent to a single Unicode Character.
-
 
 
 Acquiring API Keys
@@ -177,7 +173,7 @@ In order to acquire an API key for one of the APIs, an application must be regis
 
 Discord
 To get an API key for the Discord API, an “App” must be created. They can be created at the following URL, after logging in to the Discord website — <//discordapp.com/developers/applications/me>. Enter a name for the App; this name will become the Discord bot's visible username. Ignore the section concerning URI redirects and OAuth. Then create it. Once successfully created, “Create a Bot User” for it.
-Upon success, the Bot section should update with the new bot's full username, and a “Token” — this “Token” is the Discord API key; the “Client ID” and “Client Secret” are not needed. The application does not require OAuth2 from Discord. It is also not recommended to make the bot Public, as a single instance of the application can only interact with one Discord Guild (also previously known as a Discord Server). Take note of the Token and store it in a safe place.
+Upon success, the Bot section should update with the new bot's full username, and a “Token” — this “Token” is the Discord API key; the “Client ID” and “Client Secret” are not needed. The application does not require OAuth2 from Discord. It is also recommended to keep the bot non-Public, as a single instance of the application can only interact with one Discord Guild (also previously known as a Discord Server). Take note of the Token and store it in a safe place.
 
 Inviting Discord Bots to Guilds
 The created bot must also be invited to the desired Guild, otherwise the application will not be able to “see” the Guild and connect to it. In order to do this, you must have MANAGE_SERVER permissions for the desired Guild.

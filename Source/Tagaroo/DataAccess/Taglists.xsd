@@ -22,7 +22,7 @@
    <xs:element name="RegisteredUsers">
     <xs:annotation><xs:documentation>
      The Imgur Users that constitute the Taglist;
-     Usernames must be unique.
+     Usernames and IDs must be unique.
     </xs:documentation></xs:annotation>
     <xs:complexType>
      <xs:sequence>
