@@ -18,7 +18,6 @@ using ImgurException=Imgur.API.ImgurException;
 using TaskScheduler=Tagaroo.Infrastructure.TaskScheduler;
 
 namespace Tagaroo{
- //TODO Shutdown signal
  /// <summary>
  /// Performs application setup, then runs the application.
  /// Responsible for applying "requires restart" Settings,
@@ -32,16 +31,25 @@ namespace Tagaroo{
   private readonly TaglistRepository RepositoryTaglists;
   private readonly SettingsRepository RepositorySettings;
   private readonly ProcessLatestCommentsActivity ActivityProcessComments;
-  private readonly SingleThreadSynchronizationContext ApplicationMessagePump = new SingleThreadSynchronizationContext();
+  private readonly SingleThreadSynchronizationContext ApplicationMessagePump
+   = new SingleThreadSynchronizationContext( new NullSynchronizationContext() );
   private readonly TaskScheduler Scheduler=new TaskScheduler();
   private readonly IServiceCollection DiscordCommandServices;
+  private readonly SingleThreadReadWriteLock ApplicationShutdownLock;
+  private bool ReceivedShutdownSignal=false;
   
+  /// <param name="ApplicationShutdownLock">
+  /// This should be the same instance as passed to other objects;
+  /// this class will acquire a write lock on the lock
+  /// before allowing the process to shutdown cleanly
+  /// </param>
   public Program(
    ProcessLatestCommentsActivity ActivityProcessComments,
    ImgurInterfacer Imgur,
    DiscordInterfacer Discord,
    TaglistRepository RepositoryTaglists,
-   SettingsRepository RepositorySettings
+   SettingsRepository RepositorySettings,
+   SingleThreadReadWriteLock ApplicationShutdownLock
   ){
    this.Imgur=Imgur;
    this.Discord=Discord;
@@ -54,6 +62,7 @@ namespace Tagaroo{
     .AddSingleton<TaglistRepository>(RepositoryTaglists)
     .AddSingleton<SettingsRepository>(RepositorySettings)
    ;
+   this.ApplicationShutdownLock=ApplicationShutdownLock;
   }
 
   /// <summary>
@@ -64,6 +73,7 @@ namespace Tagaroo{
   public bool Run(){
    bool startupsuccess=false;
    Log.Bootstrap_.LogVerbose("Beginning application message pump");
+   SynchronizationContext.SetSynchronizationContext(ApplicationMessagePump);
    ApplicationMessagePump.RunOnCurrentThread(async()=>{
     Log.Bootstrap_.LogVerbose("Application message pump started");
     Tuple<TimeSpan> SetupResults = await Setup();
@@ -75,7 +85,7 @@ namespace Tagaroo{
     //Execution will be within this method while the application is running
     await RunMain(SetupResults.Item1);
     Log.Bootstrap_.LogVerbose("Application has finished running; un-setting up");
-    await UnSetup();
+    await UnSetup(true);
     ApplicationMessagePump.Finish();
    });
    Log.Bootstrap_.LogVerbose("Application message pump ended");
@@ -128,14 +138,21 @@ namespace Tagaroo{
     );
    }finally{
     if(Result is null){
-     await UnSetup();
+     await UnSetup(false);
     }
    }
    return Result;
   }
 
-  private Task UnSetup(){
-   return Discord.Shutdown();
+  private async Task UnSetup(bool ApplicationWasRunning){
+   //Acquire shutdown lock and never release
+   Log.Bootstrap_.LogVerbose("Acquiring exclusive lock on shutdown lock...");
+   await this.ApplicationShutdownLock.EnterWriteLock();
+   Log.Bootstrap_.LogInfo("Shutdown lock acquired, shutting down");
+   if(ApplicationWasRunning){
+    Console.Out.WriteLine("No critical tasks now running; if the process hangs from this point forward, it is safe to forcibly terminate it");
+   }
+   await Discord.Shutdown();
   }
 
   //Ensures that all Taglists that the application manages are associated with Text Channels that exist in the Guild
@@ -186,9 +203,39 @@ namespace Tagaroo{
     () => ActivityProcessComments.Execute()
     //async() => {await Tests();Scheduler.Stop();}
    ));
+   /*
+   onShutdownSignal will synchronize a call to TaskScheduler.Stop using the current synchronization context,
+   which will only have an effect if the TaskScheduler is running;
+   the call is simply ignored if it is not running.
+   In order to ensure that the TaskScheduler is running when the call is synchronized,
+   only react to the CancelKeyPress event right before the TaskScheduler starts running;
+   if a CancelKeyPress event gets fired at this point,
+   then by the time it is synchronized to the current synchronization context the TaskScheduler will always be running.
+   Any CancelKeyPress events that are fired before this point will have the default behavior
+   of (presumably) immediately terminating all execution, which is acceptable before this point.
+   */
+   Console.CancelKeyPress+=onShutdownSignal;
    Log.Bootstrap_.LogInfo("Setup complete, running application");
    //Execution will be within this method while the application is running
    return Scheduler.Run();
+  }
+
+  private void onShutdownSignal(Object Origin,ConsoleCancelEventArgs Event){
+   try{
+    Event.Cancel = true;
+   }catch(InvalidOperationException){
+    return;
+   }
+   lock(ApplicationShutdownLock){
+    if(ReceivedShutdownSignal){return;}
+    this.ReceivedShutdownSignal=true;
+   }
+   Console.Out.WriteLine("Shutdown signal received; initiating shutdown...");
+   Log.Bootstrap_.LogVerbose("Shutdown signal received");
+   ApplicationMessagePump.Post(
+    _=>Shutdown(),
+    null
+   );
   }
 
   /// <summary>
@@ -196,6 +243,7 @@ namespace Tagaroo{
   /// No effect if execution is not within <see cref="Run"/>.
   /// </summary>
   public void Shutdown(){
+   Log.Bootstrap_.LogVerbose("Sending stop signal to task scheduler");
    Scheduler.Stop();
   }
 

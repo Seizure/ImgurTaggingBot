@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 using System.Diagnostics;
+using Tagaroo.Infrastructure;
 using Tagaroo.Application;
 using Tagaroo.DataAccess;
 using Tagaroo.Imgur;
@@ -53,6 +54,7 @@ namespace Tagaroo{
    Log.Instance.DiscordLibraryLevel.Level = Configuration.LogLevelDiscordLibrary;
    Log.Instance.ImgurBandwidthLevel.Level = Configuration.LogLevelImgurBandwidth;
    Log.Bootstrap_.LogVerbose("Applying Configuration: Constructing Application");
+   SingleThreadReadWriteLock ApplicationShutdownLock=new SingleThreadReadWriteLock();
    TaglistRepository RepositoryTaglists=new TaglistRepositoryMain(
     Configuration.TaglistDataFilePath
    );
@@ -70,7 +72,8 @@ namespace Tagaroo{
     Configuration.ImgurPostCommentDelay,
     Configuration.ImgurAPIBandwidthWarningThreshhold,
     Configuration.ImgurMaximumCommentLengthUTF16CodeUnits,
-    Configuration.ImgurMentionPrefix
+    Configuration.ImgurMentionPrefix,
+    ApplicationShutdownLock
    );
    DiscordInterfacer Discord=new DiscordInterfacerMain(
     Configuration.DiscordAuthenticationToken,
@@ -89,7 +92,8 @@ namespace Tagaroo{
       )
      )
     ),
-    Imgur, Discord, RepositoryTaglists, RepositorySettings
+    Imgur, Discord, RepositoryTaglists, RepositorySettings,
+    ApplicationShutdownLock
    );
    //Create Discord logging output if configured to do so
    Log.Bootstrap_.LogVerbose("Applying Configuration: Logging output");

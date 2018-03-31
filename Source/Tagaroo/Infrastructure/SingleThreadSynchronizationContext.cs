@@ -6,21 +6,35 @@ using System.Threading.Tasks;
 
 namespace Tagaroo.Infrastructure{
  /// <summary>
- /// <see cref="SynchronizationContext"/> Realization that synchronizes to the thread
+ /// <see cref="SynchronizationContext"/> realization that synchronizes to the thread
  /// that calls the <see cref="RunOnCurrentThread"/> method.
+ /// Any calls made to <see cref="Post"/> before <see cref="RunOnCurrentThread"/> is called will be delayed until it is called;
+ /// any calls made to <see cref="Post"/> once <see cref="Finish"/> has been called
+ /// are sent to the finishing synchronization context supplied in the constructor.
  /// This Realization does not support the <see cref="SynchronizationContext.Send(SendOrPostCallback,object)"/> method.
  /// </summary>
  internal class SingleThreadSynchronizationContext : SynchronizationContext{
   private readonly BlockingCollection<Tuple<SendOrPostCallback,object>> MessageQueue
    = new BlockingCollection<Tuple<SendOrPostCallback, object>>( new ConcurrentQueue<Tuple<SendOrPostCallback, object>>() );
+  private readonly bool AllowSynchronousExecution;
   private bool running=false;
   private int? RunningOnThreadID=null;
-  private SynchronizationContext OriginalContext=null;
+  private SynchronizationContext FinishedContext;
   
-  public SingleThreadSynchronizationContext(){}
+  public SingleThreadSynchronizationContext(SynchronizationContext FinishedContext)
+  :this(FinishedContext,Options.None){}
+  /// <param name="FinishedContext">
+  /// The <see cref="SynchronizationContext"/> to call
+  /// upon any calls to <see cref="Post"/> after <see cref="Finish"/> has been called
+  /// </param>
+  public SingleThreadSynchronizationContext(SynchronizationContext FinishedContext,Options Options){
+   if(FinishedContext is null){throw new ArgumentNullException();}
+   this.AllowSynchronousExecution = !((Options&Options.NoSynchronousExecution)!=Options.None);
+   this.FinishedContext=FinishedContext;
+  }
 
   public override void Post(SendOrPostCallback d,object state){
-   Post(d,state,false);
+   Post(d,state,!AllowSynchronousExecution);
   }
   
   /// <summary>
@@ -34,21 +48,14 @@ namespace Tagaroo.Infrastructure{
   protected void Post(SendOrPostCallback d,object state,bool ForceAsync){
    lock(MessageQueue){
     if(MessageQueue.IsAddingCompleted){
-     //TODO Strategy for handling callbacks during shutdown
+     FinishedContext.Post(d,state);
      return;
-     /*
-     if(OriginalContext is null){
-      SynchronizationContext.Current.Post(d,state);
-     }else{
-      OriginalContext.Post(d,state);
-     }
-     */
     }
     if(d is null){throw new ArgumentNullException(nameof(d));}
-    if( Thread.CurrentThread.ManagedThreadId != RunningOnThreadID || ForceAsync ){
+    if( !running || Thread.CurrentThread.ManagedThreadId != RunningOnThreadID || ForceAsync ){
      MessageQueue.Add(new Tuple<SendOrPostCallback, object>(d,state));
     }else{
-     //If we're already on the right thread, we can immediately execute the callback
+     //Optimization — If we're already on the right thread, we can immediately execute the callback
      d(state);
     }
    }
@@ -68,17 +75,19 @@ namespace Tagaroo.Infrastructure{
 
   /// <summary>
   /// <para>Preconditions: Not already running</para>
-  /// Sets <see cref="SynchronizationContext.Current"/> to this synchronization context,
-  /// and blocks until <see cref="Finish"/> is called,
-  /// at which point <see cref="SynchronizationContext.Current"/> is reset to its previous value.
+  /// Callers should usually call <see cref="SynchronizationContext.SetSynchronizationContext"/> with this object
+  /// before calling this method.
+  /// Blocks until <see cref="Finish"/> is called,
+  /// synchronizing all calls synchronized to this context to the thread on which this method was called.
+  /// Once finish is called, any further attempts to synchronize calls
+  /// will be synchronized to the finishing <see cref="SynchronizationContext"/> specified when constructing this object.
   /// </summary>
   public void RunOnCurrentThread(){
    if(running){throw new InvalidOperationException("Already running");}
-   this.OriginalContext = SynchronizationContext.Current;
    this.RunningOnThreadID = Thread.CurrentThread.ManagedThreadId;
    this.running = true;
    try{
-    SynchronizationContext.SetSynchronizationContext(this);
+    //SynchronizationContext.SetSynchronizationContext(this);
     while(MessageQueue.TryTake(
      out Tuple<SendOrPostCallback,object> Message,
      Timeout.Infinite
@@ -87,9 +96,7 @@ namespace Tagaroo.Infrastructure{
     }
    }finally{
     lock(MessageQueue){
-     //TODO Strategy for handling callbacks after shutdown
-     SynchronizationContext.SetSynchronizationContext(OriginalContext);
-     this.OriginalContext=null;
+     //SynchronizationContext.SetSynchronizationContext(OriginalContext);
      this.RunningOnThreadID=null;
      this.running=false;
     }
@@ -108,8 +115,9 @@ namespace Tagaroo.Infrastructure{
   thus treat as async void (Action) to ensure unhandled exceptions don't go unnoticed.
   */
   /// <summary>
-  /// As for <see cref="RunOnCurrentThread"/>, but begins by executing the supplied action
-  /// once <see cref="SynchronizationContext.Current"/> has been set.
+  /// As for <see cref="RunOnCurrentThread"/>,
+  /// but first posts the supplied action to this synchronization context,
+  /// which will be executed when the synchronization context then starts up.
   /// </summary>
   public void RunOnCurrentThread(Action BeginWith){
    if(running){throw new InvalidOperationException("Already running");}
@@ -118,6 +126,34 @@ namespace Tagaroo.Infrastructure{
     null
    );
    RunOnCurrentThread();
+  }
+
+  [Flags]
+  public enum Options{
+   None=0x00,
+   /// <summary>
+   /// By default, delegates passed in calls to <see cref="Post"/> have their execution optimized,
+   /// in that if the caller is already on the right thread, they are executed synchronously,
+   /// within the call to <see cref="Post"/>.
+   /// Specify this option when constructing a <see cref="SingleThreadSynchronizationContext"/>
+   /// to disable this optimization, in which case <see cref="Post"/> will behave as <see cref="PostAsync"/>.
+   /// </summary>
+   NoSynchronousExecution=0x01
+  }
+ }
+
+ /// <summary>
+ /// A <see cref="SynchronizationContext"/> realization that does nothing with the delegates passed to it;
+ /// no delegates passed to it will get called.
+ /// This should typically only be used during application shutdown.
+ /// </summary>
+ internal class NullSynchronizationContext : SynchronizationContext{
+  public NullSynchronizationContext(){}
+  public override void Post(SendOrPostCallback d,object state){
+   return;
+  }
+  public override void Send(SendOrPostCallback d,object state){
+   return;
   }
  }
 }

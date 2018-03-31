@@ -38,7 +38,7 @@ XML Schema for the Taglists XML file, including documentation. This is provided 
 The following file names are reserved, and should not be used to store information…
 
 Settings.xml.old & Settings.xml.new:
-These files are created alongside the Settings.xml file when the application updates the Settings.xml file. Any Settings.xml.old file will contain the previous copy of Settings.xml after an update, and any Settings.xml.new file will contain the new copy of Settings.xml just before an update. The latter file will not normally be present, unless there has been a problem updating Settings.xml. If a different file name for the Settings XML file has been specified, from the command line when starting the application, the files will instead have that name, suffixed with ".old" and ".new".
+These files are created alongside the Settings.xml file when the application updates the Settings.xml file. Any Settings.xml.old file will contain the previous copy of Settings.xml after an update, and any Settings.xml.new file will contain the new copy of Settings.xml just before an update. The latter file will not normally be present, unless there has been a problem updating Settings.xml, or the application was shut down normally or otherwise at a very precise point in time. If a different file name for the Settings XML file has been specified, from the command line when starting the application, the files will instead have that name, suffixed with ".old" and ".new".
 
 Taglists.xml.old & Taglists.xml.new:
 As above, but for the Taglists.xml file. Note that if the Taglists XML file has been given a different name, such as Taglists2.xml, the reserved file names will also match — Taglists2.xml.old & Taglists2.xml.new. These files will be created in the same directory as the Taglists XML file.
@@ -133,7 +133,9 @@ If all this is successful, the application will begin.
 Note that, unlike Discord, the application does not maintain a persistent connection to Imgur; it will only connect to Imgur briefly in order to make API calls.
 
 Shutdown
-There is not currently a mechanism for shutting down the application. To end it, it must be terminated in some way from its host environment, such as with Ctrl+C, closing the command window in which it is running, ending the process with Task Manager / Ctrl+Alt+Del, or otherwise instructing the operating system to terminate the process.
+To initiate safe and clean shutdown of the application, enter a cancellation key sequence into the command line window in which the application is running; on Windows and most other platforms this will be Ctrl+C. The application will finish any important or critical tasks that it is running, and then close its connection to Discord and exit.
+Note that, although shutdown will usually be fairly immediate, sometimes it may take several minutes — one of the critical tasks that the application runs is Mentioning users on Imgur, which must be done atomically — either completely or not at all — to ensure things outside of the application are left in a stable state when the application terminates. Mentioning users takes time due to the Imgur API's throttling of Comment posting; if the application is in the process of Mentioning a large number of users, it can take a few minutes for the operation to complete.
+Once any critical tasks are finished, a message will be written to the process' STDOUT. The application will then clean up, disconnecting from Discord. If the process hangs at this point, after the message has been written, it can be forcibly terminated without causing any significant problems.
 
 
 

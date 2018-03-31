@@ -10,6 +10,7 @@ using Imgur.API.Models;
 using Imgur.API.Enums;
 using Imgur.API.Authentication;
 using Imgur.API.Endpoints;
+using Tagaroo.Infrastructure;
 using Tagaroo.Imgur.LibraryEnhancements;
 using Tagaroo.Model;
 using Tagaroo.DataAccess;
@@ -156,6 +157,7 @@ namespace Tagaroo.Imgur{
   private readonly float PercentageRemainingAPIBandwidthWarningThreshhold;
   private readonly ushort MaximumCommentLength;
   private readonly string MentionPrefix;
+  private readonly SingleThreadReadWriteLock ApplicationShutdownLock;
   
   /// <summary>
   /// <para>
@@ -219,6 +221,12 @@ namespace Tagaroo.Imgur{
   /// which will be called to save any changes made to the OAuth Token,
   /// which may be updated automatically when close to or passed expiry, or manually
   /// </param>
+  /// <param name="ApplicationShutdownLock">
+  /// Read–Write lock that the application will acquire a write lock on before shutting down;
+  /// the <see cref="ImgurInterfacer"/> will acquire a read lock on it
+  /// when in the middle of operations that must be completed,
+  /// most notably during <see cref="MentionUsers"/>
+  /// </param>
   public ImgurInterfacerMain(
    SettingsRepository RepositorySettings,
    string ApplicationAuthenticationID,
@@ -232,8 +240,10 @@ namespace Tagaroo.Imgur{
    TimeSpan PostCommentDelay,
    float PercentageRemainingAPIBandwidthWarningThreshhold,
    short MaximumCommentLength,
-   string MentionPrefix
+   string MentionPrefix,
+   SingleThreadReadWriteLock ApplicationShutdownLock
   ){
+   if(ApplicationShutdownLock is null){throw new ArgumentNullException();}
    if(PostCommentDelay<TimeSpan.Zero){
     throw new ArgumentOutOfRangeException(nameof(PostCommentDelay));
    }
@@ -277,6 +287,7 @@ namespace Tagaroo.Imgur{
    this.MaximumCommentLength=(ushort)MaximumCommentLength;
    this.RepositorySettings=RepositorySettings;
    this.MentionPrefix=MentionPrefix??string.Empty;
+   this.ApplicationShutdownLock=ApplicationShutdownLock;
    //See ImgurErrorJSONContractResolver for why this is needed
    JsonConvert.DefaultSettings = ()=> new JsonSerializerSettings(){
     ContractResolver = new ImgurErrorJSONContractResolver()
@@ -306,33 +317,35 @@ namespace Tagaroo.Imgur{
   }
 
   public async Task<IOAuth2Token> RefreshUserAuthenticationToken(){
-   //? API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
-   IOAuth2Token NewToken;
+   await this.ApplicationShutdownLock.EnterReadLock();
    try{
-    NewToken = await APIOAuth.GetTokenByRefreshTokenAsync(ClientAuthenticated.OAuth2Token.RefreshToken);
-   }catch(ImgurException){
-    throw;
-   }catch(HttpRequestException Error){
-    throw ToImgurException(Error);
-   }
-   //TODO Security–Convenience issues regarding logging this information to Discord
-   Log.Imgur_.LogCritical(
-    "A new Imgur OAuth Token has been acquired, which expires at {0:u}. It is highly recommended that this Token be backed up from the settings file, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
-    NewToken.ExpiresAt
-    //"A new Imgur OAuth Token has been acquired - '{0}' (Refresh '{1}'), which expires at {2:u}. It is highly recommended that this Token be backed up, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
-    //NewToken.AccessToken,NewToken.RefreshToken,NewToken.ExpiresAt
-   );
-   ClientAuthenticated.SetOAuth2Token(NewToken);
-   try{
-    await RepositorySettings.SaveNewImgurUserAuthorizationToken(NewToken);
-    Log.Imgur_.LogInfo("New Imgur OAuth Token saved successfully to settings");
-   }catch(DataAccessException Error){
+    //? API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
+    IOAuth2Token NewToken;
+    try{
+     NewToken = await APIOAuth.GetTokenByRefreshTokenAsync(ClientAuthenticated.OAuth2Token.RefreshToken);
+    }catch(ImgurException){
+     throw;
+    }catch(HttpRequestException Error){
+     throw ToImgurException(Error);
+    }
     Log.Imgur_.LogCritical(
-     "An error occured whilst saving the new Imgur OAuth Token; update the application settings manually with the new Token, otherwise subsequent runs of the application will use the old Token and fail to connect to Imgur.\nDetails: {0}",
-     Error.Message
+     "A new Imgur OAuth Token has been acquired, which expires at {0:u}. It is highly recommended that this Token be backed up from the settings file, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
+     NewToken.ExpiresAt
     );
+    ClientAuthenticated.SetOAuth2Token(NewToken);
+    try{
+     await RepositorySettings.SaveNewImgurUserAuthorizationToken(NewToken);
+     Log.Imgur_.LogInfo("New Imgur OAuth Token saved successfully to settings");
+    }catch(DataAccessException Error){
+     Log.Imgur_.LogCritical(
+      "An error occured whilst saving the new Imgur OAuth Token; update the application settings manually with the new Token, otherwise subsequent runs of the application will use the old Token and fail to connect to Imgur.\nDetails: {0}",
+      Error.Message
+     );
+    }
+    return NewToken;
+   }finally{
+    this.ApplicationShutdownLock.ExitReadLock();
    }
-   return NewToken;
   }
 
   public async Task<IRateLimit> ReadRemainingBandwidth(){
@@ -517,18 +530,23 @@ namespace Tagaroo.Imgur{
     " ",
     MaximumCommentLength
    );
-   Log.Imgur_.LogVerbose("Mentioning {0} total users across {1} total Comment Replies on Gallery Item '{2}'",UsernamesToMention.Count,CommentsToMake.Count,OnItemID);
-   int CommentNumber=0;
-   foreach(string Comment in CommentsToMake){
-    ++CommentNumber;
-    try{
-     await PostComment(
-      Comment,OnItemID,ItemParentCommentID,
-      string.Format("Mention Comment {0} of {1} on Gallery Item '{2}' (parent Comment ID {3:D})",CommentNumber,CommentsToMake.Count,OnItemID,ItemParentCommentID)
-     );
-    }catch(ImgurException){
-     throw;
+   await this.ApplicationShutdownLock.EnterReadLock();
+   try{
+    Log.Imgur_.LogVerbose("Mentioning {0} total users across {1} total Comment Replies on Gallery Item '{2}'",UsernamesToMention.Count,CommentsToMake.Count,OnItemID);
+    int CommentNumber=0;
+    foreach(string Comment in CommentsToMake){
+     ++CommentNumber;
+     try{
+      await PostComment(
+       Comment,OnItemID,ItemParentCommentID,
+       string.Format("Mention Comment {0} of {1} on Gallery Item '{2}' (parent Comment ID {3:D})",CommentNumber,CommentsToMake.Count,OnItemID,ItemParentCommentID)
+      );
+     }catch(ImgurException){
+      throw;
+     }
     }
+   }finally{
+    this.ApplicationShutdownLock.ExitReadLock();
    }
   }
 

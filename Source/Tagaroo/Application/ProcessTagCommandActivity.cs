@@ -71,7 +71,6 @@ namespace Tagaroo.Application{
     );
     return;
    }
-   Task MentionUsersTask = MentionInterestedUsers(Command,SpecifiedTaglist);
    GalleryItem TaggedItem;
    try{
     TaggedItem = await TaggedItemTask;
@@ -82,7 +81,7 @@ namespace Tagaroo.Application{
    }
    await Task.WhenAll(
     //Long-running operation, due to delay needed between Imgur Comments
-    MentionUsersTask,
+    MentionInterestedUsers(Command,SpecifiedTaglist),
     ArchiveTaggedItem(Command,TaggedItem,SpecifiedTaglist)
    );
    Log.Application_.LogVerbose(

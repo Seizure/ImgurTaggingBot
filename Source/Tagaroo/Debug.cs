@@ -259,7 +259,8 @@ namespace Tagaroo{
    */
    Imgur.ImgurInterfacer ClientImgur=new Imgur.ImgurInterfacerMain(
     new DataAccess.SettingsRepositoryMain(string.Empty),
-    ImgurAuthenticationID,ImgurAuthenticationSecret,"Q",3,OAuthAccessToken,"Q","bearer",DateTimeOffset.MaxValue,TimeSpan.FromSeconds(11),0.1F,140,"#"
+    ImgurAuthenticationID,ImgurAuthenticationSecret,"Q",3,OAuthAccessToken,"Q","bearer",DateTimeOffset.MaxValue,TimeSpan.FromSeconds(11),0.1F,140,"#",
+    new SingleThreadReadWriteLock()
    );
    IDictionary<string,IList<IComment>> Results=await ClientImgur.ReadCommentsSince(DateTimeOffset.UtcNow.AddMonths(-1),new HashSet<string>(){"TruFox"},10);
    foreach(IComment Result in Results.Values.First()){
@@ -274,11 +275,12 @@ namespace Tagaroo{
    Console.Write("Authentication Token > ");
    string DiscordAuthorizationToken=Console.ReadLine();
    Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL,388542416225042439UL,"/");
-   SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext();
+   SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext(new NullSynchronizationContext());
    Discord.Initialize(new ServiceCollection().AddSingleton<Discord.DiscordInterfacer>(Discord).AddSingleton<Imgur.ImgurInterfacer>(new TestImgurInterfacer()).BuildServiceProvider(),RunOn);
    //Logging.Log.Instance.AddTraceListener(new Logging.DiscordTraceListener("DiscordListener",Discord,new System.Diagnostics.TextWriterTraceListener(Console.Out)));
    Logging.Log.Instance.DiscordLevel.Level=System.Diagnostics.SourceLevels.Verbose;
    Logging.Log.Instance.DiscordLibraryLevel.Level=System.Diagnostics.SourceLevels.Warning;
+   System.Threading.SynchronizationContext.SetSynchronizationContext(RunOn);
    RunOn.RunOnCurrentThread(async()=>{
     await Discord.Connect();
     /*
@@ -377,8 +379,13 @@ namespace Tagaroo{
   }
   
   public void RunDebugSynchronized(){
-   var SynchronizationContext=new SingleThreadSynchronizationContext();
+   var SynchronizationContext=new SingleThreadSynchronizationContext(
+    new NullSynchronizationContext(),
+    SingleThreadSynchronizationContext.Options.NoSynchronousExecution
+   );
+   System.Threading.SynchronizationContext.SetSynchronizationContext(SynchronizationContext);
    SynchronizationContext.RunOnCurrentThread(async() => {
+    /*
     Infrastructure.TaskScheduler Scheduler=new Infrastructure.TaskScheduler();
     Scheduler.AddTask(ScheduledTask.NewLaterTask(
      TimeSpan.FromSeconds(2),
@@ -403,6 +410,22 @@ namespace Tagaroo{
      }
     ));
     await Scheduler.Run();
+    */
+    SingleThreadReadWriteLock Lock=new SingleThreadReadWriteLock();
+    await Lock.EnterReadLock();
+    Task EnterReadSecond=Lock.EnterReadLock().ContinueWith(
+     _=>Lock.ExitReadLock(),
+     System.Threading.CancellationToken.None,
+     TaskContinuationOptions.RunContinuationsAsynchronously|TaskContinuationOptions.DenyChildAttach|TaskContinuationOptions.LazyCancellation|TaskContinuationOptions.OnlyOnRanToCompletion,
+     System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext()
+    );
+    Task EnterWrite=Lock.EnterWriteLock();
+    Lock.ExitReadLock();
+    await EnterWrite;
+    Task EnterReadThird=Lock.EnterReadLock();
+    Lock.ExitWriteLock();
+    await EnterReadThird;
+    Lock.ExitReadLock();
     SynchronizationContext.Finish();
    });
   }
@@ -434,6 +457,7 @@ namespace Tagaroo{
    Console.Write("Imgur OAuth Refresh Token > ");
    OAuthRefreshToken=Console.ReadLine();
    */
+   SingleThreadReadWriteLock ShutdownLock=new SingleThreadReadWriteLock();
    Discord.DiscordInterfacerMain _Discord;
    Imgur.ImgurInterfacer _Imgur;
    Application.CacheingTaglistRepository RepositoryTaglists;
@@ -445,7 +469,8 @@ namespace Tagaroo{
       "wereleven",77530931,
       OAuthAccessToken,OAuthRefreshToken,"bearer",
       DateTimeOffset.UtcNow+TimeSpan.FromDays(11),
-      TimeSpan.FromSeconds(11),0.1F,140,"#"
+      TimeSpan.FromSeconds(11),0.1F,140,"#",
+      ShutdownLock
      ),
      new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
      RepositoryTaglists=new CacheingTaglistRepository(new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml")),
@@ -465,7 +490,8 @@ namespace Tagaroo{
     _Imgur,
     _Discord,
     new DataAccess.TaglistRepositoryMain(@"DataAccess\Taglists.xml"),
-    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml")
+    new DataAccess.SettingsRepositoryMain(@"DataAccess\Settings1.xml"),
+    ShutdownLock
    );
    Core.Run();
   }
@@ -491,10 +517,10 @@ namespace Tagaroo{
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
    //new Debug().RunDebug().Wait();
-   //new Debug().RunDebugDiscord();
+   new Debug().RunDebugSynchronized();
    //new Debug().RunCore();
    //EntryPoint._Main();
-   JSONDebug();
+   //JSONDebug();
    Console.ReadKey(true);
   }
 
