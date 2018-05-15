@@ -27,17 +27,20 @@ namespace Tagaroo.Discord{
   private readonly string CommandPrefix;
   private readonly CommandService CommandExecuter;
   private readonly DiscordSocketClient Client;
+  private readonly MessageSender MessageSender;
   private IServiceProvider CommandServices;
   
   /// <param name="ChannelID">The numeric ID of the Discord Channel from which commands will be accepted and processed</param>
   /// <param name="CommandExecuter">The Discord.Net library service that handles command processing</param>
   /// <param name="Client">Discord.Net library object required for interacting with <paramref name="CommandExecuter"/></param>
   /// <param name="CommandPrefix">The string prefix that all commands issued to this Channel must begin with to be treated as commands</param>
+  /// <param name="MessageSender">Object shared with <see cref="DiscordInterfacerMain"/> for sending messages to Discord Text Channels</param>
   public CommandChannel(
    ulong ChannelID,
    CommandService CommandExecuter,
    DiscordSocketClient Client,
-   string CommandPrefix
+   string CommandPrefix,
+   MessageSender MessageSender
   ){
    if(CommandExecuter is null){throw new ArgumentNullException(nameof(CommandExecuter));}
    if(Client is null){throw new ArgumentNullException(nameof(Client));}
@@ -46,6 +49,7 @@ namespace Tagaroo.Discord{
    this.CommandExecuter=CommandExecuter;
    this.Client=Client;
    this.CommandPrefix = CommandPrefix ?? string.Empty;
+   this.MessageSender=MessageSender;
   }
 
   /// <summary>
@@ -85,13 +89,11 @@ namespace Tagaroo.Discord{
    );
    if(!CommandResult.IsSuccess){
     try{
-     await Message.Channel.SendMessageAsync(
+     await MessageSender.SendMessage(
+      Message.Channel,
       string.Format("{0}: {1}",CommandResult.Error,CommandResult.ErrorReason)
      );
-    }catch(HttpException Error){
-     Log.Discord_.LogVerbose("Error sending Discord command failure message: "+Error.Message);
-     return;
-    }catch(HttpRequestException Error){
+    }catch(DiscordException Error){
      Log.Discord_.LogVerbose("Error sending Discord command failure message: "+Error.Message);
      return;
     }

@@ -1,3 +1,4 @@
-﻿Copyright 2018 github.com user "egg-meister" (also known as furaffinity.net user "Eleven-lyc")
+﻿Copyright 2018 furaffinity.net user "Eleven-lyc" (<//www.furaffinity.net./user/eleven-lyc/>).
+This copyright applies to both the software project (source code, e.t.c.), and any compiled releases of it. This notice must also be included with any release of the software.
 
-This program / software project is released under the GNU LGPLv3+ (GNU Lesser General Public License, version 3 or later). The license can be read at the web URL <//www.gnu.org/licenses/lgpl.txt>. The GNU LGPLv3+ is an extension upon the GNU GPLv3+ (GNU General Public License, version 3 or later), which can be read at the web URL <//www.gnu.org/licenses/gpl.txt>.
+The copyright holder/holders license this software project, along with any compiled/released/executable/e.t.c. manifestations of it, under the GNU LGPLv3+ (GNU Lesser General Public License, version 3 or later). The license can be read at the web URL <//www.gnu.org/licenses/lgpl.txt>. The GNU LGPLv3+ is an extension upon the GNU GPLv3+ (GNU General Public License, version 3 or later), which can be read at the web URL <//www.gnu.org/licenses/gpl.txt>.

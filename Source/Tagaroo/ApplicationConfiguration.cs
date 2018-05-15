@@ -127,6 +127,12 @@ namespace Tagaroo{
   /// </summary>
   public string DiscordCommandPrefix { get; }
   /// <summary>
+  /// The maximum permissible length of an individual message sent to a Discord Text Channel,
+  /// measured in UTF-16 Code Units.
+  /// A value of 0 indicates no limit.
+  /// </summary>
+  public ushort DiscordMaximumMessageLengthUTF16CodeUnits { get; }
+  /// <summary>
   /// A string prefix which must appear at the beginning of all Imgur Commands
   /// issued to the application from Imgur Comments made by authorized Commenters.
   /// </summary>
@@ -168,6 +174,7 @@ namespace Tagaroo{
    ulong discordChannelIDLog,
    ulong DiscordChannelIDCommands,
    string DiscordCommandPrefix,
+   ushort DiscordMaximumMessageLengthUTF16CodeUnits,
    string taglistDataFilePath,
    string ImgurCommandPrefix,
    string ImgurMentionPrefix
@@ -198,6 +205,7 @@ namespace Tagaroo{
    this.DiscordChannelIDLog=discordChannelIDLog;
    this.DiscordChannelIDCommands=DiscordChannelIDCommands;
    this.DiscordCommandPrefix=DiscordCommandPrefix;
+   this.DiscordMaximumMessageLengthUTF16CodeUnits=DiscordMaximumMessageLengthUTF16CodeUnits;
    this.TaglistDataFilePath=taglistDataFilePath;
    this.ImgurCommandPrefix=ImgurCommandPrefix;
    this.ImgurMentionPrefix=ImgurMentionPrefix;

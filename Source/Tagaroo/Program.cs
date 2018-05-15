@@ -34,7 +34,6 @@ namespace Tagaroo{
   private readonly SingleThreadSynchronizationContext ApplicationMessagePump
    = new SingleThreadSynchronizationContext( new NullSynchronizationContext() );
   private readonly TaskScheduler Scheduler=new TaskScheduler();
-  private readonly IServiceCollection DiscordCommandServices;
   private readonly SingleThreadReadWriteLock ApplicationShutdownLock;
   private bool ReceivedShutdownSignal=false;
   
@@ -56,12 +55,6 @@ namespace Tagaroo{
    this.RepositoryTaglists=RepositoryTaglists;
    this.RepositorySettings=RepositorySettings;
    this.ActivityProcessComments=ActivityProcessComments;
-   this.DiscordCommandServices=new ServiceCollection()
-    .AddSingleton<DiscordInterfacer>(Discord)
-    .AddSingleton<ImgurInterfacer>(Imgur)
-    .AddSingleton<TaglistRepository>(RepositoryTaglists)
-    .AddSingleton<SettingsRepository>(RepositorySettings)
-   ;
    this.ApplicationShutdownLock=ApplicationShutdownLock;
   }
 
@@ -104,7 +97,14 @@ namespace Tagaroo{
     Log.Bootstrap_.LogError("Could not load Settings: "+Error.Message);
    }
    if(CurrentSettings is null){return null;}
-   Discord.Initialize( DiscordCommandServices.BuildServiceProvider(), ApplicationMessagePump );
+   Discord.Initialize(
+    new ServiceCollection()
+     .AddSingleton<DiscordInterfacer>(Discord)
+     .AddSingleton<ImgurInterfacer>(Imgur)
+     .AddSingleton<TaglistRepository>(RepositoryTaglists)
+     .AddSingleton<SettingsRepository>(RepositorySettings),
+    ApplicationMessagePump
+   );
    Log.Bootstrap_.LogInfo("Connecting to Discord...");
    try{
     await Discord.Connect();
@@ -187,12 +187,15 @@ namespace Tagaroo{
     );
     return false;
    }
+   /*
+   ??? Possible Discord API bug; the Discord API doesn't seem to correctly identify NSFW Channels
    if(ShouldBeNSFW && !NSFW){
     Log.Bootstrap_.LogWarning(
      "The '{1}' Channel for the Taglist '{0}' (Channel '{3}', #{2:D}) is not marked as NSFW",
      Check.Name,ChannelTypeName,ChannelID,ChannelName
     );
    }
+   */
    return true;
   }
 

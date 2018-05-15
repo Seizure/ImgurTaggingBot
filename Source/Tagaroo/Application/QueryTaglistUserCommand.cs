@@ -17,8 +17,8 @@ namespace Tagaroo.Application{
  /// this command does not access the Imgur API.
  /// </summary>
  public class QueryTaglistUserCommand : TaglistCommandsBase{
-  public QueryTaglistUserCommand(TaglistRepository Repository)
-  :base(Repository){}
+  public QueryTaglistUserCommand(TaglistRepository Repository,Discord.MessageSender MessageSender)
+  :base(Repository,MessageSender){}
 
   [Command("TaglistUser")]
   [Summary("Displays details of a particular Registered User in a particular Taglist.")]

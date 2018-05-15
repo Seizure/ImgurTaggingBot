@@ -27,7 +27,7 @@ namespace Tagaroo.Application{
  public class RegisterUserCommand : DiscordCommandBase{
   private readonly TaglistRepository Repository;
   private readonly ImgurInterfacer Imgur;
-  public RegisterUserCommand(TaglistRepository Repository,ImgurInterfacer Imgur){
+  public RegisterUserCommand(TaglistRepository Repository,ImgurInterfacer Imgur,Discord.MessageSender MessageSender):base(MessageSender){
    this.Repository=Repository;
    this.Imgur=Imgur;
   }

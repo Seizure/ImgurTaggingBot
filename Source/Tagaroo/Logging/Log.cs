@@ -97,13 +97,19 @@ namespace Tagaroo.Logging{
   /// <summary>
   /// Adds a logging output destination to all loggers.
   /// </summary>
-  public void AddTraceListener(TraceListener Add){
+  /// <param name="IncludeDiscordLibraryLogger">
+  /// Whether or not the DiscordLibrary logger should send logging output to the supplied destination;
+  /// the DiscordLibrary logger should not send its logging output to Discord, as this causes re-entrancy issues
+  /// </param>
+  public void AddTraceListener(TraceListener Add,bool IncludeDiscordLibraryLogger){
    Bootstrap.AddListener(Add);
    Application.AddListener(Add);
    Imgur.AddListener(Add);
    ImgurBandwidth.AddListener(Add);
    Discord.AddListener(Add);
-   DiscordLibrary.AddListener(Add);
+   if(IncludeDiscordLibraryLogger){
+    DiscordLibrary.AddListener(Add);
+   }
   }
 
   public void RemoveTraceListener(string Name){

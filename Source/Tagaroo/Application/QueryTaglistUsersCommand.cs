@@ -14,8 +14,8 @@ namespace Tagaroo.Application{
  /// Implements commands for displaying a list of Registered Users in a particular Taglist.
  /// </summary>
  public class QueryTaglistUsersCommand : TaglistCommandsBase{
-  public QueryTaglistUsersCommand(TaglistRepository Repository)
-  :base(Repository){}
+  public QueryTaglistUsersCommand(TaglistRepository Repository,Discord.MessageSender MessageSender)
+  :base(Repository,MessageSender){}
 
   [Command("Taglist")]
   [Summary("Displays all Users Registered to a Taglist.")]

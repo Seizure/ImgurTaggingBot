@@ -217,3 +217,4 @@ Messages concerning the application's interaction with Discord.
 
 DiscordLibrary:
 This is the logging output produced by the library Discord.Net, which the application depends upon. The nature of these log messages are dependent on the library, and not the application. As such, for normal use, the recommended verbosity level is Error rather than Information.
+Note that, due to reentrancy issues, output from this logger will not be sent to Discord, and will only be logged to the application process' STDOUT.

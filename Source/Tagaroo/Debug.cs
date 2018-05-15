@@ -274,9 +274,9 @@ namespace Tagaroo{
   public void RunDebugDiscord(){
    Console.Write("Authentication Token > ");
    string DiscordAuthorizationToken=Console.ReadLine();
-   Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL,388542416225042439UL,"/");
+   Discord.DiscordInterfacer Discord=new Discord.DiscordInterfacerMain(DiscordAuthorizationToken,388542416225042435UL,388542416225042439UL,388542416225042439UL,"/",3000);
    SingleThreadSynchronizationContext RunOn=new SingleThreadSynchronizationContext(new NullSynchronizationContext());
-   Discord.Initialize(new ServiceCollection().AddSingleton<Discord.DiscordInterfacer>(Discord).AddSingleton<Imgur.ImgurInterfacer>(new TestImgurInterfacer()).BuildServiceProvider(),RunOn);
+   Discord.Initialize(new ServiceCollection().AddSingleton<Discord.DiscordInterfacer>(Discord).AddSingleton<Imgur.ImgurInterfacer>(new TestImgurInterfacer()),RunOn);
    //Logging.Log.Instance.AddTraceListener(new Logging.DiscordTraceListener("DiscordListener",Discord,new System.Diagnostics.TextWriterTraceListener(Console.Out)));
    Logging.Log.Instance.DiscordLevel.Level=System.Diagnostics.SourceLevels.Verbose;
    Logging.Log.Instance.DiscordLibraryLevel.Level=System.Diagnostics.SourceLevels.Warning;
@@ -297,6 +297,15 @@ namespace Tagaroo{
     await Discord.PostGalleryItemDetails(388542416225042439UL,new GalleryItem(
      "Q","Resource Link","https://i.imgur.com/2rzgptw.jpg",null,null,false,DateTimeOffset.UtcNow,string.Empty,null,null
     ));
+    */
+    /*
+    try{
+     await Discord.SendMessage(388542416225042439UL,string.Concat(Enumerable.Repeat(
+      "2001-character-message-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM-",
+      20
+     ))+"M",false);
+    }catch(Discord.DiscordException Error){
+    }
     */
     await Task.Run(()=>{
      Console.ReadKey(true);
@@ -481,7 +490,8 @@ namespace Tagaroo{
        _Discord=new Discord.DiscordInterfacerMain(
         DiscordAuthorizationToken,
         388542416225042435UL,388542416225042439UL,
-        388542416225042439UL,"/"
+        388542416225042439UL,"/",
+        2000
        ),
        RepositoryTaglists
       )
@@ -514,13 +524,32 @@ namespace Tagaroo{
    Console.WriteLine("Error - {0}",Result.Data.Error);
   }
 
+  static void MessageSplit(){
+   string[] Result;
+   Discord.MessageSender MessageSender=new Discord.MessageSender(20);
+   Result=MessageSender.SplitMessage("19-MMMMMMMMMMMMMMMM");
+   Console.WriteLine("{0}\t{1}",Result.Length,string.Join("\r\n\t",Result));
+   Result=MessageSender.SplitMessage("20-MMMMMMMMMMMMMMMMM");
+   Console.WriteLine("{0}\t{1}",Result.Length,string.Join("\r\n\t",Result));
+   Result=MessageSender.SplitMessage("21-MMMMMMMMMMMMMMMMMM");
+   Console.WriteLine("{0}\t{1}",Result.Length,string.Join("\r\n\t",Result));
+   Result=MessageSender.SplitMessage("59-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+   Console.WriteLine("{0}\t{1}",Result.Length,string.Join("\r\n\t",Result));
+   Result=MessageSender.SplitMessage("60-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+   Console.WriteLine("{0}\t{1}",Result.Length,string.Join("\r\n\t",Result));
+   Result=MessageSender.SplitMessage("61-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+   Console.WriteLine("{0}\t{1}",Result.Length,string.Join("\r\n\t",Result));
+  }
+
   static void Main(){
    //AppDomain.CurrentDomain.AssemblyResolve+=ResolveAssembly;
+   new Debug().RunDebugDiscord();
    //new Debug().RunDebug().Wait();
-   new Debug().RunDebugSynchronized();
+   //new Debug().RunDebugSynchronized();
    //new Debug().RunCore();
    //EntryPoint._Main();
    //JSONDebug();
+   //MessageSplit();
    Console.ReadKey(true);
   }
 

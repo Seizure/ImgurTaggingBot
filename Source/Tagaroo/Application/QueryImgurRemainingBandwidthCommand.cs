@@ -17,7 +17,7 @@ namespace Tagaroo.Application{
  /// </summary>
  public class QueryImgurRemainingBandwidthCommand : DiscordCommandBase{
   private readonly ImgurInterfacer Imgur;
-  public QueryImgurRemainingBandwidthCommand(ImgurInterfacer Imgur):base(){
+  public QueryImgurRemainingBandwidthCommand(ImgurInterfacer Imgur,Discord.MessageSender MessageSender):base(MessageSender){
    this.Imgur=Imgur;
   }
 

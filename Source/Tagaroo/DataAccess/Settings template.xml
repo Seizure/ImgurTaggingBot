@@ -43,6 +43,7 @@ Make sure the edits made are valid with respect to the schema, in "Settings.xsd"
   ImgurCommandPrefix="@Tagaroo"
   ImgurMentionPrefix="@"
   DiscordCommandPrefix="/"
+  DiscordMaximumMessageLengthUTF16CodeUnits="2000"
  />
  
  <DynamicSettings

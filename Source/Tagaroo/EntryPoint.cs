@@ -26,7 +26,7 @@ namespace Tagaroo{
   /// </returns>
   public static int _Main(string SettingsFilePath=null){
    //Log to STDOUT by default
-   Log.Instance.AddTraceListener(new TextWriterTraceListener(Console.Out,"StdOutListener"));
+   Log.Instance.AddTraceListener(new TextWriterTraceListener(Console.Out,"StdOutListener"),true);
    //Log all messages sent to the Bootstrap logger until the application's Configuration can be read and applied (other loggers are not used until after the Configuration is applied)
    Log.Instance.BootstrapLevel.Level = SourceLevels.Verbose;
    Log.Bootstrap_.LogInfo("Application starting");
@@ -80,7 +80,8 @@ namespace Tagaroo{
     Configuration.DiscordGuildID,
     Configuration.DiscordChannelIDLog,
     Configuration.DiscordChannelIDCommands,
-    Configuration.DiscordCommandPrefix
+    Configuration.DiscordCommandPrefix,
+    Configuration.DiscordMaximumMessageLengthUTF16CodeUnits
    );
    Program Application=new Program(
     new ProcessLatestCommentsActivity(
@@ -99,9 +100,11 @@ namespace Tagaroo{
    Log.Bootstrap_.LogVerbose("Applying Configuration: Logging output");
    if(Configuration.LogToDiscord){
     Log.Instance.AddTraceListener(
-     new DiscordTraceListener("DiscordListener", Discord, new TextWriterTraceListener(Console.Out))
+     new DiscordTraceListener("DiscordListener", Discord, new TextWriterTraceListener(Console.Out)),
+     false
     );
     Log.Instance.RemoveTraceListener("StdOutListener");
+    Log.Instance.DiscordLibrary.AddListener(new TextWriterTraceListener(Console.Out,"StdOutListener"));
    }
    Log.Bootstrap_.LogInfo("Configuration applied; starting application");
    //Execution will be within this method while the application is running

@@ -19,7 +19,7 @@ namespace Tagaroo.Application{
  /// </summary>
  public class UnRegisterUserCommand : DiscordCommandBase{
   private readonly TaglistRepository Repository;
-  public UnRegisterUserCommand(TaglistRepository Repository){
+  public UnRegisterUserCommand(TaglistRepository Repository,Discord.MessageSender MessageSender):base(MessageSender){
    this.Repository=Repository;
   }
 

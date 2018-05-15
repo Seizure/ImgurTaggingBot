@@ -19,24 +19,30 @@ namespace Tagaroo.Discord{
  /// the <see cref="IServiceProvider"/> provided to <see cref="DiscordInterfacer.Initialize"/>.
  /// </summary>
  abstract public class DiscordCommandBase : ModuleBase<SocketCommandContext>{
-  protected DiscordCommandBase(){}
+  private readonly MessageSender MessageSender;
+  protected DiscordCommandBase(MessageSender MessageSender){
+   this.MessageSender=MessageSender;
+  }
 
   /// <summary>
   /// Sends a message to the Discord Text Channel from which the current Discord command was given.
-  /// Any problems in sending the message are swallowed, and null is returned.
+  /// Any problems in sending the message are swallowed.
   /// </summary>
-  protected override Task<IUserMessage> ReplyAsync(string message,bool isTTS=false,Embed embed=null,RequestOptions options=null){
+  protected new async Task ReplyAsync(string message,bool isTTS=false,Embed embed=null,RequestOptions options=null){
    if(string.IsNullOrWhiteSpace(message)){
     message="-";
    }
    try{
-    return base.ReplyAsync(message,isTTS,embed,options);
+    foreach(string MessagePart in MessageSender.SplitMessage(message)){
+     await base.ReplyAsync(MessagePart,isTTS,embed,options);
+    }
    }catch(HttpException Error){
     Log.Discord_.LogVerbose("Error sending Discord command reply message in {0}: {1}",this.GetType().Name,Error.Message);
    }catch(HttpRequestException Error){
     Log.Discord_.LogVerbose("Network error sending Discord command reply message in {0}: {1}",this.GetType().Name,Error.Message);
+   }catch(RateLimitedException Error){
+    Log.Discord_.LogVerbose("Error sending Discord command reply message in {0}: {1}",this.GetType().Name,Error.Message);
    }
-   return Task.FromResult<IUserMessage>(null);
   }
  }
 }

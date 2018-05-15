@@ -255,6 +255,15 @@
     Any Channel post not beginning with this string is ignored.
    </xs:documentation></xs:annotation>
   </xs:attribute>
+  <xs:attribute name="DiscordMaximumMessageLengthUTF16CodeUnits" type="xs:unsignedShort" use="required">
+   <xs:annotation><xs:documentation>
+    The maximum length of an individual message sent to a Discord Text Channel.
+    This is measured in units of UTF-16 Code Units,
+    which is equivalent to a Unicode Character for Characters within the Basic Multilingual Plane
+    (Characters outside the BMP are not often used).
+    A value of 0 can be specified for no limit.
+   </xs:documentation></xs:annotation>
+  </xs:attribute>
  </xs:complexType>
  
  <xs:complexType name="DynamicSettings">

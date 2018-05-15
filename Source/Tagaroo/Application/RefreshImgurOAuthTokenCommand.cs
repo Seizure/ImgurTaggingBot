@@ -18,7 +18,7 @@ namespace Tagaroo.Application{
  /// </summary>
  public class RefreshImgurOAuthTokenCommand : DiscordCommandBase{
   private readonly ImgurInterfacer Imgur;
-  public RefreshImgurOAuthTokenCommand(ImgurInterfacer Imgur):base(){
+  public RefreshImgurOAuthTokenCommand(ImgurInterfacer Imgur,Discord.MessageSender MessageSender):base(MessageSender){
    this.Imgur=Imgur;
   }
 

@@ -319,7 +319,7 @@ namespace Tagaroo.Imgur{
   public async Task<IOAuth2Token> RefreshUserAuthenticationToken(){
    await this.ApplicationShutdownLock.EnterReadLock();
    try{
-    //? API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
+    //??? API response parameter expires_in seems to be in tenths of a second instead of seconds; possible API bug
     IOAuth2Token NewToken;
     try{
      NewToken = await APIOAuth.GetTokenByRefreshTokenAsync(ClientAuthenticated.OAuth2Token.RefreshToken);

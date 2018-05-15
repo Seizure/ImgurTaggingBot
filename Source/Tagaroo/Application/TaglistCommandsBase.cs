@@ -15,7 +15,7 @@ namespace Tagaroo.Application{
  /// </summary>
  abstract public class TaglistCommandsBase : DiscordCommandBase{
   protected readonly TaglistRepository Repository;
-  protected TaglistCommandsBase(TaglistRepository Repository):base(){
+  protected TaglistCommandsBase(TaglistRepository Repository,Discord.MessageSender MessageSender):base(MessageSender){
    this.Repository=Repository;
   }
 

@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
+using Discord.Net;
 using Discord.Net.Providers.WS4Net;
 using Discord.Commands;
 using Tagaroo.Model;
@@ -31,13 +33,13 @@ namespace Tagaroo.Discord{
   /// Calls <see cref="CommandChannel.Initialize"/> of all associated <see cref="CommandChannel"/> instances.
   /// </summary>
   /// <param name="CommandServices">
-  /// Passed to <see cref="CommandChannel.Initialize"/> of all associated <see cref="CommandChannel"/> instances
+  /// Some further services are added, then this is built and passed to <see cref="CommandChannel.Initialize"/> of all associated <see cref="CommandChannel"/> instances
   /// </param>
   /// <param name="SynchronizationContext">
   /// The <see cref="SynchronizationContext"/> with which to use to synchronize incoming asynchronous events to,
   /// primarily incoming messages, to ensure thread safety
   /// </param>
-  void Initialize(IServiceProvider CommandServices,SynchronizationContext SynchronizationContext);
+  void Initialize(IServiceCollection CommandServices,SynchronizationContext SynchronizationContext);
 
   /// <summary>
   /// <para>Preconditions: State is not Uninitialized, Connecting, or Disconnecting</para>
@@ -107,12 +109,13 @@ namespace Tagaroo.Discord{
   private readonly ulong LogChannelID;
   private readonly CommandService CommandExecuter;
   private readonly IReadOnlyDictionary<ulong,CommandChannel> CommandChannelSources;
+  private readonly MessageSender MessageSender;
   private SynchronizationContext SynchronizationContext;
   private States State=States.Disconnected;
   private ulong? Self;
   private SocketGuild Guild=null;
   private ITextChannel LogChannel=null;
-  private bool loggingmessage=false;
+  //private bool loggingmessage=false;
   
   /// <summary>
   /// <para>Postconditions: State is Uninitialized</para>
@@ -136,15 +139,21 @@ namespace Tagaroo.Discord{
   /// <param name="CommandChannelPrefix">
   /// Passed to the single component <see cref="CommandChannel"/> of this class
   /// </param>
+  /// <param name="MessageCharacterLimit">
+  /// The maximum inclusive length of a single message sent to a Discord Text Channel,
+  /// or 0 for no maximum,
+  /// measured in UTF-16 Code Units
+  /// </param>
   public DiscordInterfacerMain(
    string AuthenticationToken,ulong GuildID,ulong LogChannelID,
-   ulong CommandChannelID,string CommandChannelPrefix
+   ulong CommandChannelID,string CommandChannelPrefix,
+   ushort MessageCharacterLimitUTF16
   ){
+   if(AuthenticationToken is null){throw new ArgumentNullException(nameof(AuthenticationToken));}
    this.Client = new DiscordSocketClient( new DiscordSocketConfig(){
     WebSocketProvider=WS4NetProvider.Instance,
     HandlerTimeout=null
    });
-   if(AuthenticationToken is null){throw new ArgumentNullException(nameof(AuthenticationToken));}
    this.AuthenticationToken=AuthenticationToken;
    this.GuildID=GuildID;
    this.LogChannelID=LogChannelID;
@@ -153,8 +162,9 @@ namespace Tagaroo.Discord{
     ThrowOnError = false,
     LogLevel = LogSeverity.Debug
    });
+   this.MessageSender=new MessageSender(MessageCharacterLimitUTF16);
    this.CommandChannelSources = new Dictionary<ulong,CommandChannel>{
-    {CommandChannelID, new CommandChannel(CommandChannelID, this.CommandExecuter, this.Client, CommandChannelPrefix)}
+    {CommandChannelID, new CommandChannel(CommandChannelID, this.CommandExecuter, this.Client, CommandChannelPrefix, this.MessageSender)}
    };
    /*
    Many of these event handlers are not called in a synchronized manner,
@@ -169,9 +179,11 @@ namespace Tagaroo.Discord{
    CommandExecuter.Log+=onClientLogMessage;
   }
 
-  public void Initialize(IServiceProvider CommandServices,SynchronizationContext SynchronizationContext){
+  public void Initialize(IServiceCollection _CommandServices,SynchronizationContext SynchronizationContext){
    if(!(this.SynchronizationContext is null)){throw new InvalidOperationException();}
    if(SynchronizationContext is null){throw new ArgumentNullException(nameof(SynchronizationContext));}
+   _CommandServices.AddSingleton<MessageSender>(this.MessageSender);
+   IServiceProvider CommandServices=_CommandServices.BuildServiceProvider();
    Log.Bootstrap_.LogVerbose("Initializing CommandChannel instances");
    foreach(CommandChannel InitializeCommandChannel in CommandChannelSources.Values){
     InitializeCommandChannel.Initialize(CommandServices);
@@ -279,11 +291,15 @@ namespace Tagaroo.Discord{
    try{
     await Client.StopAsync();
    }catch(HttpException){
-   }catch(HttpRequestException){}
+   }catch(HttpRequestException){
+   }catch(RateLimitedException){
+   }
    try{
     await Client.LogoutAsync();
    }catch(HttpException){
-   }catch(HttpRequestException){}
+   }catch(HttpRequestException){
+   }catch(RateLimitedException){
+   }
    this.State = States.Disconnected;
    this.Guild=null;
    this.LogChannel=null;
@@ -375,11 +391,9 @@ namespace Tagaroo.Discord{
    }
    */
    try{
-    await Channel.SendMessageAsync(Message, embed:EmbeddedItem);
-   }catch(HttpException Error){
-    throw new DiscordException(Error.Message,Error);
-   }catch(HttpRequestException Error){
-    throw new DiscordException(Error.Message,Error);
+    await MessageSender.SendMessage(Channel,Message,EmbeddedItem);
+   }catch(DiscordException){
+    throw;
    }
   }
 
@@ -392,16 +406,20 @@ namespace Tagaroo.Discord{
    ){
     return false;
    }
+   /*
    //Prevent logging of any messages whilst logging a message, re-entrancy, which may cause infinite recursion
    if(loggingmessage){return false;}
    this.loggingmessage = true;
+   */
    try{
-    await LogChannel.SendMessageAsync(Message);
+    await MessageSender.SendMessage(LogChannel,Message);
     return true;
-   }catch(HttpException){
-   }catch(HttpRequestException){
+   }catch(DiscordException){
+   }catch(TaskCanceledException){
+   /*
    }finally{
     this.loggingmessage = false;
+   */
    }
    return false;
   }
@@ -474,5 +492,55 @@ namespace Tagaroo.Discord{
   }
 
   protected enum States{Disconnected,Connecting,Connected,Disconnecting}
+ }
+
+ public class MessageSender{
+  private readonly ushort MessageCharacterLimitUTF16;
+  public MessageSender(ushort MessageCharacterLimitUTF16){
+   this.MessageCharacterLimitUTF16=MessageCharacterLimitUTF16;
+  }
+
+  public string[] SplitMessage(string Message){
+   if(MessageCharacterLimitUTF16 <= 0){
+    return new string[]{Message};
+   }
+   string[] MessageParts=new string[ (Message.Length + MessageCharacterLimitUTF16 - 1) / MessageCharacterLimitUTF16 ];
+   for(
+    int indexArray=0, indexMessage=0;
+    indexArray<MessageParts.Length;
+    ++indexArray, indexMessage+=MessageCharacterLimitUTF16
+   ){
+    MessageParts[indexArray] = Message.Substring(
+     indexMessage,
+     indexMessage+MessageCharacterLimitUTF16>Message.Length ? Message.Length-indexMessage : MessageCharacterLimitUTF16
+    );
+   }
+   return MessageParts;
+  }
+
+  /// <exception cref="DiscordException"/>
+  public async Task SendMessage(IMessageChannel SendTo,string Message,Embed EmbeddedItem = null){
+   if(MessageCharacterLimitUTF16 <= 0){
+    await SendTo.SendMessageAsync(Message, embed:EmbeddedItem);
+    return;
+   }
+   string[] MessageParts=SplitMessage(Message);
+   bool first=true;
+   try{
+    foreach(string MessagePart in MessageParts){
+     await SendTo.SendMessageAsync(
+      MessagePart,
+      embed:first?EmbeddedItem:null
+     );
+     first=false;
+    }
+   }catch(HttpException Error){
+    throw new DiscordException(Error.Message,Error);
+   }catch(HttpRequestException Error){
+    throw new DiscordException(Error.Message,Error);
+   }catch(RateLimitedException Error){
+    throw new DiscordException(Error.Message,Error);
+   }
+  }
  }
 }

@@ -18,7 +18,7 @@ namespace Tagaroo.Application{
  /// </summary>
  public class ImgurUserIDCommand : DiscordCommandBase{
   private readonly ImgurInterfacer Imgur;
-  public ImgurUserIDCommand(ImgurInterfacer Imgur):base(){
+  public ImgurUserIDCommand(ImgurInterfacer Imgur,Discord.MessageSender MessageSender):base(MessageSender){
    this.Imgur=Imgur;
   }
 

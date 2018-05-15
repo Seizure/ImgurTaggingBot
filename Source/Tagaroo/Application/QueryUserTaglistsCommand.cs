@@ -15,8 +15,8 @@ namespace Tagaroo.Application{
  /// The Imgur user to search for can be specified either by their username or account ID.
  /// </summary>
  public class QueryUserTaglistsCommand : TaglistCommandsBase{
-  public QueryUserTaglistsCommand(TaglistRepository Repository)
-  :base(Repository){}
+  public QueryUserTaglistsCommand(TaglistRepository Repository,Discord.MessageSender MessageSender)
+  :base(Repository,MessageSender){}
 
   [Command("UserTaglists")]
   [Summary("Searches through all Taglists and displays those that contain a Registered User with the specified username.")]

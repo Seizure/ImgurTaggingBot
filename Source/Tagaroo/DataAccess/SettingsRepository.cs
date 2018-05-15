@@ -115,6 +115,7 @@ namespace Tagaroo.DataAccess{
     (ulong)ConfigurationDiscordElement.Attribute("LogChannelID"),
     (ulong)ConfigurationDiscordElement.Attribute("CommandChannelID"),
     (string)StaticSettingsElement.Attribute("DiscordCommandPrefix"),
+    (ushort)(int)StaticSettingsElement.Attribute("DiscordMaximumMessageLengthUTF16CodeUnits"),
     (string)StaticSettingsElement.Attribute("TaglistDatafilePath"),
     (string)StaticSettingsElement.Attribute("ImgurCommandPrefix"),
     (string)StaticSettingsElement.Attribute("ImgurMentionPrefix")

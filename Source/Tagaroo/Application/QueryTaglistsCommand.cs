@@ -15,8 +15,8 @@ namespace Tagaroo.Application{
  /// not including all the Registered Users of those Taglists.
  /// </summary>
  public class QueryTaglistsCommand : TaglistCommandsBase{
-  public QueryTaglistsCommand(TaglistRepository Repository)
-  :base(Repository){}
+  public QueryTaglistsCommand(TaglistRepository Repository,Discord.MessageSender MessageSender)
+  :base(Repository,MessageSender){}
 
   [Command("Taglists")]
   [Summary("Displays a list of all Taglists.")]

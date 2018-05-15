@@ -192,7 +192,7 @@ namespace Tagaroo.Imgur{
   /// </summary>
   protected async Task<bool> ShouldProcess(IComment ToProcess){
    IEnumerable<IComment> Replies;
-   //? Imgur seems inconsistent in whether or not Comment Replies are included
+   //??? Imgur seems inconsistent in whether or not Comment Replies are included
    if(ToProcess.Children.Count()>0){
     Replies = ToProcess.Children;
    }else{
