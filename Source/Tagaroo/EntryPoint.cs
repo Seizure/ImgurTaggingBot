@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 using System.Diagnostics;
+using System.Reflection;
 using Tagaroo.Infrastructure;
 using Tagaroo.Application;
 using Tagaroo.DataAccess;
@@ -25,11 +26,12 @@ namespace Tagaroo{
   /// 0 otherwise
   /// </returns>
   public static int _Main(string SettingsFilePath=null){
+   CrashHandler ProcessCrashHandler = new CrashHandler(AppDomain.CurrentDomain, Console.Error);
    //Log to STDOUT by default
    Log.Instance.AddTraceListener(new TextWriterTraceListener(Console.Out,"StdOutListener"),true);
    //Log all messages sent to the Bootstrap logger until the application's Configuration can be read and applied (other loggers are not used until after the Configuration is applied)
    Log.Instance.BootstrapLevel.Level = SourceLevels.Verbose;
-   Log.Bootstrap_.LogInfo("Application starting");
+   Log.Bootstrap_.LogInfo("Tagaroo {0}; application starting",typeof(EntryPoint).Assembly.GetName().Version.ToString(3));
    //Robustness — Use locale-invariant comparison/formatting/e.t.c. rules by default, to mitigate aginst bugs caused by varying host system locales
    CultureInfo.CurrentCulture = CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
    SettingsRepository RepositorySettings=new SettingsRepositoryMain(
