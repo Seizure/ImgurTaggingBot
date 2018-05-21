@@ -22,6 +22,7 @@ namespace Tagaroo{
   private void OutputUnhandledExceptionDetails(Object Origin,UnhandledExceptionEventArgs Event){
    if(!Event.IsTerminating){return;}
    Out.WriteLine("--- Process Crash ---");
+   Out.WriteLine(DateTimeOffset.Now.ToString("yyyy'-'MM'-'dd HH':'mm':'ss'.'fff"));
    if(!(Event.ExceptionObject is Exception)){
     Out.WriteLine("Non-Exception thrown:");
     Out.WriteLine("{0}",Event.ExceptionObject);

@@ -327,6 +327,8 @@ namespace Tagaroo.Imgur{
      throw;
     }catch(HttpRequestException Error){
      throw ToImgurException(Error);
+    }catch(TaskCanceledException Error){
+     throw ToImgurException(Error);
     }
     Log.Imgur_.LogCritical(
      "A new Imgur OAuth Token has been acquired, which expires at {0:u}. It is highly recommended that this Token be backed up from the settings file, in case it is lost. This token must be kept secret; anyone with access to it has access to the Imgur user account with which it is associated.",
@@ -354,6 +356,8 @@ namespace Tagaroo.Imgur{
    }catch(ImgurException){
     throw;
    }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
+   }catch(TaskCanceledException Error){
     throw ToImgurException(Error);
    }
   }
@@ -393,6 +397,8 @@ namespace Tagaroo.Imgur{
     throw;
    }catch(HttpRequestException Error){
     throw ToImgurException(Error);
+   }catch(TaskCanceledException Error){
+    throw ToImgurException(Error);
    }
   }
   public async Task<IAccount> ReadUserDetails(int UserID){
@@ -401,6 +407,8 @@ namespace Tagaroo.Imgur{
    }catch(ImgurException){
     throw;
    }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
+   }catch(TaskCanceledException Error){
     throw ToImgurException(Error);
    }
   }
@@ -452,6 +460,8 @@ namespace Tagaroo.Imgur{
      throw;
     }catch(HttpRequestException Error){
      throw ToImgurException(Error);
+    }catch(TaskCanceledException Error){
+     throw ToImgurException(Error);
     }
     Result.AddRange(UserComments);
     more = UserComments.Count >= CommentsPerPage;
@@ -475,6 +485,8 @@ namespace Tagaroo.Imgur{
    }catch(ImgurException){
     throw;
    }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
+   }catch(TaskCanceledException Error){
     throw ToImgurException(Error);
    }
   }
@@ -514,6 +526,8 @@ namespace Tagaroo.Imgur{
    }catch(ImgurException){
     throw;
    }catch(HttpRequestException Error){
+    throw ToImgurException(Error);
+   }catch(TaskCanceledException Error){
     throw ToImgurException(Error);
    }
   }
@@ -565,6 +579,8 @@ namespace Tagaroo.Imgur{
      throw;
     }catch(HttpRequestException Error){
      throw ToImgurException(Error);
+    }catch(TaskCanceledException Error){
+     throw ToImgurException(Error);
     }
     Log.Imgur_.LogVerbose("Posted {0}; delaying for {1} before allowing further Comments",LoggedCommentDescription,PostCommentDelay);
     await Task.Delay(PostCommentDelay);
@@ -610,6 +626,13 @@ namespace Tagaroo.Imgur{
 
   protected ImgurException ToImgurException(HttpRequestException From){
    return new ImgurException("Network Error: "+From.Message,From);
+  }
+  protected ImgurException ToImgurException(TaskCanceledException From){
+   if(From.InnerException is null){
+    return new ImgurException("Timeout: "+From.Message,From);
+   }else{
+    return new ImgurException(string.Format("Timeout: {0} - {1}",From.Message,From.InnerException.Message),From);
+   }
   }
 
   protected readonly TimeSpan ExpiryPrecision = TimeSpan.FromDays(1);

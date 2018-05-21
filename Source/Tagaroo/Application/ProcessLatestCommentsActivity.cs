@@ -57,12 +57,11 @@ namespace Tagaroo.Application{
    //Robustness — clear the cache in case it hasn't been cleared for some reason
    RepositoryTaglists.ClearCache();
    /*
-   Prepare the cache ahead of time;
-   The ProcessCommentActivity tasks will execute in paralell,
-   which means that LoadAll will be called all the times it is to be called
-   before it can complete, and cache the result if not already cached;
-   hence it should be cached here, before paralell SubActivity execution begins
+   Initialize the Taglist Repository cache, so that subsequent calls to Load
+   by the ProcessCommentActivity SubActivity tasks
+   will efficiently retrieve the cached result
    */
+   //TODO Implement proper lazy-loading in CacheingTaglistRepository, so that results are cached upon calls to Load and not just LoadAll
    Task InitializeCacheTask = RepositoryTaglists.LoadAll();
    try{
     CurrentSettings = await CurrentSettingsTask;
@@ -90,21 +89,22 @@ namespace Tagaroo.Application{
    }
    //Execute the sub-activity for each new Comment, keeping track of the latest date–time from all the Comments
    Log.Application_.LogVerbose("Processing latest Comments from {0} total Commenters",NewComments.Count);
-   List<Task<bool>> Tasks=new List<Task<bool>>();
+   bool AnyCommentsProcessed=false;
    DateTimeOffset LatestCommentAt=DateTimeOffset.MinValue;
    foreach( KeyValuePair<string,IList<IComment>> _NewUserComments in NewComments ){
     IList<IComment> NewUserComments=_NewUserComments.Value;
     //Process Comments from a particular user, oldest Comment first
     Log.Application_.LogVerbose("Processing latest Comments from Commenter '{0}', total — {1}",_NewUserComments.Key,NewUserComments.Count);
     foreach( IComment NewUserComment in NewUserComments.Reverse() ){
-     Tasks.Add(SubActivity.ExecuteIfNew(NewUserComment));
+     bool CommentsProcessed = await SubActivity.ExecuteIfNew(NewUserComment);
+     if(CommentsProcessed){
+      AnyCommentsProcessed=true;
+     }
      if( NewUserComment.DateTime > LatestCommentAt ){
       LatestCommentAt = NewUserComment.DateTime;
      }
     }
    }
-   //Wait until all Comments have been processed before then updating the latest Comment date–time, in case of any unhandled exceptions during processing
-   bool[] CommentsProcessed = await Task<bool[]>.WhenAll(Tasks);
    RepositoryTaglists.ClearCache();
    //Update and save the latest Comment date–time if it has progressed
    Log.Application_.LogVerbose("Latest date–time of all Comments read — {0:u}; current saved value is {1:u}",LatestCommentAt,CurrentSettings.CommentsProcessedUpToInclusive);
@@ -120,7 +120,7 @@ namespace Tagaroo.Application{
      );
     }
    }
-   if(CommentsProcessed.Any( value=>value )){
+   if(AnyCommentsProcessed){
     await Imgur.LogRemainingBandwidth(TraceEventType.Information);
    }else{
     await Imgur.LogRemainingBandwidth(TraceEventType.Verbose);

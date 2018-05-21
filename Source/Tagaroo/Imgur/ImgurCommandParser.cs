@@ -134,7 +134,7 @@ namespace Tagaroo.Imgur{
   protected async Task<bool> ProcessCommands(IComment HostComment,ImgurCommandHandler Callback,bool CheckForReplies){
    ICollection<Match> ParsedCommands = Pattern_Command.Matches(HostComment.CommentText);
    Log.Imgur_.LogVerbose("Parsing Comment made by '{1}' at {2:u} on Gallery Item '{3}' [#{0:D}] for commands; total commands found - {4}",HostComment.Id,HostComment.Author,HostComment.DateTime,HostComment.ImageId,ParsedCommands.Count);
-   List<Task> Tasks=new List<Task>(ParsedCommands.Count);
+   bool CommandsFound=false;
    foreach(Match ParsedCommand in ParsedCommands){
     if(CheckForReplies){
      //Only need to check once per Comment
@@ -164,12 +164,13 @@ namespace Tagaroo.Imgur{
       HostComment.OnAlbum,
       out TagCommandParameters CommandParameter
      )){
+      CommandsFound=true;
       Log.Imgur_.LogVerbose(
        "'tag' command in Comment #{0:D} parsed successfully: Taglist - '{1}', Rating - {2}, Total Categoties - {3}",
        HostComment.Id,
        CommandParameter.TaglistName,CommandParameter.Rating,CommandParameter.Categories.Count
       );
-      Tasks.Add(Callback.ProcessTagCommand(CommandParameter));
+      await Callback.ProcessTagCommand(CommandParameter);
      }else{
       Log.Imgur_.LogWarning(
        "The following Tag command on the Imgur Gallery item '{0}' by User '{1}' could not be parsed: {2}",
@@ -179,8 +180,7 @@ namespace Tagaroo.Imgur{
     break;
     }
    }
-   await Task.WhenAll(Tasks);
-   return Tasks.Count>0;
+   return CommandsFound;
   }
 
   /// <summary>
